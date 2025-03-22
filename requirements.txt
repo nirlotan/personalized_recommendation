@@ -1,0 +1,7 @@
+pandas
+tqdm
+socialvec
+swifter
+scipy
+xlsxwriter
+gdown
