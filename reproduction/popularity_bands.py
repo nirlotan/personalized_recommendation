@@ -161,3 +161,16 @@ def summarize(per_user: pd.DataFrame, population: str, candidates: str, exclusio
                             table["socialvec"].mean(), test(sub)]
     table["gain"] = table["socialvec"] / table["popularity"] - 1
     return table[["users", "relevant_per_user", "random", "popularity", "socialvec", "gain", "p_value"]]
+
+
+def matched_comparison(per_user: pd.DataFrame, population: str,
+                       exclusion: str = "exclude_category") -> Dict[str, pd.DataFrame]:
+    """
+    `summarize` for the top-20 ('head') and the band candidates, restricted to the
+    (category, user) pairs evaluated in both, so the two rankings share their users.
+    """
+    sub = per_user[(per_user["population"] == population) & (per_user["exclusion"] == exclusion)]
+    pairs = {c: set(zip(g["category"], g["user"])) for c, g in sub.groupby("candidates")}
+    shared = pairs["head"] & pairs["band"]
+    matched = sub[[pair in shared for pair in zip(sub["category"], sub["user"])]]
+    return {c: summarize(matched, population, c, exclusion) for c in ("head", "band")}

@@ -10,10 +10,17 @@ Outputs go to results/popularity_band_<start>_<end>/.
 import argparse
 from pathlib import Path
 
-from reproduction.config import RESULTS_DIR
+import pandas as pd
+
+from reproduction.config import CATEGORY_LABELS, RESULTS_DIR
 from reproduction.data import load_categories, load_users
 from reproduction.embeddings import SocialVec
-from reproduction.popularity_bands import load_category_sheets, run_band_experiment, summarize
+from reproduction.popularity_bands import (
+    load_category_sheets,
+    matched_comparison,
+    run_band_experiment,
+    summarize,
+)
 from reproduction.report import markdown_table
 
 CONDITIONS = [
@@ -23,6 +30,35 @@ CONDITIONS = [
     ("all", "band", "exclude_category", "Robustness: all experiment users, band candidates, all category entities removed"),
     ("all", "head", "exclude_category", "Robustness control: all experiment users, top-20 candidates"),
 ]
+COMPARISONS = [
+    ("category", "Users sampled for each category"),
+    ("all", "All experiment users"),
+]
+
+
+def comparison_markdown(head: pd.DataFrame, band: pd.DataFrame, start: int, end: int) -> str:
+    """Top-20 and band results side by side, one row per category (paper-style table)."""
+    def p(v):
+        return "< 0.001" if v < 0.001 else f"{v:.3f}"
+
+    def rel(v):
+        return "" if pd.isna(v) else f"{v:.1f}"
+
+    b = f"{start}–{end}"
+    lines = [
+        f"| Category | Users | Rel./user (1–20) | Popularity (1–20) | Social (1–20) | Δ (1–20) | p (1–20) "
+        f"| Rel./user ({b}) | Random ({b}) | Popularity ({b}) | Social ({b}) | Δ ({b}) | p ({b}) |",
+        "|" + "---|" * 13,
+    ]
+    for category in band.index:
+        h, r = head.loc[category], band.loc[category]
+        label = CATEGORY_LABELS.get(category, "**Overall**")
+        lines.append(
+            f"| {label} | {r['users']:,.0f} | {rel(h['relevant_per_user'])} | {h['popularity']:.3f} "
+            f"| {h['socialvec']:.3f} | {h['gain']:+.0%} | {p(h['p_value'])} | {rel(r['relevant_per_user'])} "
+            f"| {r['random']:.3f} | {r['popularity']:.3f} | {r['socialvec']:.3f} | {r['gain']:+.0%} | {p(r['p_value'])} |"
+        )
+    return "\n".join(lines).replace("+-", "−").replace("| -", "| −")
 
 
 def main():
@@ -51,7 +87,17 @@ def main():
         shown["p_value"] = shown["p_value"].map(lambda v: f"{v:.1e}")
         sections.append(f"## {title}\n\n" + markdown_table(shown) + "\n")
     (out / "tables.md").write_text("\n".join(sections), encoding="utf-8")
-    print("\n".join(sections))
+
+    # Top-20 vs. band on the users evaluated in both (all category entities removed from profiles)
+    comparisons = [f"# Top-20 vs. ranks {args.start}-{args.end}: matched users\n"]
+    for population, title in COMPARISONS:
+        tables = matched_comparison(per_user, population)
+        for candidates, table in tables.items():
+            table.to_csv(out / f"matched_{population}_{candidates}.csv")
+        comparisons.append(f"## {title}\n\n"
+                           + comparison_markdown(tables["head"], tables["band"], args.start, args.end) + "\n")
+    (out / "comparison_tables.md").write_text("\n".join(comparisons), encoding="utf-8")
+    print("\n".join(comparisons))
 
 
 if __name__ == "__main__":

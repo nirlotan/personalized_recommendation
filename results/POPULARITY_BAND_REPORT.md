@@ -20,22 +20,22 @@ The main experiments (Table 2) rank the 20 most popular entities of each categor
 
 ## Results
 
-**Table A.** MAP for ranking the original top-20 entities (1–20) and the entities ranked 81–100 by follower count. Both conditions use the same users and the same user representations, which exclude all entities of the target category. Rel./user is the average number of candidates each user follows. Δ is the relative gain of social similarity over popularity. p is from a Wilcoxon signed-rank test (social vs. popularity, 81–100).
+**Table A.** MAP for ranking the original top-20 entities (1–20) and the entities ranked 81–100 by follower count. Both conditions use the same users and the same user representations, which exclude all entities of the target category. Rel./user is the average number of candidates each user follows. Δ is the relative gain of social similarity over popularity. p is from a Wilcoxon signed-rank test of social similarity against popularity, computed separately for each band.
 
-| Category | Users | Rel./user (1–20) | Popularity (1–20) | Social (1–20) | Δ (1–20) | Rel./user (81–100) | Random (81–100) | Popularity (81–100) | Social (81–100) | Δ (81–100) | p (81–100) |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Musical artists | 472 | 8.1 | 0.518 | 0.655 | +26% | 2.4 | 0.240 | 0.349 | 0.520 | +49% | < 0.001 |
-| News outlets | 426 | 9.4 | 0.604 | 0.731 | +21% | 2.5 | 0.244 | 0.233 | 0.379 | +62% | < 0.001 |
-| Comedians | 277 | 9.0 | 0.617 | 0.678 | +10% | 1.8 | 0.214 | 0.363 | 0.267 | −26% | < 0.001 |
-| Politicians | 641 | 12.3 | 0.734 | 0.803 | +9% | 5.6 | 0.377 | 0.359 | 0.438 | +22% | < 0.001 |
-| TV stations | 198 | 6.4 | 0.527 | 0.672 | +27% | 1.4 | 0.198 | 0.186 | 0.413 | +122% | < 0.001 |
-| Actors | 579 | 7.4 | 0.560 | 0.696 | +24% | 3.2 | 0.274 | 0.305 | 0.483 | +58% | < 0.001 |
-| TV shows | 216 | 5.4 | 0.429 | 0.673 | +57% | 1.4 | 0.215 | 0.325 | 0.398 | +23% | 0.011 |
-| Sports teams | 240 | 6.9 | 0.441 | 0.576 | +31% | 2.5 | 0.245 | 0.260 | 0.436 | +68% | < 0.001 |
-| Journalists | 749 | 11.4 | 0.666 | 0.720 | +8% | 4.1 | 0.325 | 0.299 | 0.385 | +29% | < 0.001 |
-| **Overall** | 3,798 | | 0.566 | 0.689 | +22% | | 0.259 | 0.298 | 0.413 | +39% | < 0.001 |
+| Category | Users | Rel./user (1–20) | Popularity (1–20) | Social (1–20) | Δ (1–20) | p (1–20) | Rel./user (81–100) | Random (81–100) | Popularity (81–100) | Social (81–100) | Δ (81–100) | p (81–100) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Musical artists | 472 | 8.1 | 0.518 | 0.655 | +26% | < 0.001 | 2.4 | 0.240 | 0.349 | 0.520 | +49% | < 0.001 |
+| News outlets | 426 | 9.4 | 0.604 | 0.731 | +21% | < 0.001 | 2.5 | 0.244 | 0.233 | 0.379 | +62% | < 0.001 |
+| Comedians | 277 | 9.0 | 0.617 | 0.678 | +10% | < 0.001 | 1.8 | 0.214 | 0.363 | 0.267 | −26% | < 0.001 |
+| Politicians | 641 | 12.3 | 0.734 | 0.803 | +9% | < 0.001 | 5.6 | 0.377 | 0.359 | 0.438 | +22% | < 0.001 |
+| TV stations | 198 | 6.4 | 0.527 | 0.672 | +27% | < 0.001 | 1.4 | 0.198 | 0.186 | 0.413 | +122% | < 0.001 |
+| Actors | 579 | 7.4 | 0.560 | 0.696 | +24% | < 0.001 | 3.2 | 0.274 | 0.305 | 0.483 | +58% | < 0.001 |
+| TV shows | 216 | 5.4 | 0.429 | 0.673 | +57% | < 0.001 | 1.4 | 0.215 | 0.325 | 0.398 | +23% | 0.011 |
+| Sports teams | 240 | 6.9 | 0.441 | 0.576 | +31% | < 0.001 | 2.5 | 0.245 | 0.260 | 0.436 | +68% | < 0.001 |
+| Journalists | 749 | 11.4 | 0.666 | 0.720 | +8% | < 0.001 | 4.1 | 0.325 | 0.299 | 0.385 | +29% | < 0.001 |
+| **Overall** | 3,798 | | 0.566 | 0.689 | +22% | < 0.001 | | 0.259 | 0.298 | 0.413 | +39% | < 0.001 |
 
-For the original top-20 candidates, the gains on this subset of users (+22% overall) are in line with Table 2. All differences between social similarity and popularity in the 1–20 condition are significant (p < 0.001).
+For the original top-20 candidates, the gains on this subset of users (+22% overall) are in line with Table 2. Social similarity significantly outperforms popularity in every category (all p < 10⁻⁹; overall p < 10⁻¹⁶⁰).
 
 For the entities ranked 81–100, MAP is lower for both methods. Users follow fewer of these candidates (1.4–5.6 per user, compared with 5.4–12.3), so the task is harder. Even a random ranking is expected to score only 0.259 on average. Popularity loses most of its value in this range: its overall MAP of 0.298 is only 0.039 above chance, and in four categories (News outlets, Politicians, TV stations and Journalists) it scores below a random ranking. Among entities with similar, moderate follower counts, worldwide popularity says little about which of them a particular user follows.
 
@@ -49,7 +49,31 @@ Overall, these results indicate that the benefit of social user modeling is not 
 
 *Excluding only the candidates.* If the user representation excludes only the 20 band candidates, keeping the category's other entities as in the main experiments, the results are nearly unchanged: overall social MAP is 0.415 vs. 0.298 for popularity (+39%). Keeping the other entities of the target domain thus adds little information about preferences among its less popular entities.
 
-*All users.* If we evaluate all 11,153 experiment users who follow at least one band entity in a category, rather than only the users sampled for that category, we obtain 39,437 user–category pairs. The pattern is the same: social similarity scores 0.403 vs. 0.287 for popularity (+40%), compared with +24% on the top-20 candidates for the same users (0.634 vs. 0.513). Comedians again remain the only category where popularity is better (−23%).
+*All users.* The users sampled for a category were selected as followers of its top-20 entities, so they may be atypical of that category's audience. We therefore repeat the matched comparison of Table A on *all* experiment users rather than only those sampled for the category. Each of the 11,153 users is evaluated in every category in which they follow at least one band entity *and* at least one of the original 20 candidates. As in Table A, the user representation excludes every entity listed for the target category, and both bands are ranked for exactly the same users. This yields 36,739 user–category pairs from 10,039 distinct users, about 3.7 categories per user. Only 10% of these pairs come from users sampled for the category in question, so this test is largely independent of the sample used in Table A. The results are shown in Table B.
+
+**Table B.** As Table A, evaluated on all experiment users who follow at least one entity from each band in the category. Users counts user–category pairs. The per-category p-values are from a Wilcoxon signed-rank test in which each user appears once. The overall test pools all pairs, so a user who appears in several categories contributes several pairs.
+
+| Category | Users | Rel./user (1–20) | Popularity (1–20) | Social (1–20) | Δ (1–20) | p (1–20) | Rel./user (81–100) | Random (81–100) | Popularity (81–100) | Social (81–100) | Δ (81–100) | p (81–100) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Musical artists | 5,922 | 6.1 | 0.398 | 0.561 | +41% | < 0.001 | 2.3 | 0.238 | 0.330 | 0.493 | +49% | < 0.001 |
+| News outlets | 4,426 | 8.5 | 0.560 | 0.698 | +25% | < 0.001 | 2.6 | 0.248 | 0.235 | 0.385 | +64% | < 0.001 |
+| Comedians | 2,528 | 7.5 | 0.567 | 0.625 | +10% | < 0.001 | 1.7 | 0.209 | 0.373 | 0.288 | −23% | < 0.001 |
+| Politicians | 6,348 | 10.9 | 0.693 | 0.779 | +12% | < 0.001 | 5.3 | 0.366 | 0.359 | 0.448 | +25% | < 0.001 |
+| TV stations | 2,585 | 5.4 | 0.527 | 0.629 | +19% | < 0.001 | 1.4 | 0.197 | 0.186 | 0.362 | +95% | < 0.001 |
+| Actors | 6,064 | 6.0 | 0.515 | 0.629 | +22% | < 0.001 | 3.1 | 0.270 | 0.294 | 0.464 | +58% | < 0.001 |
+| TV shows | 2,769 | 4.3 | 0.433 | 0.611 | +41% | < 0.001 | 1.4 | 0.213 | 0.325 | 0.377 | +16% | < 0.001 |
+| Sports teams | 1,585 | 4.6 | 0.350 | 0.499 | +42% | < 0.001 | 2.1 | 0.229 | 0.231 | 0.451 | +95% | < 0.001 |
+| Journalists | 4,512 | 9.2 | 0.570 | 0.677 | +19% | < 0.001 | 3.6 | 0.303 | 0.288 | 0.361 | +25% | < 0.001 |
+| **Overall** | 36,739 | | 0.513 | 0.634 | +24% | < 0.001 | | 0.252 | 0.291 | 0.403 | +38% | < 0.001 |
+
+Table B confirms the findings of Table A on a population roughly ten times larger.
+- **Top 20:** social similarity outperforms popularity in all nine categories, by +24% overall.
+- **Ranks 81–100:** the overall gain rises to +38% (0.403 vs. 0.291).
+- **Popularity near chance:** at ranks 81–100, popularity again scores below a random ranking for news outlets, politicians, TV stations and journalists, and is at chance level for sports teams (0.231 vs. 0.229).
+- **Significance:** with the larger samples, every per-category difference is significant at p < 0.001, including TV shows (+16%), which did not survive Bonferroni correction in Table A.
+- **Comedians:** this is again the only category in which popularity outperforms social similarity (−23%).
+
+Popularity MAP on the top-20 candidates is lower here than in Table A (0.513 vs. 0.566), because users who were not sampled for a category follow fewer of its top entities (4.3–10.9 per user, compared with 5.4–12.3). Social similarity retains its advantage regardless.
 
 ## Limitations
 
@@ -84,7 +108,9 @@ Outputs in `results/popularity_band_81_100/`:
 
 | File | Contents |
 |---|---|
-| `tables.md` | All five conditions, with exact p-values |
+| `comparison_tables.md` | Tables A and B: matched top-20 vs. 81–100 comparisons |
+| `matched_*.csv` | The data behind Tables A and B |
+| `tables.md` | All five conditions, unmatched, with exact p-values |
 | `summary_*.csv` | One summary table per condition |
 | `per_user_ap.csv.gz` | Per-user AP for each condition, with random-ranking AP |
 | `band_entities.csv` | The candidates, their follower counts and SocialVec coverage |
