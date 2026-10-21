@@ -107,13 +107,15 @@ The experiments use a carefully constructed dataset:
 personalized_recommendation/
 ├── run_reproduction.py          # Reproduces the paper's tables and figures
 ├── run_popularity_band.py       # Extension: ranking entities ranked 81-100 by popularity
+├── run_llm_experiments.py       # LLM experiments: Table 3 rerun, candidate order, ranks 81-100
+├── make_results_page.py         # Builds results/results.html
 ├── reproduction/                # Reproduction code
 │   ├── data.py                  #   categories, users, closed-world splits
 │   ├── embeddings.py            #   SocialVec loading and user projection
 │   ├── ranking.py               #   cosine / popularity ranking, average precision
 │   ├── experiments.py           #   Table 2, Figure 1, Table 4
 │   ├── demographics.py          #   Figure 2 (socio-demographic classifiers)
-│   ├── llm.py                   #   Table 3 (GPT-4o, optional)
+│   ├── llm.py                   #   Table 3: LLM ranking with the authors' prompts
 │   ├── popularity_bands.py      #   extension: less popular candidates
 │   ├── paper_results.py         #   published numbers, for comparison
 │   ├── plots.py, report.py
@@ -122,7 +124,7 @@ personalized_recommendation/
 ├── legacy_code/                 # Original notebooks
 ├── paper/                       # The paper (arXiv:2603.10148)
 ├── requirements.txt
-└── requirements-llm.txt         # Extra dependencies for the GPT-4o experiment
+└── requirements-llm.txt         # Extra dependencies for the LLM experiments
 ```
 
 ## 🔁 Reproducing the paper
@@ -144,15 +146,24 @@ see [results/POPULARITY_BAND_REPORT.md](results/POPULARITY_BAND_REPORT.md):
 .venv/Scripts/python run_popularity_band.py --start 81 --end 100
 ```
 
-The GPT-4o experiment (Table 3) is optional because it makes about 33.5K API calls. It uses the
-authors' dspy prompts and caches responses, so interrupted runs resume where they stopped:
+The LLM experiments use the authors' dspy prompts on stratified user samples:
+- the Table 3 rerun
+- a test of whether the order of the candidates matters
+- the LLM ranking of ranks 81–100
+
+The run was about 4,600 calls with GPT-6 Luna, costing $0.86. It reads the OpenAI key from `OPENAI_API_KEY`, `OPENAI_KEY` or
+`.env.local`, stops calling the model at `--budget` dollars, and caches every response, so interrupted
+runs resume and `--rescore` recomputes all scores without new calls. Results are in
+[results/LLM_REPORT.md](results/LLM_REPORT.md):
 
 ```bash
 .venv/Scripts/pip install -r requirements-llm.txt
-# Azure: set AZURE_API_KEY, AZURE_API_BASE, AZURE_API_VERSION  (or use --llm-model openai/gpt-4o with OPENAI_API_KEY)
-.venv/Scripts/python run_reproduction.py --llm --llm-users-per-category 5   # cheap trial run
-.venv/Scripts/python run_reproduction.py --llm
+.venv/Scripts/python run_llm_experiments.py --dry-run --out scratch/llm   # offline check, fake model
+.venv/Scripts/python run_llm_experiments.py --model gpt-6-luna --effort low --budget 1.5
 ```
+
+[results/results.html](results/results.html) presents all results on one page. Rebuild it with
+`.venv/Scripts/python make_results_page.py`.
 
 
 ## 🔒 Ethics & Privacy

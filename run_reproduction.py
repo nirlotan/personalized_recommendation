@@ -2,9 +2,10 @@
 Reproduce the results of "Social Knowledge for Cross-Domain User Preference Modeling".
 
     python run_reproduction.py                 # Tables 2 and 4, Figures 1 and 2 (~2 minutes)
-    python run_reproduction.py --llm           # also Table 3 with GPT-4o (needs API credentials)
 
 Outputs go to results/; results/REPORT.md compares every number with the paper.
+The LLM experiments (Table 3) are run separately with run_llm_experiments.py;
+the report includes their results when results/llm/ exists.
 """
 
 import argparse
@@ -12,8 +13,8 @@ from pathlib import Path
 
 from reproduction.config import RESULTS_DIR
 from reproduction.data import load_categories, load_users
-from reproduction.embeddings import SocialVec, load_metadata
-from reproduction.experiments import evaluate_users, figure1, per_category_map, table2, table4
+from reproduction.embeddings import SocialVec
+from reproduction.experiments import evaluate_users, figure1, table2, table4
 from reproduction.paper_results import FIGURE2, FIGURE2_SHEETS
 from reproduction.plots import plot_figure1, plot_figure2
 from reproduction.report import build_report
@@ -23,14 +24,6 @@ def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
     p.add_argument("--skip-demographics", action="store_true", help="skip Figure 2")
-    p.add_argument("--llm", action="store_true", help="run the GPT-4o experiment (Table 3)")
-    p.add_argument("--llm-model", default="azure/gpt-4o",
-                   help="litellm model name, e.g. azure/gpt-4o (default) or openai/gpt-4o")
-    p.add_argument("--llm-users-per-category", type=int, default=None,
-                   help="only evaluate the first N users of each category (cheap trial run)")
-    p.add_argument("--llm-workers", type=int, default=8, help="concurrent model calls")
-    p.add_argument("--llm-exclude-target", action="store_true",
-                   help="drop the target category's candidates from the k=50 prompt (fixes the legacy leak)")
     return p.parse_args()
 
 
@@ -72,24 +65,7 @@ def main():
         }
         plot_figure2(radars, out / "figure2.png")
 
-    # Table 3
-    llm_table = None
-    if args.llm:
-        from reproduction.llm import make_dspy_rankers, run_llm
-
-        metadata = load_metadata()
-        names = dict(zip(metadata["twitter_id"].astype(str), metadata["name"]))
-        rank_personal, rank_default = make_dspy_rankers(args.llm_model)
-        llm_per_user = run_llm(users, categories, names, rank_personal, rank_default,
-                               cache_path=out / "llm_responses.jsonl",
-                               users_per_category=args.llm_users_per_category,
-                               workers=args.llm_workers, exclude_target=args.llm_exclude_target)
-        llm_per_user.to_csv(out / "llm_per_user_ap.csv", index=False)
-        llm_table = per_category_map(llm_per_user, ["llm_baseline", "llm_k12", "llm_k25", "llm_k50"])
-        llm_table.attrs["n_users"] = len(llm_per_user)
-        llm_table.to_csv(out / "table3_llm.csv")
-
-    report = build_report(per_user, categories, t2, fig1, grid, pooled, radars, llm_table)
+    report = build_report(per_user, categories, t2, fig1, grid, pooled, radars, out / "llm")
     (out / "REPORT.md").write_text(report, encoding="utf-8")
     print(f"Done. See {out / 'REPORT.md'}")
 

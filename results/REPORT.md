@@ -64,27 +64,27 @@ Ratios quoted in the paper: k = 10 → 92.6% (paper 93.1%), k = 20 → 95.3% (pa
 
 ![Figure 1](figure1.png)
 
-## Table 3: LLM (GPT-4o) personalization
+## Table 3: LLM personalization
 
-| Category | Social k=50 (paper) | Social k=50 | llm_baseline (paper) | llm_k12 (paper) | llm_k25 (paper) | llm_k50 (paper) |
-|---|---|---|---|---|---|---|
-| Musical artists | 0.625 | 0.627 | 0.508 | 0.582 | 0.611 | 0.667 |
-| News outlets | 0.688 | 0.687 | 0.648 | 0.695 | 0.698 | 0.716 |
-| Comedians | 0.593 | 0.590 | 0.576 | 0.638 | 0.643 | 0.655 |
-| Politicians | 0.774 | 0.770 | 0.785 | 0.797 | 0.801 | 0.811 |
-| TV stations | 0.605 | 0.609 | 0.507 | 0.636 | 0.640 | 0.664 |
-| Actors | 0.637 | 0.640 | 0.511 | 0.605 | 0.603 | 0.662 |
-| TV shows | 0.622 | 0.622 | 0.427 | 0.595 | 0.612 | 0.637 |
-| Sports teams | 0.495 | 0.493 | 0.347 | 0.393 | 0.391 | 0.571 |
-| Fashion | 0.443 | 0.436 | 0.377 | 0.409 | 0.409 | 0.493 |
-| Journalists | 0.668 | 0.668 | 0.680 | 0.673 | 0.675 | 0.704 |
-| TV hosts | 0.422 | 0.422 | 0.313 | 0.436 | 0.451 | 0.522 |
-| Films | 0.372 | 0.370 | 0.216 | 0.306 | 0.308 | 0.399 |
-| Food chains | 0.485 | 0.490 | 0.492 | 0.496 | 0.504 | 0.496 |
-| Car makers | 0.438 | 0.447 | 0.472 | 0.480 | 0.487 | 0.409 |
-| **Average** | 0.562 | 0.562 | 0.490 | 0.553 | 0.559 | 0.600 |
+| Category | Social k=50 (paper) | Social k=50 | GPT-4o baseline (paper) | GPT-4o k12 (paper) | GPT-4o k25 (paper) | GPT-4o k50 (paper) | GPT-6 Luna baseline | GPT-6 Luna k12 | GPT-6 Luna k25 | GPT-6 Luna k50 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Musical artists | 0.625 | 0.627 | 0.508 | 0.582 | 0.611 | 0.667 | 0.521 | 0.599 | 0.594 | 0.699 |
+| News outlets | 0.688 | 0.687 | 0.648 | 0.695 | 0.698 | 0.716 | 0.677 | 0.744 | 0.756 | 0.753 |
+| Comedians | 0.593 | 0.590 | 0.576 | 0.638 | 0.643 | 0.655 | 0.578 | 0.640 | 0.642 | 0.662 |
+| Politicians | 0.774 | 0.770 | 0.785 | 0.797 | 0.801 | 0.811 | 0.802 | 0.823 | 0.830 | 0.832 |
+| TV stations | 0.605 | 0.609 | 0.507 | 0.636 | 0.640 | 0.664 | 0.474 | 0.604 | 0.627 | 0.667 |
+| Actors | 0.637 | 0.640 | 0.511 | 0.605 | 0.603 | 0.662 | 0.496 | 0.628 | 0.623 | 0.678 |
+| TV shows | 0.622 | 0.622 | 0.427 | 0.595 | 0.612 | 0.637 | 0.433 | 0.610 | 0.633 | 0.624 |
+| Sports teams | 0.495 | 0.493 | 0.347 | 0.393 | 0.391 | 0.571 | 0.322 | 0.371 | 0.362 | 0.554 |
+| Fashion | 0.443 | 0.436 | 0.377 | 0.409 | 0.409 | 0.493 | 0.335 | 0.380 | 0.369 | 0.471 |
+| Journalists | 0.668 | 0.668 | 0.680 | 0.673 | 0.675 | 0.704 | 0.684 | 0.692 | 0.695 | 0.712 |
+| TV hosts | 0.422 | 0.422 | 0.313 | 0.436 | 0.451 | 0.522 | 0.299 | 0.424 | 0.453 | 0.538 |
+| Films | 0.372 | 0.370 | 0.216 | 0.306 | 0.308 | 0.399 | 0.175 | 0.273 | 0.254 | 0.361 |
+| Food chains | 0.485 | 0.490 | 0.492 | 0.496 | 0.504 | 0.496 | 0.426 | 0.444 | 0.434 | 0.449 |
+| Car makers | 0.438 | 0.447 | 0.472 | 0.480 | 0.487 | 0.409 | 0.411 | 0.450 | 0.485 | 0.551 |
+| **Average** | 0.562 | 0.562 | 0.490 | 0.553 | 0.559 | 0.600 | 0.474 | 0.549 | 0.554 | 0.611 |
 
-The GPT-4o columns were **not re-run**: they need Azure OpenAI credentials and about 33.5K model calls. Run `python run_reproduction.py --llm` to produce them (see README). The 'Social k=50' column is the SE1 k = 50 setting of Figure 1.
+The 'Social k=50' column is the SE1 k = 50 setting of Figure 1, computed on all users. The GPT-6 Luna columns (reasoning effort 'low') were re-run on a stratified random sample of 700 users (50 per category), with the authors' prompts. See `results/LLM_REPORT.md` for the analysis, including the candidate-order experiment.
 
 ## Table 4: k categories × n entities (closed world)
 
@@ -206,4 +206,5 @@ Mean absolute difference from the values in the notebook (which produced the pap
    outputs the opposite way round from the paper's Figure 2. We follow the figure. With the package's
    labels, ~98% of *60 Minutes* followers would be under 25.
 5. **Table 4** — see the section above; the code behind it is not in the notebooks.
-6. **Table 3 (GPT-4o)** needs API access and is not part of the default run.
+6. **Table 3** was re-run with a different model on a user sample (`run_llm_experiments.py`);
+   GPT-4o itself was not re-run.

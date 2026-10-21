@@ -1,0 +1,14 @@
+[
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "main",
+      "order",
+      "band"
+    ],
+    "calls": 4613,
+    "cost_usd": 0.863,
+    "budget_usd": 1.5
+  }
+]

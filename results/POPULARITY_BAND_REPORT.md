@@ -75,6 +75,49 @@ Table B confirms the findings of Table A on a population roughly ten times large
 
 Popularity MAP on the top-20 candidates is lower here than in Table A (0.513 vs. 0.566), because users who were not sampled for a category follow fewer of its top entities (4.3–10.9 per user, compared with 5.4–12.3). Social similarity retains its advantage regardless.
 
+## LLM ranking of less popular entities
+
+We also applied the LLM protocol of the paper's Table 3 to the 81–100 candidates, using GPT-6 Luna with reasoning effort `low` and the authors' prompts. To limit cost, we evaluated a stratified random sample of 30 users per category (270 users) from the Table A population.
+- **Personalized prompts:** they name 12 or 25 entities sampled from the user's closed-world profile, or 50 accounts sampled from everything the user follows. As in the main experiment, *every* listed entity of the target category is removed before sampling, so the prompts carry no direct information about the target domain. The candidates are listed by follower count.
+- **Baseline:** the non-personalized prompt lists the candidates in spreadsheet order.
+- **Comparison:** popularity, random and social-similarity scores are those of Table A for the same users. Note that the social representation uses all of the user's entities, while an LLM prompt lists at most 50 names: on average 11.7, 21.8 and 29.0 for k = 12, 25 and 50, since only accounts with known names are listed.
+
+**Table C.** MAP for ranks 81–100 on 270 sampled users (30 per category).
+
+| Category | Users | Random | Popularity | Social (all entities) | LLM baseline | LLM k = 12 | LLM k = 25 | LLM k = 50 |
+|---|---|---|---|---|---|---|---|---|
+| Musical artists | 30 | 0.252 | 0.453 | 0.611 | 0.316 | 0.395 | 0.369 | 0.489 |
+| News outlets | 30 | 0.253 | 0.267 | 0.396 | 0.268 | 0.532 | 0.546 | 0.533 |
+| Comedians | 30 | 0.217 | 0.290 | 0.281 | 0.154 | 0.290 | 0.272 | 0.351 |
+| Politicians | 30 | 0.386 | 0.328 | 0.463 | 0.540 | 0.484 | 0.546 | 0.519 |
+| TV stations | 30 | 0.191 | 0.149 | 0.444 | 0.236 | 0.353 | 0.463 | 0.666 |
+| Actors | 30 | 0.268 | 0.320 | 0.518 | 0.271 | 0.353 | 0.403 | 0.487 |
+| TV shows | 30 | 0.213 | 0.276 | 0.407 | 0.334 | 0.485 | 0.456 | 0.570 |
+| Sports teams | 30 | 0.252 | 0.269 | 0.516 | 0.222 | 0.302 | 0.315 | 0.426 |
+| Journalists | 30 | 0.324 | 0.303 | 0.423 | 0.392 | 0.424 | 0.423 | 0.467 |
+| **Overall** | 270 | 0.262 | 0.295 | 0.451 | 0.304 | 0.402 | 0.421 | 0.501 |
+
+Paired Wilcoxon tests over the 270 users:
+
+| Comparison | LLM baseline | LLM k = 12 | LLM k = 25 | LLM k = 50 |
+|---|---|---|---|---|
+| vs. popularity | p = 0.57 | p < 0.001 | p < 0.001 | p < 0.001 |
+| vs. social similarity | p < 0.001 (lower) | p = 0.051 | p = 0.30 | p = 0.016 (higher) |
+
+**Findings.**
+- **Without user information, the LLM is no better than popularity.** In this range of the popularity distribution, the non-personalized LLM ranking (0.304) does not differ from popularity (0.295, p = 0.57). Both are barely above a random ranking (0.262), consistent with Table A. The model's general knowledge of these entities does not identify which ones users follow.
+- **With user information, the LLM personalizes well.** Naming 12 entities from the user's profile raises MAP to 0.402, and 50 accounts to 0.501. Every personalized condition clearly outperforms popularity (p < 0.001).
+- **The LLM is competitive with social embeddings.**
+  - *12 and 25 entities:* with a short profile, the LLM is statistically indistinguishable from the social embedding built from all of the user's entities (0.402 and 0.421 vs. 0.451; p = 0.051 and 0.30).
+  - *50 accounts:* with 50 sampled accounts it scores higher (0.501 vs. 0.451, p = 0.016).
+  - *Where each method does better:* the methods are complementary.
+    - *LLM better:* news outlets (0.53–0.55 vs. 0.40 at every k) and TV shows. For TV stations, the LLM is better only with 50 accounts (0.666 vs. 0.444).
+    - *Social similarity better:* musical artists, sports teams and actors, at every k.
+  - *A possible explanation:* the candidates in the LLM's strongest categories have informative names, such as regional TV stations, partisan outlets and party accounts. A language model can relate these to the user's other interests directly from their names.
+- **Caveat.** With 30 users per category, per-category MAP has a standard error of about 0.05, so only large per-category differences should be read as meaningful.
+
+Full details of the LLM setup, including how sensitive the LLM is to the order of the candidates, are in `results/LLM_REPORT.md`.
+
 ## Limitations
 
 - **Popularity range.** The entity lists contain at most 100 entities per category, so we could not evaluate the planned band of ranks 100–120, or any less popular band. Ranks 81–100 are the least popular entities available. They span 20K–1.5M followers, depending on the category.
@@ -102,7 +145,10 @@ Entities marked * have no SocialVec embedding and were excluded.
 
 ```bash
 .venv/Scripts/python run_popularity_band.py --start 81 --end 100
+.venv/Scripts/python run_llm_experiments.py --parts band      # Table C (needs an OpenAI key)
 ```
+
+Table C's data is in `results/llm/band_per_user.csv.gz` and `results/llm/band_by_category.csv`.
 
 Outputs in `results/popularity_band_81_100/`:
 

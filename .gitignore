@@ -176,3 +176,7 @@ cython_debug/
 # Reproduction: downloaded SocialVec models and cached LLM responses
 models/
 results/llm_responses.jsonl
+
+# Local secrets and raw LLM response caches (responses are kept in results/llm/*_per_user.csv.gz)
+.env.local
+results/llm/cache/

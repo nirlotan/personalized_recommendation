@@ -33,7 +33,7 @@ def load_category_sheets(path: Path = CATEGORIES_XLSX) -> Dict[str, pd.DataFrame
 
 def popularity_band(sheet: pd.DataFrame, start: int, end: int) -> pd.DataFrame:
     """The entities ranked `start`..`end` (1-based, inclusive) by follower count."""
-    ranked = sheet.sort_values("followers_count", ascending=False).reset_index(drop=True)
+    ranked = sheet.rename_axis("sheet_row").sort_values("followers_count", ascending=False).reset_index()
     ranked.insert(0, "popularity_rank", np.arange(1, len(ranked) + 1))
     return ranked.iloc[start - 1:end].reset_index(drop=True)
 
