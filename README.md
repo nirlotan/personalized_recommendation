@@ -105,22 +105,45 @@ The experiments use a carefully constructed dataset:
 
 ```
 personalized_recommendation/
-├── main.tex                          # Research paper (LaTeX)
-├── README.md                         # This file
-├── requirements.txt                  # Python dependencies
-└── recommendation_evaluation/
-    ├── recommendation_p2.ipynb       # Main experimental notebook
-    └── recommendation.ipynb          # Additional experiments
+├── run_reproduction.py          # Reproduces the paper's tables and figures
+├── reproduction/                # Reproduction code
+│   ├── data.py                  #   categories, users, closed-world splits
+│   ├── embeddings.py            #   SocialVec loading and user projection
+│   ├── ranking.py               #   cosine / popularity ranking, average precision
+│   ├── experiments.py           #   Table 2, Figure 1, Table 4
+│   ├── demographics.py          #   Figure 2 (socio-demographic classifiers)
+│   ├── llm.py                   #   Table 3 (GPT-4o, optional)
+│   ├── paper_results.py         #   published numbers, for comparison
+│   ├── plots.py, report.py
+├── results/                     # Generated outputs; REPORT.md compares them with the paper
+├── data/                        # Experimental dataset
+├── legacy_code/                 # Original notebooks
+├── paper/                       # The paper (arXiv:2603.10148)
+├── requirements.txt
+└── requirements-llm.txt         # Extra dependencies for the GPT-4o experiment
 ```
 
-## 🔧 Requirements
+## 🔁 Reproducing the paper
 
-Key dependencies (see [requirements.txt](requirements.txt)):
-- `socialvec` - Pre-trained social embeddings
-- `pandas`, `numpy` - Data manipulation
-- `scipy` - Cosine similarity calculations
-- `tqdm` - Progress tracking
-- `matplotlib` - Visualizations
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt      # on Linux/macOS: .venv/bin/pip
+.venv/Scripts/python run_reproduction.py
+```
+
+The first run downloads the SocialVec embeddings (~300 MB) into `models/`. A full run takes
+about two minutes and writes the tables, figures and per-user scores to `results/`.
+[results/REPORT.md](results/REPORT.md) puts every reproduced number next to the paper's.
+
+The GPT-4o experiment (Table 3) is optional because it makes about 33.5K API calls. It uses the
+authors' dspy prompts and caches responses, so interrupted runs resume where they stopped:
+
+```bash
+.venv/Scripts/pip install -r requirements-llm.txt
+# Azure: set AZURE_API_KEY, AZURE_API_BASE, AZURE_API_VERSION  (or use --llm-model openai/gpt-4o with OPENAI_API_KEY)
+.venv/Scripts/python run_reproduction.py --llm --llm-users-per-category 5   # cheap trial run
+.venv/Scripts/python run_reproduction.py --llm
+```
 
 
 ## 🔒 Ethics & Privacy

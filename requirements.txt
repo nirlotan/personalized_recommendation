@@ -1,7 +1,8 @@
-pandas
-tqdm
-socialvec
-swifter
-scipy
-xlsxwriter
-gdown
+numpy==2.4.6
+pandas==3.0.6
+gensim==4.4.0        # unpickles the SocialVec Word2Vec models
+openpyxl==3.1.5      # reads data/popular_accounts_manually_validated.xlsx
+h5py==3.14.0         # reads the socio-demographic classifier weights
+socialvec==0.1.7.1   # ships the classifier weights (not imported; it needs TensorFlow)
+matplotlib==3.11.2
+tqdm==4.70.1

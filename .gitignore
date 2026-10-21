@@ -172,3 +172,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Reproduction: downloaded SocialVec models and cached LLM responses
+models/
+results/llm_responses.jsonl
