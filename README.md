@@ -106,6 +106,7 @@ The experiments use a carefully constructed dataset:
 ```
 personalized_recommendation/
 ├── run_reproduction.py          # Reproduces the paper's tables and figures
+├── run_popularity_band.py       # Extension: ranking entities ranked 81-100 by popularity
 ├── reproduction/                # Reproduction code
 │   ├── data.py                  #   categories, users, closed-world splits
 │   ├── embeddings.py            #   SocialVec loading and user projection
@@ -113,6 +114,7 @@ personalized_recommendation/
 │   ├── experiments.py           #   Table 2, Figure 1, Table 4
 │   ├── demographics.py          #   Figure 2 (socio-demographic classifiers)
 │   ├── llm.py                   #   Table 3 (GPT-4o, optional)
+│   ├── popularity_bands.py      #   extension: less popular candidates
 │   ├── paper_results.py         #   published numbers, for comparison
 │   ├── plots.py, report.py
 ├── results/                     # Generated outputs; REPORT.md compares them with the paper
@@ -134,6 +136,13 @@ python -m venv .venv
 The first run downloads the SocialVec embeddings (~300 MB) into `models/`. A full run takes
 about two minutes and writes the tables, figures and per-user scores to `results/`.
 [results/REPORT.md](results/REPORT.md) puts every reproduced number next to the paper's.
+
+An extension ranks less popular candidates (ranks 81-100 by follower count instead of the top 20);
+see [results/POPULARITY_BAND_REPORT.md](results/POPULARITY_BAND_REPORT.md):
+
+```bash
+.venv/Scripts/python run_popularity_band.py --start 81 --end 100
+```
 
 The GPT-4o experiment (Table 3) is optional because it makes about 33.5K API calls. It uses the
 authors' dspy prompts and caches responses, so interrupted runs resume where they stopped:
