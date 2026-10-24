@@ -94,12 +94,24 @@ def band_setup(users, categories):
     return candidates, exclude, vocab
 
 
-def run_band(users, categories, names, rankers, out, workers):
+def band_sample(users, categories):
+    """
+    The users of the ranks 81-100 LLM experiment: per category, a random sample of the
+    users sampled for that category who follow at least one band candidate.
+
+    Returns:
+        (sample, band candidates, per-topic exclusions, SocialVec embeddings)
+    """
     candidates, exclude, sv = band_setup(users, categories)
     eligible = users[users["topic"].isin(candidates)].copy()
     ids = {t: set(c["twitter_user_id"]) for t, c in candidates.items()}
     eligible = eligible[[not ids[t].isdisjoint(f) for t, f in zip(eligible["topic"], eligible["friends_ids"])]]
     sample = eligible.groupby("topic").sample(n=BAND_USERS_PER_CATEGORY, random_state=SEED)
+    return sample, candidates, exclude, sv
+
+
+def run_band(users, categories, names, rankers, out, workers):
+    sample, candidates, exclude, sv = band_sample(users, categories)
     prompts = user_prompts(sample, categories, names, exclude=exclude)
     res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / "band.jsonl", workers=workers)
 
