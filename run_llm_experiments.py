@@ -41,8 +41,9 @@ from reproduction.llm import (
     ranked_ids,
     run_llm,
     user_prompts,
+    user_samples,
 )
-from reproduction.popularity_bands import load_category_sheets, popularity_band
+from reproduction.popularity_bands import load_category_sheets, make_candidates, popularity_band
 from reproduction.report import markdown_table
 
 USERS_PER_CATEGORY = 50
@@ -78,7 +79,7 @@ def run_order(users, categories, names, rankers, out, workers):
 
 
 def band_setup(users, categories):
-    """Band candidates (with SocialVec embeddings, in spreadsheet order) and per-topic exclusions."""
+    """Band candidates (with SocialVec embeddings, in spreadsheet order), per-topic exclusions and the embeddings."""
     sheets = load_category_sheets()
     vocab = SocialVec("2020")
     candidates, exclude = {}, {}
@@ -90,17 +91,30 @@ def band_setup(users, categories):
         candidates[topic] = band[["twitter_user_id", "twitter_name", "followers_count"]].reset_index(drop=True)
         exclude[topic] = ({int(i) for i in sheets[topic]["twitter_user_id"]}
                           | {int(i) for i in categories[topic]["twitter_user_id"]})
-    return candidates, exclude
+    return candidates, exclude, vocab
 
 
 def run_band(users, categories, names, rankers, out, workers):
-    candidates, exclude = band_setup(users, categories)
+    candidates, exclude, sv = band_setup(users, categories)
     eligible = users[users["topic"].isin(candidates)].copy()
     ids = {t: set(c["twitter_user_id"]) for t, c in candidates.items()}
     eligible = eligible[[not ids[t].isdisjoint(f) for t, f in zip(eligible["topic"], eligible["friends_ids"])]]
     sample = eligible.groupby("topic").sample(n=BAND_USERS_PER_CATEGORY, random_state=SEED)
     prompts = user_prompts(sample, categories, names, exclude=exclude)
     res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / "band.jsonl", workers=workers)
+
+    # SocialVec on the same accounts that the LLM's k=12 and k=25 prompts list
+    samples = user_samples(sample, categories, names, exclude=exclude)
+    ranker = {t: make_candidates(c, sv) for t, c in candidates.items()}
+    for k in (12, 25):
+        ap = {}
+        for user_row, user in sample.iterrows():
+            cand = ranker[user["topic"]]
+            relevant = [cand.position[int(f)] for f in user["friends_ids"] if int(f) in cand.position]
+            user_vec = sv.average(sv.indices(samples.at[user_row, f"llm_k{k}"]))
+            ap[user_row] = cand.average_precision(user_vec, relevant)
+        res[f"socialvec_k{k}"] = res["user"].map(ap)
+        res[f"n_k{k}_accounts"] = res["user"].map(samples[f"llm_k{k}"].apply(len))
 
     band_ap = pd.read_csv(RESULTS_DIR / f"popularity_band_{BAND_START}_{BAND_END}" / "per_user_ap.csv.gz")
     band_ap = band_ap[(band_ap["population"] == "category") & (band_ap["candidates"] == "band")
@@ -228,11 +242,14 @@ def analyze(out, categories, main_users):
 
     # ---- band
     band = pd.read_csv(out / "band_per_user.csv.gz")
-    t_band = by_category(band, ["random", "popularity", "socialvec"] + LLM_COLUMNS)
+    sv_cols = ["socialvec", "socialvec_k12", "socialvec_k25"]
+    t_band = by_category(band, ["random", "popularity"] + sv_cols + LLM_COLUMNS)
     t_band.to_csv(out / "band_by_category.csv")
-    band_tests = {c: p_value(band[c], band["popularity"]) for c in ["socialvec"] + LLM_COLUMNS}
+    band_tests = {f"{c} vs popularity": p_value(band[c], band["popularity"]) for c in sv_cols + LLM_COLUMNS}
+    for k in (12, 25):
+        band_tests[f"llm_k{k} vs socialvec_k{k}"] = p_value(band[f"llm_k{k}"], band[f"socialvec_k{k}"])
     sections += [f"## Ranks {BAND_START}-{BAND_END} (per category MAP)\n", markdown_table(labelled(t_band)), "",
-                 "Paired Wilcoxon p vs popularity: "
+                 "socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: "
                  + ", ".join(f"{k} {v:.3g}" for k, v in band_tests.items()), ""]
     pd.Series(band_tests).to_csv(out / "band_tests.csv")
 

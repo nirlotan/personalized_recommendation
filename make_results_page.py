@@ -76,6 +76,11 @@ def pval(p):
     return "&lt; 0.001" if p < 0.001 else f"{p:.3f}"
 
 
+def p_text(p):
+    """A p-value for running text: '< 0.001' or '= 0.006'."""
+    return pval(p) if p < 0.001 else f"= {p:.3f}"
+
+
 # ---------------------------------------------------------------- charts
 def line_chart():
     """Overall MAP vs number of sampled entities (Figure 1, overall panel)."""
@@ -313,16 +318,18 @@ def order_html():
 
 
 def band_llm_html():
-    cols = ["random", "popularity", "socialvec"] + LLM_COLS
+    cols = ["random", "popularity", "socialvec", "socialvec_k12", "socialvec_k25"] + LLM_COLS
+    group_start = {"socialvec", "llm_baseline"}
     rows = []
     for cat, r in band_llm.iterrows():
         cls = " class='total'" if cat == "Overall" else ""
         best = max(r[c] for c in cols)
-        cells = "".join(f"<td{' class=grp' if c == 'llm_baseline' else ''}>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>" for c in cols)
+        cells = "".join(f"<td{' class=grp' if c in group_start else ''}>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>" for c in cols)
         rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{r['users']:,.0f}</td>{cells}</tr>")
-    return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='3'>Table A, same users</th>"
-            f"<th colspan='4' class='grp'>{esc(model_name)}</th></tr><tr><th>Category</th><th>Users</th><th>Random</th><th>Popularity</th>"
-            "<th>Social</th><th class='grp'>Baseline</th><th>k = 12</th><th>k = 25</th><th>k = 50</th></tr></thead>"
+    return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='2'>Non-personalized</th>"
+            f"<th colspan='3' class='grp'>SocialVec</th><th colspan='4' class='grp'>{esc(model_name)}</th></tr>"
+            "<tr><th>Category</th><th>Users</th><th>Random</th><th>Popularity</th>"
+            "<th class='grp'>All entities</th><th>k = 12</th><th>k = 25</th><th class='grp'>Baseline</th><th>k = 12</th><th>k = 25</th><th>k = 50</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div>")
 
 
@@ -371,6 +378,10 @@ llm_stats = pd.read_csv(LLM / "table3_stats.csv", index_col=0)
 order_st = pd.read_csv(LLM / "order_stats.csv", index_col=0)
 base_st = pd.read_csv(LLM / "baseline_trial_stats.csv", index_col=0)
 band_llm = pd.read_csv(LLM / "band_by_category.csv", index_col=0)
+band_tests = pd.read_csv(LLM / "band_tests.csv", index_col=0).iloc[:, 0]
+_band_users = pd.read_csv(LLM / "band_per_user.csv.gz", usecols=["n_k12_accounts", "n_k25_accounts"])
+band_llm_n = {k: _band_users[f"n_k{k}_accounts"].mean() for k in (12, 25)}
+band_llm_wins = {k: int((band_llm.drop("Overall")[f"llm_k{k}"] > band_llm.drop("Overall")[f"socialvec_k{k}"]).sum()) for k in (12, 25)}
 llm_runs = [r for r in json.loads((LLM / "run_info.json").read_text()) if r["calls"] > 0]
 llm_calls, llm_cost = sum(r["calls"] for r in llm_runs), sum(r["cost_usd"] for r in llm_runs)
 model_name = {"gpt-6-luna": "GPT-6 Luna"}.get(llm_runs[0]["model"], llm_runs[0]["model"])
@@ -663,6 +674,13 @@ page = f"""<!doctype html>
   {band_llm.loc['Overall','llm_k12']:.3f} with 12 entities and {band_llm.loc['Overall','llm_k50']:.3f} with 50 accounts. Social similarity from all of
   the user's entities scores {band_llm.loc['Overall','socialvec']:.3f}. The two are complementary: the LLM is stronger for news outlets and
   TV shows, social similarity for musical artists, sports teams and actors.</p>
+  <p>For a like-for-like comparison, the <i>SocialVec k = 12</i> and <i>k = 25</i> columns build the user embedding from exactly the
+  accounts listed in the LLM's k = 12 and k = 25 prompts ({band_llm_n[12]:.1f} and {band_llm_n[25]:.1f} on average, as some users have fewer).
+  Given the same evidence, the LLM ranks better at both sizes:
+  {band_llm.loc['Overall','llm_k12']:.3f} vs. {band_llm.loc['Overall','socialvec_k12']:.3f} with 12 accounts
+  (paired Wilcoxon p {p_text(band_tests['llm_k12 vs socialvec_k12'])}; ahead in {band_llm_wins[12]} of 9 categories), and
+  {band_llm.loc['Overall','llm_k25']:.3f} vs. {band_llm.loc['Overall','socialvec_k25']:.3f} with 25
+  (p {p_text(band_tests['llm_k25 vs socialvec_k25'])}; ahead in {band_llm_wins[25]} of 9).</p>
   <div class="card">{band_llm_html()}
   <p class="caption">Bold marks the best method in each row. With 30 users per category, per-category MAP has a standard error of about 0.05.</p></div>
 

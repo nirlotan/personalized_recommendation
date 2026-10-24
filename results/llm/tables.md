@@ -70,17 +70,17 @@
 
 ## Ranks 81-100 (per category MAP)
 
-|  | users | random | popularity | socialvec | llm_baseline | llm_k12 | llm_k25 | llm_k50 |
-|---|---|---|---|---|---|---|---|---|
-| Musical artists | 30 | 0.252 | 0.453 | 0.611 | 0.316 | 0.395 | 0.369 | 0.489 |
-| News outlets | 30 | 0.253 | 0.267 | 0.396 | 0.268 | 0.532 | 0.546 | 0.533 |
-| Comedians | 30 | 0.217 | 0.290 | 0.281 | 0.154 | 0.290 | 0.272 | 0.351 |
-| Politicians | 30 | 0.386 | 0.328 | 0.463 | 0.540 | 0.484 | 0.546 | 0.519 |
-| TV stations | 30 | 0.191 | 0.149 | 0.444 | 0.236 | 0.353 | 0.463 | 0.666 |
-| Actors | 30 | 0.268 | 0.320 | 0.518 | 0.271 | 0.353 | 0.403 | 0.487 |
-| TV shows | 30 | 0.213 | 0.276 | 0.407 | 0.334 | 0.485 | 0.456 | 0.570 |
-| Sports teams | 30 | 0.252 | 0.269 | 0.516 | 0.222 | 0.302 | 0.315 | 0.426 |
-| Journalists | 30 | 0.324 | 0.303 | 0.423 | 0.392 | 0.424 | 0.423 | 0.467 |
-| **Overall** | 270 | 0.262 | 0.295 | 0.451 | 0.304 | 0.402 | 0.421 | 0.501 |
+|  | users | random | popularity | socialvec | socialvec_k12 | socialvec_k25 | llm_baseline | llm_k12 | llm_k25 | llm_k50 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Musical artists | 30 | 0.252 | 0.453 | 0.611 | 0.489 | 0.498 | 0.316 | 0.395 | 0.369 | 0.489 |
+| News outlets | 30 | 0.253 | 0.267 | 0.396 | 0.331 | 0.353 | 0.268 | 0.532 | 0.546 | 0.533 |
+| Comedians | 30 | 0.217 | 0.290 | 0.281 | 0.222 | 0.243 | 0.154 | 0.290 | 0.272 | 0.351 |
+| Politicians | 30 | 0.386 | 0.328 | 0.463 | 0.413 | 0.412 | 0.540 | 0.484 | 0.546 | 0.519 |
+| TV stations | 30 | 0.191 | 0.149 | 0.444 | 0.338 | 0.334 | 0.236 | 0.353 | 0.463 | 0.666 |
+| Actors | 30 | 0.268 | 0.320 | 0.518 | 0.464 | 0.441 | 0.271 | 0.353 | 0.403 | 0.487 |
+| TV shows | 30 | 0.213 | 0.276 | 0.407 | 0.371 | 0.374 | 0.334 | 0.485 | 0.456 | 0.570 |
+| Sports teams | 30 | 0.252 | 0.269 | 0.516 | 0.292 | 0.284 | 0.222 | 0.302 | 0.315 | 0.426 |
+| Journalists | 30 | 0.324 | 0.303 | 0.423 | 0.343 | 0.343 | 0.392 | 0.424 | 0.423 | 0.467 |
+| **Overall** | 270 | 0.262 | 0.295 | 0.451 | 0.362 | 0.365 | 0.304 | 0.402 | 0.421 | 0.501 |
 
-Paired Wilcoxon p vs popularity: socialvec 1e-12, llm_baseline 0.567, llm_k12 9.33e-10, llm_k25 2.03e-12, llm_k50 2.57e-23
+socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: socialvec vs popularity 1e-12, socialvec_k12 vs popularity 1.52e-07, socialvec_k25 vs popularity 3.06e-08, llm_baseline vs popularity 0.567, llm_k12 vs popularity 9.33e-10, llm_k25 vs popularity 2.03e-12, llm_k50 vs popularity 2.57e-23, llm_k12 vs socialvec_k12 0.006, llm_k25 vs socialvec_k25 0.000186

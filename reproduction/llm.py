@@ -111,11 +111,12 @@ def names_of(account_ids, names: Dict[str, str]) -> str:
     return ", ".join(n for n in found if n)
 
 
-def user_prompts(users: pd.DataFrame, categories: Dict[str, pd.DataFrame], names: Dict[str, str],
+def user_samples(users: pd.DataFrame, categories: Dict[str, pd.DataFrame], names: Dict[str, str],
                  seed: int = SEED, exclude_target: bool = False,
                  exclude: Optional[Dict[str, Set[int]]] = None) -> pd.DataFrame:
     """
-    The 'followed accounts' text of every user for each condition.
+    The accounts listed in every user's prompt for each condition: a random sample
+    of followed accounts, keeping only those with a known name.
 
     Args:
         exclude_target: drop the target category's candidates from the k=50 sample.
@@ -123,6 +124,9 @@ def user_prompts(users: pd.DataFrame, categories: Dict[str, pd.DataFrame], names
             reproduces the published setup.
         exclude: per topic, account ids to drop from every condition's sample
             (used to keep a category's entities out of its own prompts).
+
+    Returns:
+        One row per user (indexed like `users`): topic and one list of account ids per condition.
     """
     rows = []
     for user_row, user in users.iterrows():
@@ -139,9 +143,19 @@ def user_prompts(users: pd.DataFrame, categories: Dict[str, pd.DataFrame], names
         for condition, k in CONDITIONS.items():
             population = friends if k == 50 else closed_world
             sample = random.Random(seed).sample(population, k) if k < len(population) else population
-            row[condition] = names_of(sample, names)
+            row[condition] = [int(a) for a in sample if names.get(str(a))]
         rows.append(row)
     return pd.DataFrame(rows).set_index("user")
+
+
+def user_prompts(users: pd.DataFrame, categories: Dict[str, pd.DataFrame], names: Dict[str, str],
+                 seed: int = SEED, exclude_target: bool = False,
+                 exclude: Optional[Dict[str, Set[int]]] = None) -> pd.DataFrame:
+    """The 'followed accounts' text of every user for each condition (see `user_samples`)."""
+    samples = user_samples(users, categories, names, seed, exclude_target, exclude)
+    for condition in CONDITIONS:
+        samples[condition] = samples[condition].apply(lambda ids: names_of(ids, names))
+    return samples
 
 
 def parse_ranking(ranked) -> Optional[list]:
