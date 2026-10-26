@@ -60,7 +60,7 @@ svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .chart .dot{stroke:var(--card);stroke-width:2}
 .chart .dot.s1{fill:var(--s1)}.chart .dot.s2{fill:var(--s2)}.chart .dot.s3{fill:var(--s3)}
 .chart .paper-mark{fill:none;stroke:var(--ink);stroke-width:1.6}
-.chart .bar.s1{fill:var(--s1)}.chart .bar.s2{fill:var(--s2)}
+.chart .bar.s1{fill:var(--s1)}.chart .bar.s2{fill:var(--s2)}.chart .bar.s3{fill:var(--s3)}.chart .bar.muted-bar{fill:var(--axis)}
 .chart .rand{stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
 .chart .hit{fill:transparent;cursor:default}
 .chart .hit:hover{fill:rgba(127,127,127,.10)}

@@ -440,6 +440,39 @@ def legacy_parses(text):
 llm_main = pd.read_csv(LLM / "main_per_user.csv.gz", usecols=[f"resp_{c}" for c in LLM_COLS[1:]])
 legacy_fail = 1 - np.mean([legacy_parses(t) for c in llm_main.columns for t in llm_main[c]])
 
+# demographics-only LLM ranking (headline numbers written by make_demographics_report.py)
+demo = json.loads((LLM / "demographics_summary.json").read_text())
+dsh = {b: demo["shuffled"][b] for b in ("81-100", "181-200")}
+DEMO_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
+                ("ap_baseline", "LLM, no user information"), ("ap_luna", "LLM, demographics by GPT-6 Luna"),
+                ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("ap_k12", "LLM, 12 followed account names"),
+                ("ap_k25", "LLM, 25 followed account names"), ("ap_k50", "LLM, 50 followed account names"),
+                ("socialvec", "SocialVec, all followed entities")]
+DEMO_COLORS = {"ap_luna": "s1", "ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k50": "s3"}
+
+
+def demographics_chart(band):
+    """Overall MAP per method with shuffled candidates (as in Section 6 of LLM_DEMOGRAPHICS_REPORT.html)."""
+    W, L, Rm, T, rowh = 520, 230, 50, 6, 28
+    H = T + rowh * len(DEMO_METHODS) + 28
+    x1 = 0.6
+    px = lambda v: L + v / x1 * (W - L - Rm)
+    o = dsh[band]["map"]
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, ranks {band}, shuffled candidates">']
+    for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
+        parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-22}"/>'
+                     f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:.1f}</text>')
+    for i, (c, label) in enumerate(DEMO_METHODS):
+        y, v = T + i * rowh, o[c]
+        w = px(v) - L
+        weight = ' font-weight="650"' if c in DEMO_COLORS else ""
+        parts.append(f'<text class="cat" x="{L-10}" y="{y+16}" text-anchor="end"{weight}>{esc(label)}</text>'
+                     f'<path class="bar {DEMO_COLORS.get(c, "muted-bar")}" d="M{L},{y+5} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
+                     f'<text class="delta" x="{px(v)+8:.1f}" y="{y+16}"{weight}>{v:.3f}</text>'
+                     f'<rect class="hit" x="{L}" y="{y+3}" width="{w:.1f}" height="18" data-tip="{esc(label)}, ranks {band}<br>MAP <b>{v:.3f}</b>"/>')
+    parts.append("</svg>")
+    return "\n".join(parts)
+
 
 
 page = f"""<!doctype html>
@@ -454,7 +487,8 @@ page = f"""<!doctype html>
   checked every reported number, and extended the evaluation to less popular entities, where a
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
-  <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a><a href="#open">6 · Open items</a></nav>
+  <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a>
+  <a href="#demographics">6 · Demographics-only LLM</a><a href="#open">7 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Table 2 values matching the paper</div><div class="value">42 / 42</div><div class="sub">largest difference {max_t2:.4f}</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">{ov['se1_all_legacy']:.3f}</div><div class="sub">vs. {ov['popularity']:.3f} · {pct(ov['se1_all_legacy_gain'])}, as in the paper</div></div>
@@ -705,8 +739,54 @@ page = f"""<!doctype html>
   <p class="caption">{llm_calls:,} model calls in total across all LLM experiments, costing ${llm_cost:.2f}.</p>
 </section>
 
+<section id="demographics">
+  <h2><span class="num">6</span>Can demographics alone personalize the LLM?</h2>
+  <p class="intro">A summary of <a href="LLM_DEMOGRAPHICS_REPORT.html">the demographics report</a>, which has the method,
+  per-category tables and examples.</p>
+  <p>For the {demo['users']} users of Table C, an LLM first guessed each user's gender, age, ethnicity and education from the
+  names of accounts they follow, and was told to rely on stereotypes rather than decline. {model_name} then ranked the candidates
+  given only that description. The descriptions came from {model_name} and, in a repeat, from GPT-4o. The final runs list the
+  candidates in one random order per user, shared by every condition, for ranks 81–100 and 181–200. For comparison, the same
+  shuffled candidates were also ranked from the names of 12, 25 or 50 followed accounts.</p>
+
+  <ul class="highlights">
+    <li class="warn"><b>Neither model gives clean descriptions for everyone.</b> {model_name} declined to describe {demo['declined']['luna']} of {demo['users']} users.
+    GPT-4o described all of them, but {demo['leak_4o']} of its descriptions also named the user's interests.</li>
+    <li><b>Demographics help once the order is fair.</b> With shuffled candidates, GPT-4o's descriptions beat the no-information
+    ranking: {dsh['81-100']['map']['ap_gpt-4o']:.3f} vs. {dsh['81-100']['map']['ap_baseline']:.3f} at ranks 81–100 and
+    {dsh['181-200']['map']['ap_gpt-4o']:.3f} vs. {dsh['181-200']['map']['ap_baseline']:.3f} at ranks 181–200
+    (both p {p_text(max(dsh[b]['tests']['4o_vs_baseline'] for b in dsh))}). Its demographics-only descriptions do too
+    ({dsh['81-100']['clean_4o']['map']:.3f} vs. {dsh['81-100']['clean_4o']['baseline']:.3f} and
+    {dsh['181-200']['clean_4o']['map']:.3f} vs. {dsh['181-200']['clean_4o']['baseline']:.3f}).</li>
+    <li><b>Sorted candidates hid the gain.</b> With candidates listed by popularity, the no-information ranking scored
+    {demo['order_effect']['baseline']['sorted']:.3f} at ranks 81–100; shuffled, it drops to {demo['order_effect']['baseline']['shuffled']:.3f}
+    (p {p_text(demo['order_effect']['baseline']['p'])}). The rankings that use user information barely change.</li>
+    <li><b>Account names say more than demographics.</b> 12 names score {dsh['81-100']['map']['ap_k12']:.3f} and
+    {dsh['181-200']['map']['ap_k12']:.3f}, above GPT-4o's descriptions. The difference is significant at ranks 81–100
+    (p {p_text(dsh['81-100']['tests']['k12_vs_4o'])}) but not at ranks 181–200 (p {p_text(dsh['181-200']['tests']['k12_vs_4o'])}).</li>
+    <li><b>50 names beat SocialVec's full profile.</b> {dsh['81-100']['map']['ap_k50']:.3f} vs. {dsh['81-100']['map']['socialvec']:.3f}
+    (p {p_text(dsh['81-100']['tests']['k50_vs_socialvec'])}) and {dsh['181-200']['map']['ap_k50']:.3f} vs.
+    {dsh['181-200']['map']['socialvec']:.3f} (p {p_text(dsh['181-200']['tests']['k50_vs_socialvec'])}).</li>
+  </ul>
+
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s1)"></i>Demographics by {model_name}</span>
+    <span class="key"><i class="sq" style="background:var(--s2)"></i>Demographics by GPT-4o</span>
+    <span class="key"><i class="sq" style="background:var(--s3)"></i>Followed account names</span></div>
+    <div class="panels">
+      <div class="panel"><h4>Ranks 81–100 · {dsh['81-100']['users']} users</h4>{demographics_chart('81-100')}</div>
+      <div class="panel"><h4>Ranks 181–200 · {dsh['181-200']['users']} users</h4>{demographics_chart('181-200')}</div>
+    </div>
+    <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Ranks 181–200 use the
+    {dsh['181-200']['users']} of these users who follow at least one of those candidates. The shuffled runs cost
+    ${demo['shuffled_cost_usd']:.2f}.</p>
+  </div>
+  <p class="caption">The descriptions are stereotype-based guesses about real people. They are kept outside the repository and
+  should not be read as findings about which groups like which entities.</p>
+</section>
+
 <section id="open">
-  <h2><span class="num">6</span>Open items</h2>
+  <h2><span class="num">7</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
     <p>The LLM results use samples of 50 users per category (30 for ranks 81–100 and 181–200), which keeps overall MAP within
@@ -726,6 +806,8 @@ page = f"""<!doctype html>
   181–200, run <code>python build_extended_categories.py</code>,
   <code>python run_popularity_band.py --start 181 --end 200 --source extended</code> and
   <code>python run_llm_experiments.py --parts band --band-start 181 --band-end 200 --band-source extended</code>.
+  For Section 6, run <code>python run_llm_demographics.py</code> (with <code>--describe-model gpt-4o</code> for the repeat),
+  <code>python run_llm_demographics_bands.py</code> and <code>python make_demographics_report.py</code>.
   Then rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
   <code>results/POPULARITY_BAND_REPORT.md</code>, <code>results/LLM_REPORT.md</code> and
   <code>results/EXTENDED_CATEGORIES_REPORT.md</code>.</p>

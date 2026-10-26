@@ -94,5 +94,15 @@
     "calls": 1275,
     "cost_usd": 0.2205,
     "budget_usd": 0.6
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1275,
+    "cost_usd": 0.2592,
+    "budget_usd": 0.5
   }
 ]

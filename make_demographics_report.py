@@ -223,7 +223,10 @@ run_sh = [r for r in runs if r.get("parts") == ["demographics-bands"]]
 sh_calls, sh_cost = sum(r["calls"] for r in run_sh), sum(r["cost_usd"] for r in run_sh)
 SH_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
               ("ap_baseline", "LLM, no user information"), ("ap_luna", "LLM, demographics by GPT-6 Luna"),
-              ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("socialvec", "SocialVec, all followed entities")]
+              ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("ap_k12", "LLM, 12 followed account names"),
+              ("ap_k25", "LLM, 25 followed account names"), ("ap_k50", "LLM, 50 followed account names"),
+              ("socialvec", "SocialVec, all followed entities")]
+SH_COLORS = {"ap_luna": "s1", "ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k50": "s3"}  # highlighted LLM rankings
 SH_BANDS = ["81-100", "181-200"]
 sh_cat = {b: sh[sh["band"] == b].groupby("topic")[[c for c, _ in SH_METHODS]].mean() for b in SH_BANDS}
 sh_overall = {b: t.mean() for b, t in sh_cat.items()}  # unweighted mean over categories
@@ -246,12 +249,18 @@ sh_group_rows = {b: sh_groups(b) for b in SH_BANDS}
 sh_tests = {b: {name: pv(sh.loc[sh["band"] == b, x], sh.loc[sh["band"] == b, y]) for name, x, y in [
     ("luna_vs_baseline", "ap_luna", "ap_baseline"), ("4o_vs_baseline", "ap_gpt-4o", "ap_baseline"),
     ("4o_vs_luna", "ap_gpt-4o", "ap_luna"), ("baseline_vs_popularity", "ap_baseline", "popularity"),
-    ("baseline_vs_random", "ap_baseline", "random"), ("4o_vs_socialvec", "ap_gpt-4o", "socialvec")]} for b in SH_BANDS}
+    ("baseline_vs_random", "ap_baseline", "random"), ("4o_vs_socialvec", "ap_gpt-4o", "socialvec"),
+    ("k12_vs_baseline", "ap_k12", "ap_baseline"), ("k12_vs_4o", "ap_k12", "ap_gpt-4o"), ("k25_vs_k12", "ap_k25", "ap_k12"),
+    ("k50_vs_k12", "ap_k50", "ap_k12"), ("k50_vs_socialvec", "ap_k50", "socialvec")]} for b in SH_BANDS}
 s81 = sh[sh["band"] == "81-100"]
 order_effect = {k: (s81[a].mean(), s81[b].mean(), pv(s81[a], s81[b])) for k, a, b in [
     ("baseline", "ap_baseline", "ordered_llm_baseline"), ("luna", "ap_luna", "ordered_llm_demographics"),
-    ("4o", "ap_gpt-4o", "ordered_llm_demographics_4o")]}
-sh_complete = {b: float((sh.loc[sh["band"] == b, [f"returned_{k}" for k in ("baseline", "luna", "gpt-4o")]]
+    ("4o", "ap_gpt-4o", "ordered_llm_demographics_4o"), ("k12", "ap_k12", "ordered_llm_k12"), ("k25", "ap_k25", "ordered_llm_k25"),
+    ("k50", "ap_k50", "ordered_llm_k50")]}
+# SocialVec on the same 12 / 25 account names (Table C of results.html); it does not depend on the candidate order
+names_vs_sv = {k: (s81[f"ap_k{k}"].mean(), s81[f"ordered_socialvec_k{k}"].mean(), pv(s81[f"ap_k{k}"], s81[f"ordered_socialvec_k{k}"]))
+               for k in (12, 25)}
+sh_complete = {b: float((sh.loc[sh["band"] == b, [f"returned_{k}" for k in ("baseline", "luna", "gpt-4o", "k12", "k25", "k50")]]
                          .eq(sh.loc[sh["band"] == b, "n_candidates"], axis=0)).mean().min()) for b in SH_BANDS}
 
 # ---------------------------------------------------------------- html helpers
@@ -349,7 +358,7 @@ def example_block(row, title, variant=""):
 
 
 EXTRA_CSS = """
-.chart .bar.muted-bar{fill:var(--axis)}
+
 table.data td.hl{background:var(--accent-wash)}
 table.data tr.hl-row th,table.data tr.hl-row td{background:var(--accent-wash);font-weight:650}
 .example h4{margin:0 0 12px;font-size:16px}
@@ -434,19 +443,19 @@ def shuffled_chart(band):
     """Overall MAP per method for one band, shuffled candidates."""
     W, L, Rm, T, rowh = 520, 230, 50, 6, 28
     H = T + rowh * len(SH_METHODS) + 28
-    x1 = 0.5
+    x1 = 0.6
     px = lambda v: L + v / x1 * (W - L - Rm)
     o_ = sh_overall[band]
     parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, ranks {band}">']
-    for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
         parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-22}"/>'
                      f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:.1f}</text>')
     for i, (c, label) in enumerate(SH_METHODS):
         y = T + i * rowh
         v = o_[c]
-        cls = {"ap_luna": "s1", "ap_gpt-4o": "s2"}.get(c, "muted-bar")
+        cls = SH_COLORS.get(c, "muted-bar")
         w = px(v) - L
-        weight = ' font-weight="650"' if c in ("ap_luna", "ap_gpt-4o") else ""
+        weight = ' font-weight="650"' if c in SH_COLORS else ""
         parts.append(f'<text class="cat" x="{L-10}" y="{y+16}" text-anchor="end"{weight}>{esc(label)}</text>'
                      f'<path class="bar {cls}" d="M{L},{y+5} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
                      f'<text class="delta" x="{px(v)+8:.1f}" y="{y+16}"{weight}>{v:.3f}</text>'
@@ -461,7 +470,7 @@ def shuffled_category_table(band):
     rows = []
     for cat, r in t.iterrows():
         best = r.max()
-        cells = "".join(f"<td class='{'hl' if c in ('ap_luna', 'ap_gpt-4o') else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>"
+        cells = "".join(f"<td class='{'hl' if c in SH_COLORS else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>"
                         for c, _ in SH_METHODS)
         rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td>{users[cat]}</td>{cells}</tr>")
     o_ = sh_overall[band]
@@ -716,10 +725,13 @@ Output ranked_ids</pre>
   <ul>
     <li><i>Descriptions:</i> the Stage 1 descriptions are reused unchanged, both GPT-6 Luna's and GPT-4o's. Only the ranking
     is repeated, by GPT-6 Luna (reasoning effort low) with the same prompt.</li>
+    <li><i>Account names:</i> for comparison, GPT-6 Luna also ranks the same candidates from the names of 12, 25 or 50 accounts
+    the user follows. These are the prompts of Table C in <code>results/results.html</code>, with every account of the band's
+    category lists removed.</li>
     <li><i>Shared random order:</i> for every user and band, the candidates are put in one random order. That order is used for
-    all three rankings of the user: with no user information, from GPT-6 Luna's description, and from GPT-4o's description.
-    Differences between them therefore come from the description alone. The no-information ranking is a per-user call here,
-    not one call per category as before.</li>
+    all six rankings of the user: with no user information, from each of the two descriptions, and from the three name lists.
+    Differences between them therefore come from the user information alone. The no-information ranking is a per-user call
+    here, not one call per category as before.</li>
     <li><i>Ranks 81–100:</i> the same candidates and all {sh_n['81-100']} users as above.</li>
     <li><i>Ranks 181–200:</i> the candidates are ranks 181–200 of the extended lists (by SocialVec popularity; see
     <code>results/EXTENDED_CATEGORIES_REPORT.md</code>). We use the {sh_n['181-200']} of the same users who follow at least one of
@@ -733,8 +745,8 @@ Output ranked_ids</pre>
     <div class="panel card"><h4>Ranks 81–100 · {sh_n['81-100']} users</h4>{shuffled_chart('81-100')}</div>
     <div class="panel card"><h4>Ranks 181–200 · {sh_n['181-200']} users</h4>{shuffled_chart('181-200')}</div>
   </div>
-  <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Highlighted bars: rankings from the
-  demographic descriptions.</p>
+  <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Highlighted bars: LLM rankings from
+  the demographic descriptions (blue, orange) and from the names of followed accounts (green).</p>
 
   <p><b>Findings.</b>
   <ul>
@@ -742,7 +754,9 @@ Output ranked_ids</pre>
     {order_effect['baseline'][1]:.3f} (popularity-sorted candidates) to {order_effect['baseline'][0]:.3f} with shuffled candidates
     (p {p_eq(order_effect['baseline'][2])}). The description-based rankings barely change: GPT-6 Luna {order_effect['luna'][1]:.3f} →
     {order_effect['luna'][0]:.3f} (p = {order_effect['luna'][2]:.2f}), GPT-4o {order_effect['4o'][1]:.3f} → {order_effect['4o'][0]:.3f}
-    (p = {order_effect['4o'][2]:.2f}).</li>
+    (p = {order_effect['4o'][2]:.2f}). The name-based rankings show no significant change either: {order_effect['k12'][1]:.3f} → {order_effect['k12'][0]:.3f},
+    {order_effect['k25'][1]:.3f} → {order_effect['k25'][0]:.3f} and {order_effect['k50'][1]:.3f} → {order_effect['k50'][0]:.3f} for 12,
+    25 and 50 names (p ≥ {min(order_effect[k][2] for k in ('k12', 'k25', 'k50')):.2f}).</li>
     <li><b>With a fair baseline, demographic descriptions help in both bands.</b>
     <ul>
       <li><i>GPT-4o's descriptions:</i> they beat the no-information ranking at ranks 81–100 ({sh_overall['81-100']['ap_gpt-4o']:.3f} vs.
@@ -762,10 +776,28 @@ Output ranked_ids</pre>
     181–200 candidates better than chance ({sh_overall['181-200']['ap_baseline']:.3f} vs. {sh_overall['181-200']['random']:.3f},
     p {p_eq(sh_tests['181-200']['baseline_vs_random'])}). It also beats follower-count popularity, which is below chance in this band
     ({sh_overall['181-200']['popularity']:.3f}).</li>
-    <li><b>Social embeddings still lead.</b> SocialVec, using all of the user's followed entities, scores
-    {sh_overall['81-100']['socialvec']:.3f} and {sh_overall['181-200']['socialvec']:.3f}. The best description-based ranking reaches
-    {sh_overall['81-100']['ap_gpt-4o']:.3f} and {sh_overall['181-200']['ap_gpt-4o']:.3f}. The gap is significant at ranks 81–100
-    (p {p_eq(sh_tests['81-100']['4o_vs_socialvec'])}) but not at ranks 181–200 (p = {sh_tests['181-200']['4o_vs_socialvec']:.2f}).</li>
+    <li><b>Account names give larger gains than demographics.</b> Ranking from 12 followed account names scores
+    {sh_overall['81-100']['ap_k12']:.3f} at ranks 81–100 and {sh_overall['181-200']['ap_k12']:.3f} at ranks 181–200, well above the
+    no-information ranking (both p {p_eq(max(sh_tests[b]['k12_vs_baseline'] for b in SH_BANDS))}).
+    <ul>
+      <li><i>Against GPT-4o's descriptions:</i> 12 names are better at ranks 81–100 (p {p_eq(sh_tests['81-100']['k12_vs_4o'])}); at
+      ranks 181–200 the difference is not significant (p = {sh_tests['181-200']['k12_vs_4o']:.2f}).</li>
+      <li><i>More names:</i> 25 names add nothing over 12 (p = {sh_tests['81-100']['k25_vs_k12']:.2f} and
+      {sh_tests['181-200']['k25_vs_k12']:.2f}). 50 names do: {sh_overall['81-100']['ap_k50']:.3f} and {sh_overall['181-200']['ap_k50']:.3f}
+      (p {p_eq(max(sh_tests[b]['k50_vs_k12'] for b in SH_BANDS))} against 12 names in both bands).</li>
+    </ul></li>
+    <li><b>Social embeddings vs. the LLM.</b> SocialVec, using all of the user's followed entities, scores
+    {sh_overall['81-100']['socialvec']:.3f} and {sh_overall['181-200']['socialvec']:.3f}.
+    <ul>
+      <li><i>Demographics:</i> the best description-based ranking reaches {sh_overall['81-100']['ap_gpt-4o']:.3f} and
+      {sh_overall['181-200']['ap_gpt-4o']:.3f}. The gap is significant at ranks 81–100 (p {p_eq(sh_tests['81-100']['4o_vs_socialvec'])})
+      but not at ranks 181–200 (p = {sh_tests['181-200']['4o_vs_socialvec']:.2f}).</li>
+      <li><i>50 names:</i> the LLM with 50 account names scores above SocialVec's full profile in both bands
+      (p {p_eq(sh_tests['81-100']['k50_vs_socialvec'])} and p {p_eq(sh_tests['181-200']['k50_vs_socialvec'])}).</li>
+      <li><i>Same accounts:</i> at ranks 81–100, SocialVec using only the same 12 or 25 accounts scores {names_vs_sv[12][1]:.3f} and
+      {names_vs_sv[25][1]:.3f}, below the LLM's {names_vs_sv[12][0]:.3f} and {names_vs_sv[25][0]:.3f}
+      (p {p_eq(names_vs_sv[12][2])} and p {p_eq(names_vs_sv[25][2])}; means over users).</li>
+    </ul></li>
   </ul></p>
 
   <h3>By description type</h3>
@@ -806,7 +838,8 @@ Output ranked_ids</pre>
     non-personalized LLM ranking should therefore use randomized candidate orders.</li>
     <li><b>Demographics are a coarse summary of taste.</b> Even when the description was complete, ranking from four
     attributes did not beat ranking from 12 account names, and it scored below SocialVec's full-profile embedding overall in
-    both bands. The account names carry information beyond the demographic groups they imply.</li>
+    both bands. With shuffled candidates, the same 12 names beat GPT-4o's descriptions at ranks 81–100, and 50 names beat
+    SocialVec in both bands (Section 6). The account names carry information beyond the demographic groups they imply.</li>
     <li><b>Stereotype-based inference.</b> The method asks a model to apply stereotypes about gender, age, ethnicity and
     education. The resulting descriptions are guesses about real people. They are stored outside the repository, and this page
     identifies users by internal row only. Conclusions about which groups like which entities should not be drawn from them.</li>
@@ -827,6 +860,18 @@ descriptions and usernames are in <code>data/llm_demographics/</code>, which is 
 """
 (RESULTS_DIR / "LLM_DEMOGRAPHICS_REPORT.html").write_text(page, encoding="utf-8")
 print("wrote", RESULTS_DIR / "LLM_DEMOGRAPHICS_REPORT.html")
+
+# headline numbers for the summary in results.html (make_results_page.py)
+summary = {
+    "users": len(m), "declined": {"luna": int(dec_n), "gpt-4o": int((m["status_4o"] == "declined").sum())}, "leak_4o": int(leak_n),
+    "sorted_map": overall.round(4).to_dict(),
+    "shuffled": {b: {"users": int(sh_n[b]), "map": sh_overall[b].round(4).to_dict(), "tests": sh_tests[b],
+                     "clean_4o": dict(zip(["label", "users", "map", "baseline", "p"], sh_group_rows[b][2]))} for b in SH_BANDS},
+    "order_effect": {k: dict(zip(["shuffled", "sorted", "p"], v)) for k, v in order_effect.items()},
+    "names_vs_socialvec_81_100": {k: dict(zip(["llm", "socialvec", "p"], v)) for k, v in names_vs_sv.items()},
+    "shuffled_cost_usd": round(sh_cost, 2), "shuffled_calls": sh_calls,
+}
+(LLM / "demographics_summary.json").write_text(json.dumps(summary, indent=2, default=float))
 print("examples:", examples)
 print("status:", m["status"].value_counts().to_dict())
 print("agreement:", [(a[0], a[1], round(a[2], 3), round(a[3], 3)) for a in agreement])
