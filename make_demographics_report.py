@@ -9,6 +9,7 @@ identifies users by internal row only, never by username.
 """
 
 import html
+import json
 import re
 
 import numpy as np
@@ -32,6 +33,13 @@ desc = pd.read_csv(PRIVATE / "descriptions.csv").set_index("row")
 demo = pd.read_csv(LLM / "demographics_per_user.csv.gz").set_index("user")
 band = pd.read_csv(LLM / "band_per_user.csv.gz").set_index("user")
 m = band.join(demo[["llm_demographics", "n_accounts_described"]], how="inner").join(desc[["description", "ranking_response"]])
+# Stage 1 repeated with GPT-4o (Stage 2 still GPT-6 Luna)
+desc4 = pd.read_csv(PRIVATE / "descriptions_gpt-4o.csv").set_index("row")
+demo4 = pd.read_csv(LLM / "demographics_per_user_gpt-4o.csv.gz").set_index("user")
+m = m.join(demo4["llm_demographics"].rename("llm_demographics_4o")).join(
+    desc4[["description", "ranking_response"]].rename(columns=lambda c: f"{c}_4o"))
+runs = json.loads((LLM / "run_info.json").read_text())
+run_4o = [r for r in runs if r.get("describe_model") == "gpt-4o"][-1]
 
 categories = load_categories()
 users = load_users(categories)
@@ -48,10 +56,23 @@ ATTR = {
     "ethnicity": r"\b(white|black|caucasian|african[- ]american|hispanic|latin[oax]\w*|asian)\b",
     "education": r"(college|university|degree|high[- ]school|higher[- ]education|graduate|bachelor|primary school|educated)",
 }
+# Topics or interests named in a description, which the prompt forbids (it leaks more than demographics)
+TOPICS = (r"\b(?:politic\w*|sport\w*|music\w*|entertainment|news|pop culture|conservative|liberal|progressive|republican|"
+          r"democrat\w*|business|military|gaming|comedy|celebrit\w*|interest\w*|fan|fans|enthusiast\w*|hip[- ]hop|media)\b")
+
+
+def description_status(texts: pd.Series) -> pd.Series:
+    n = sum(texts.str.contains(p, case=False, regex=True).astype(int) for p in ATTR.values())
+    return pd.Series(np.select([n == 4, n == 0], ["complete", "declined"], "partial"), index=texts.index)
+
+
 for attr, pattern in ATTR.items():
     m[attr] = m["description"].str.contains(pattern, case=False, regex=True)
 m["n_attr"] = m[list(ATTR)].sum(axis=1)
-m["status"] = np.select([m["n_attr"] == 4, m["n_attr"] == 0], ["complete", "declined"], "partial")
+m["status"] = description_status(m["description"])
+m["status_4o"] = description_status(m["description_4o"])
+m["leak"] = m["description"].str.contains(TOPICS, case=False, regex=True)
+m["leak_4o"] = m["description_4o"].str.contains(TOPICS, case=False, regex=True)
 
 
 def parse_gender(t):
@@ -84,21 +105,22 @@ def parse_age(t):
         return "Over25"
 
 
-said = m["status"] != "declined"
-parsed = pd.DataFrame({
-    "gender": m.loc[said, "description"].map(parse_gender),
-    "ethnicity": m.loc[said, "description"].map(parse_ethnicity),
-    "education": m.loc[said, "description"].map(parse_education),
-    "age": m.loc[said, "description"].map(parse_age),
-})
-traits = classify_users(sample.loc[parsed.index], SocialVec("2020c"))
+def parse_attributes(texts: pd.Series) -> pd.DataFrame:
+    return pd.DataFrame({"gender": texts.map(parse_gender), "ethnicity": texts.map(parse_ethnicity),
+                         "education": texts.map(parse_education), "age": texts.map(parse_age)})
+
+
+parsed = parse_attributes(m.loc[m["status"] != "declined", "description"])
+parsed_4o = parse_attributes(m.loc[m["status_4o"] != "declined", "description_4o"])
+traits = classify_users(sample.loc[m.index], SocialVec("2020c"))
 
 # ---------------------------------------------------------------- numbers
 METHODS = [
     ("random", "Random ranking (expected)", "Non-personalized"),
     ("popularity", "Popularity (follower count)", "Non-personalized"),
     ("llm_baseline", "LLM, no user information", "Non-personalized"),
-    ("llm_demographics", "LLM, demographic description", "This experiment"),
+    ("llm_demographics", "LLM, demographics by GPT-6 Luna", "This experiment"),
+    ("llm_demographics_4o", "LLM, demographics by GPT-4o", "This experiment"),
     ("socialvec_k12", "SocialVec, 12 accounts", "Same 12 accounts"),
     ("llm_k12", "LLM, 12 account names", "Same 12 accounts"),
     ("socialvec_k25", "SocialVec, 25 accounts", "Same 25 accounts"),
@@ -122,7 +144,9 @@ def ptxt(p):
 
 
 tests = [(label, overall["llm_demographics"] - overall[c], pv(m["llm_demographics"], m[c]))
-         for c, label, _ in METHODS if c != "llm_demographics"]
+         for c, label, _ in METHODS if c not in ("llm_demographics", "llm_demographics_4o")]
+tests_4o = [(label, overall["llm_demographics_4o"] - overall[c], pv(m["llm_demographics_4o"], m[c]))
+            for c, label, _ in METHODS if c not in ("llm_demographics_4o", "random")]
 
 status_rows = []
 for s, label in [("complete", "All four attributes guessed"), ("partial", "Some attributes guessed"), ("declined", "Declined to guess")]:
@@ -145,14 +169,36 @@ m["tau_baseline"] = [tau(r, ranked_ids(b)) for r, b in zip(m["ranking_response"]
 m["tau_popularity"] = [tau(r, pop_order[t]) for r, t in zip(m["ranking_response"], m["topic"])]
 tau_by_status = m.groupby("status")[["tau_baseline", "tau_popularity"]].mean()
 
-agreement = []
-for attr, sv_name, label in [("gender", "gender", "Gender (female / male)"), ("ethnicity", "ethnicity", "Ethnicity (Caucasian / African American)"),
-                             ("education", "education", "Education (degree / high school)"), ("age", "age", "Age (over / under 25)")]:
-    both = parsed[attr].notna() & parsed[attr].isin(["Female", "Male", "Caucasian", "AfrAmerican", "Degree", "HighSchool", "Over25", "Under25"])
-    a, b = parsed.loc[both, attr], traits.loc[both[both].index, sv_name]
-    majority = b.value_counts(normalize=True).max() if len(b) else np.nan
-    agreement.append((label, int(both.sum()), (a == b).mean() if len(b) else np.nan, majority,
-                      a.value_counts().to_dict()))
+def agreement_with_socialvec(parsed_attrs):
+    """Per attribute: users with a parsed binary guess, agreement with SocialVec, majority-class rate, guess counts."""
+    rows = []
+    for attr, label in [("gender", "Gender (female / male)"), ("ethnicity", "Ethnicity (Caucasian / African American)"),
+                        ("education", "Education (degree / high school)"), ("age", "Age (over / under 25)")]:
+        both = parsed_attrs[attr].isin(["Female", "Male", "Caucasian", "AfrAmerican", "Degree", "HighSchool", "Over25", "Under25"])
+        a, b = parsed_attrs.loc[both, attr], traits.loc[both[both].index, attr]
+        majority = b.value_counts(normalize=True).max() if len(b) else np.nan
+        rows.append((label, int(both.sum()), (a == b).mean() if len(b) else np.nan, majority, a.value_counts().to_dict()))
+    return rows
+
+
+agreement = agreement_with_socialvec(parsed)
+agreement_4o = agreement_with_socialvec(parsed_4o)
+
+# GPT-4o descriptions: who complied, who leaked interests, and what each subset scores
+clean_4o = m[(m["status_4o"] == "complete") & ~m["leak_4o"]]
+leak_4o = m[m["leak_4o"]]
+luna_declined = m[m["status"] == "declined"]
+luna_complete = m[m["status"] == "complete"]
+subsets_4o = [
+    ("All users", m),
+    ("GPT-4o description names interests or topics", leak_4o),
+    ("GPT-4o description is demographics only", m[~m["leak_4o"]]),
+    ("GPT-6 Luna declined; GPT-4o described", luna_declined),
+    ("Both models gave complete descriptions", luna_complete[luna_complete["status_4o"] == "complete"]),
+]
+subset_rows_4o = [(label, len(g), g["llm_demographics_4o"].mean(), g["llm_demographics"].mean(), g["llm_baseline"].mean(),
+                   pv(g["llm_demographics_4o"], g["llm_baseline"]))
+                  for label, g in subsets_4o]
 
 # ---------------------------------------------------------------- examples
 complete = m[m["status"] == "complete"]
@@ -164,6 +210,10 @@ ex_declined = (declined["llm_demographics"] - declined["llm_demographics"].media
 examples = [(ex_high, "A high-AP case"), (ex_low, "A low-AP case"), (ex_declined, "A case where the model declined")]
 if 1864 in m.index and 1864 not in {ex_high, ex_low, ex_declined}:
     examples.append((1864, "The debugging user"))
+# GPT-4o: the user GPT-6 Luna declined in both debugging rounds, and a leaking description with typical AP
+leaks = m[m["leak_4o"]]
+ex_leak = (leaks["llm_demographics_4o"] - leaks["llm_demographics_4o"].median()).abs().sort_values().index[0]
+examples_4o = [(1808, "GPT-6 Luna declined; GPT-4o described"), (ex_leak, "A GPT-4o description that names interests")]
 
 # ---------------------------------------------------------------- html helpers
 esc = html.escape
@@ -183,7 +233,7 @@ def methods_table():
     for cat, r in by_cat.iterrows():
         cls = " class='total'" if cat == "Overall" else ""
         best = r[cols].max()
-        cells = "".join(f"<td class='{'hl' if c == 'llm_demographics' else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>" for c in cols)
+        cells = "".join(f"<td class='{'hl' if c.startswith('llm_demographics') else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>" for c in cols)
         rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th>{cells}</tr>")
     return f"<div class='scroll'><table class='data compact'><thead><tr><th>Category</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
 
@@ -200,9 +250,9 @@ def overall_chart():
     for i, (c, label, group) in enumerate(METHODS):
         y = T + i * rowh
         v = overall[c]
-        cls = "s1" if c == "llm_demographics" else "muted-bar"
+        cls = {"llm_demographics": "s1", "llm_demographics_4o": "s2"}.get(c, "muted-bar")
         w = px(v) - L
-        weight = ' font-weight="650"' if c == "llm_demographics" else ""
+        weight = ' font-weight="650"' if c.startswith("llm_demographics") else ""
         parts.append(f'<text class="cat" x="{L-10}" y="{y+17}" text-anchor="end"{weight}>{esc(label)}</text>'
                      f'<path class="bar {cls}" d="M{L},{y+6} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
                      f'<text class="delta" x="{px(v)+8:.1f}" y="{y+17}"{weight}>{v:.3f}</text>'
@@ -211,21 +261,31 @@ def overall_chart():
     return "\n".join(parts)
 
 
-def example_block(row, title):
+def example_block(row, title, variant=""):
+    """One worked example; variant "" shows the GPT-6 Luna description, "_4o" the GPT-4o one."""
     r = m.loc[row]
     topic = r["topic"]
     followed = names_of(prompt_ids[row], names)
     relevant = {f for f in sample.at[row, "friends_ids"] if f in set(candidates[topic]["twitter_user_id"])}
-    order = ranked_ids(r["ranking_response"])
+    order = ranked_ids(r[f"ranking_response{variant}"])
     missing = [i for i in candidates[topic]["twitter_user_id"] if int(i) not in set(order)]
     items = "".join(f"<li class='{'hit-item' if a in relevant else ''}'>{esc(cand_name.get(a, str(a)))}{' ✓' if a in relevant else ''}</li>" for a in order)
     found = sorted(order.index(a) + 1 for a in relevant if a in order)
     calc = " + ".join(f"{i + 1}/{p}" for i, p in enumerate(found))
+    model = "GPT-4o" if variant else "GPT-6 Luna"
+    this = f"llm_demographics{variant}"
     comp = [("Random (expected)", "random"), ("Popularity", "popularity"), ("LLM, no information", "llm_baseline"),
-            ("LLM, demographics", "llm_demographics"), ("LLM, 12 names", "llm_k12"), ("SocialVec, same 12", "socialvec_k12"),
-            ("SocialVec, all entities", "socialvec")]
-    comp_rows = "".join(f"<tr{' class=hl-row' if c == 'llm_demographics' else ''}><th>{n}</th><td>{f3(r[c])}</td></tr>" for n, c in comp)
-    status_label = {"complete": "all four attributes guessed", "partial": "some attributes guessed", "declined": "declined to guess"}[r["status"]]
+            ("LLM, demographics by GPT-6 Luna", "llm_demographics"), ("LLM, demographics by GPT-4o", "llm_demographics_4o"),
+            ("LLM, 12 names", "llm_k12"), ("SocialVec, same 12", "socialvec_k12"), ("SocialVec, all entities", "socialvec")]
+    comp_rows = "".join(f"<tr{' class=hl-row' if c == this else ''}><th>{n}</th><td>{f3(r[c])}</td></tr>" for n, c in comp)
+    status_label = {"complete": "all four attributes guessed", "partial": "some attributes guessed",
+                    "declined": "declined to guess"}[r[f"status{variant}"]]
+    if variant and r["leak_4o"]:
+        status_label += "; also names interests"
+    other = ""
+    if variant:
+        other = (f"<p class='step'><span>·</span>For comparison, GPT-6 Luna's description</p>"
+                 f"<p class='quote small'>{esc(r['description'])}</p>")
     return f"""
     <div class="example card">
       <h4>{esc(title)} · user row {row} · {esc(CATEGORY_LABELS[topic])}</h4>
@@ -233,15 +293,16 @@ def example_block(row, title):
         <div>
           <p class="step"><span>1</span>Accounts given to the model ({len(prompt_ids[row])} names)</p>
           <p class="quote small">{esc(followed)}</p>
-          <p class="step"><span>2</span>Generated description ({status_label})</p>
-          <p class="quote">{esc(r['description'])}</p>
-          <p class="step"><span>3</span>Ranking from the description only (✓ = followed by the user)</p>
+          <p class="step"><span>2</span>Description by {model} ({status_label})</p>
+          <p class="quote">{esc(r[f'description{variant}'])}</p>
+          {other}
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking">{items}</ol>
           {f"<p class='caption'>Not returned by the model: {', '.join(esc(cand_name.get(int(i), str(i))) for i in missing)}.</p>" if missing else ""}
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
-          <p class="ap">AP = ({calc}) / {len(found)} = <b>{r['llm_demographics']:.3f}</b></p>
+          <p class="ap">AP = ({calc}) / {len(found)} = <b>{r[this]:.3f}</b></p>
           <table class="data compact mini"><tbody>{comp_rows}</tbody></table>
         </div>
       </div>
@@ -293,6 +354,43 @@ agreement_text = (
     + ", agreement is close to what always guessing the most common class would give, so the guesses add little there."
 ) if above and near else ""
 
+# GPT-4o section tables
+test_rows_4o = "".join(f"<tr><th>{esc(label)}</th><td>{signed(diff)}</td><td>{ptxt(p)}</td></tr>" for label, diff, p in tests_4o)
+subset_table_4o = "".join(
+    f"<tr><th>{esc(label)}</th><td>{n}</td><td class='hl'>{f3(g4)}</td><td>{f3(gl)}</td><td>{f3(b)}</td><td>{ptxt(p) if not pd.isna(p) else ''}</td></tr>"
+    for label, n, g4, gl, b, p in subset_rows_4o)
+agree_rows_4o = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td>{a:.0%}</td><td>{maj:.0%}</td><td class='muted'>{esc(', '.join(f'{k} {v}' for k, v in dist.items()))}</td></tr>"
+                        for label, n, a, maj, dist in agreement_4o)
+outcomes = "".join(
+    f"<tr><th>{model}</th><td>{(m[s] == 'complete').sum()}</td><td>{(m[s] == 'partial').sum()}</td><td>{(m[s] == 'declined').sum()}</td><td>{int(m[lk].sum())}</td></tr>"
+    for model, s, lk in [("GPT-6 Luna", "status", "leak"), ("GPT-4o", "status_4o", "leak_4o")])
+s4 = {label: (n, g4, gl, b, p) for label, n, g4, gl, b, p in subset_rows_4o}
+leak_n, leak_g4, _, leak_b, leak_p = s4["GPT-4o description names interests or topics"]
+clean_n, clean_g4, _, clean_b, clean_p = s4["GPT-4o description is demographics only"]
+switch_n, switch_g4, switch_gl, switch_b, _ = s4["GPT-6 Luna declined; GPT-4o described"]
+both_n, both_g4, both_gl, both_b, _ = s4["Both models gave complete descriptions"]
+p_4o_luna = pv(m["llm_demographics_4o"], m["llm_demographics"])
+p_switch = pv(luna_declined["llm_demographics_4o"], luna_declined["llm_demographics"])
+p_both = pv(*[luna_complete.loc[luna_complete["status_4o"] == "complete", c] for c in ("llm_demographics_4o", "llm_demographics")])
+switch_leak, switch_clean = luna_declined[luna_declined["leak_4o"]], luna_declined[~luna_declined["leak_4o"]]
+p_switch_clean = pv(switch_clean["llm_demographics_4o"], switch_clean["llm_demographics"])
+cost_4o = run_4o["cost_by_model"]
+
+
+def p_eq(p):
+    """A p-value for running text: '< 0.001' or '= 0.006'."""
+    return ptxt(p) if p < 0.001 else f"= {p:.3f}"
+
+
+above_4o = [(label.split(" (")[0].lower(), a, maj) for label, _, a, maj, _ in agreement_4o if a - maj >= 0.05]
+dominant = {label.split(" (")[0].lower(): max(dist.items(), key=lambda kv: kv[1]) for label, _, _, _, dist in agreement_4o}
+agreement_text_4o = (
+    "GPT-4o's guesses lean heavily toward the most common class: "
+    + ", ".join(f"{dominant[n][1]} of its {n} guesses are {dominant[n][0]}" for n in ("education", "age", "ethnicity"))
+    + ". Agreement with SocialVec is therefore close to the majority-class rate, except for "
+    + " and ".join(f"{n} ({a:.0%} vs. {maj:.0%})" for n, a, maj in above_4o) + "."
+) if above_4o else ""
+
 o = overall
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -306,9 +404,10 @@ page = f"""<!doctype html>
   then ranks less popular entities given only that inferred description. I compare this with ranking from the account
   names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users.</p>
   <div class="tiles">
-    <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">{o['llm_demographics']:.3f}</div><div class="sub">vs. {o['llm_baseline']:.3f} with no user information (p = {pv(m['llm_demographics'], m['llm_baseline']):.2f})</div></div>
-    <div class="tile"><div class="label">Descriptions where the model declined</div><div class="value">{dec_n} / {len(m)}</div><div class="sub">despite being told to always guess</div></div>
-    <div class="tile"><div class="label">MAP when all four attributes were guessed</div><div class="value">{comp_demo:.3f}</div><div class="sub">vs. {comp_base:.3f} without user information; {comp_k12:.3f} from 12 account names ({comp_n} users)</div></div>
+    <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">{o['llm_demographics']:.3f} · {o['llm_demographics_4o']:.3f}</div><div class="sub">descriptions by GPT-6 Luna · by GPT-4o; {o['llm_baseline']:.3f} with no user information</div></div>
+    <div class="tile"><div class="label">Users the model declined to describe</div><div class="value">{dec_n} · {int((m['status_4o'] == 'declined').sum())}</div><div class="sub">of {len(m)}: GPT-6 Luna · GPT-4o, despite being told to always guess</div></div>
+    <div class="tile"><div class="label">GPT-4o descriptions that also name interests</div><div class="value">{leak_n} / {len(m)}</div><div class="sub">MAP {leak_g4:.3f} for those users; {clean_g4:.3f} for demographics-only descriptions</div></div>
+    <div class="tile"><div class="label">MAP when GPT-6 Luna guessed all four attributes</div><div class="value">{comp_demo:.3f}</div><div class="sub">vs. {comp_base:.3f} without user information; {comp_k12:.3f} from 12 account names ({comp_n} users)</div></div>
   </div>
 </header>
 
@@ -364,6 +463,12 @@ Output ranked_ids</pre>
   </ul>
   Differences are tested with two-sided paired Wilcoxon signed-rank tests on per-user AP.</p>
 
+  <p><b>Repeating Stage 1 with GPT-4o.</b> Because GPT-6 Luna often refused to infer the attributes (Section 3), we
+  repeated Stage 1 with GPT-4o (default sampling settings), using the identical prompt and inputs. Stage 2 was left
+  unchanged: GPT-6 Luna ranks the candidates from GPT-4o's description, so the two runs differ only in who wrote the
+  description. Since the prompt forbids mentioning interests, we also flag descriptions that name topics or interests (for
+  example politics, sports, music or news) as <i>leaking</i> information beyond demographics.</p>
+
   <p><b>Implementation.</b> GPT-6 Luna with reasoning effort <i>low</i>, called through dspy without caching, under a
   spending cap. Responses are cached locally per prompt version (this run uses version {PROMPT_VERSION}).
   dspy's end-of-output marker, which the model sometimes leaves inside the description, is removed before Stage 2.
@@ -375,9 +480,10 @@ Output ranked_ids</pre>
 
 <section>
   <h2><span class="num">2</span>Results</h2>
-  <p class="intro">Overall, the demographic description adds almost nothing: {o['llm_demographics']:.3f} MAP, compared with
-  {o['llm_baseline']:.3f} for the LLM without user information and {o['popularity']:.3f} for popularity. Naming 12 followed accounts
-  gives {o['llm_k12']:.3f}.</p>
+  <p class="intro">With GPT-6 Luna's descriptions, demographics add almost nothing: {o['llm_demographics']:.3f} MAP, compared with
+  {o['llm_baseline']:.3f} for the LLM without user information and {o['popularity']:.3f} for popularity. GPT-4o's descriptions
+  give {o['llm_demographics_4o']:.3f}, but most of that gain comes from descriptions that break the prompt by naming the user's
+  interests (Section 4). Naming 12 followed accounts gives {o['llm_k12']:.3f}.</p>
   <div class="card">{overall_chart()}
   <p class="caption">Overall MAP (mean over nine categories) on the same 270 users. The highlighted bar is this experiment.</p></div>
 
@@ -390,9 +496,10 @@ Output ranked_ids</pre>
   {by_cat.loc['Politician','llm_baseline']:.3f}).</p></div>
 
   <h3>Statistical tests</h3>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographic description vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-6 Luna vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
   <tbody>{test_rows}</tbody></table></div>
-  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method.</p></div>
+  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method. The same tests for
+  GPT-4o's descriptions are in Section 4.</p></div>
 </section>
 
 <section>
@@ -440,7 +547,69 @@ Output ranked_ids</pre>
 </section>
 
 <section>
-  <h2><span class="num">4</span>Examples</h2>
+  <h2><span class="num">4</span>Repeating the inference with GPT-4o</h2>
+  <p class="intro">GPT-4o's policy is looser: it described every user. But it also often ignored the instruction to describe
+  demographics only, and the extra information it added explains most of its advantage.</p>
+
+  <div class="panels">
+    <div class="panel"><h4>Description outcomes</h4><div class="scroll"><table class="data compact">
+    <thead><tr><th>Stage 1 model</th><th>Complete</th><th>Partial</th><th>Declined</th><th>Names interests</th></tr></thead>
+    <tbody>{outcomes}</tbody></table></div>
+    <p class="caption">Users out of {len(m)}. GPT-4o's two "partial" descriptions do guess all four attributes, but in wording the
+    parser misses ("twenties", "diverse ethnicity"). The last column counts descriptions that name topics or interests.</p></div>
+    <div class="panel"><h4>Cost</h4><div class="scroll"><table class="data compact"><thead><tr><th>Model</th><th>Role</th><th>Cost</th></tr></thead><tbody>
+    <tr><th>GPT-4o</th><td>Stage 1, {len(m)} descriptions</td><td>${cost_4o.get('openai/gpt-4o', 0):.2f}</td></tr>
+    <tr><th>GPT-6 Luna</th><td>Stage 2, {len(m)} rankings</td><td>${cost_4o.get('openai/gpt-6-luna', 0):.2f}</td></tr>
+    <tr class="total"><th>Total</th><td></td><td>${run_4o['cost_usd']:.2f}</td></tr></tbody></table></div></div>
+  </div>
+
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Users</th><th>n</th><th>Demographics by GPT-4o</th>
+  <th>Demographics by GPT-6 Luna</th><th>LLM, no information</th><th>p (GPT-4o vs. no information)</th></tr></thead>
+  <tbody>{subset_table_4o}</tbody></table></div>
+  <p class="caption">MAP over the users in each row, pooled across categories. In every row, Stage 2 is GPT-6 Luna.</p></div>
+
+  <p><b>More descriptions, mostly from leaked interests.</b>
+  <ul>
+    <li><i>Overall:</i> GPT-4o's descriptions improve on GPT-6 Luna's ({o['llm_demographics_4o']:.3f} vs. {o['llm_demographics']:.3f}
+    overall MAP, p = {p_4o_luna:.3f}).</li>
+    <li><i>Leaking descriptions:</i> {leak_n} of them ({leak_n / len(m):.0%}) also name the user's interests, despite the instruction,
+    for example "…with a higher education level, likely due to the interest in diverse media and sports analysts,
+    personalities, and NFL-related accounts". For these users the ranking reaches {leak_g4:.3f}, far above the no-information
+    baseline ({leak_b:.3f}, p {p_eq(leak_p)}).</li>
+    <li><i>Demographics-only descriptions:</i> for the remaining {clean_n} users the score is {clean_g4:.3f}, indistinguishable from
+    the baseline ({clean_b:.3f}, p = {clean_p:.2f}).</li>
+  </ul>
+  So GPT-4o's advantage reflects interest information, not demographics.</p>
+
+  <p><b>Same users, both models.</b>
+  <ul>
+    <li><i>Both models complete:</i> where GPT-6 Luna had given a complete description, GPT-4o's descriptions perform the same
+    ({both_g4:.3f} vs. {both_gl:.3f}, {both_n} users, p = {p_both:.2f}).</li>
+    <li><i>GPT-6 Luna declined:</i> for the {switch_n} users GPT-6 Luna refused, GPT-4o's descriptions raise MAP from
+    {switch_gl:.3f} to {switch_g4:.3f} (p {p_eq(p_switch)}). Most of this gain comes from the {len(switch_leak)} of them whose
+    GPT-4o description leaked interests ({switch_leak['llm_demographics'].mean():.3f} → {switch_leak['llm_demographics_4o'].mean():.3f}).
+    For the other {len(switch_clean)}, MAP rises only from {switch_clean['llm_demographics'].mean():.3f} to
+    {switch_clean['llm_demographics_4o'].mean():.3f} (p {p_eq(p_switch_clean)}).</li>
+  </ul>
+  Taken together, explicit demographic guesses help most for the users whose followed accounts point clearly to a
+  demographic group, which are also the users GPT-6 Luna was willing to describe.</p>
+
+  <h3>GPT-4o's guesses vs. SocialVec's trait classifiers</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Attribute</th><th>Users with a parsed guess</th>
+  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>GPT-4o guesses</th></tr></thead><tbody>{agree_rows_4o}</tbody></table></div>
+  <p class="caption">As in Section 3, using the same parsing rules, on all users GPT-4o described.</p></div>
+  <p>{agreement_text_4o}</p>
+
+  <h3>Statistical tests for GPT-4o's descriptions</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-4o vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <tbody>{test_rows_4o}</tbody></table></div></div>
+
+  <h3>GPT-4o examples</h3>
+  {''.join(example_block(r, t, "_4o") for r, t in examples_4o)}
+</section>
+
+<section>
+  <h2><span class="num">5</span>Examples</h2>
   <p class="intro">The cases are chosen by rule rather than by hand: the highest and the lowest AP among complete descriptions
   for users who follow at least two candidates; a declined description with typical AP; and the user used for debugging.
   Users are identified by internal row only.</p>
@@ -448,12 +617,17 @@ Output ranked_ids</pre>
 </section>
 
 <section>
-  <h2><span class="num">5</span>Discussion and limitations</h2>
+  <h2><span class="num">6</span>Discussion and limitations</h2>
   <ul class="highlights">
-    <li><b>The main limitation is the model's own policy.</b> GPT-6 Luna declined to infer demographics for {dec_n / len(m):.0%} of users,
-    even when told to rely on stereotypes. The experiment therefore measures a mix of demographic personalization and refusals.
-    A cleaner test would reframe Stage 1, for example asking for the typical audience of the listed accounts rather than for
-    attributes of an individual. Alternatively, it could supply the attributes from SocialVec's classifiers directly.</li>
+    <li><b>Model policies shape the result.</b> GPT-6 Luna declined to infer demographics for {dec_n / len(m):.0%} of users, even
+    when told to rely on stereotypes. GPT-4o described every user, but in {leak_n / len(m):.0%} of cases it also named the user's
+    interests, against the instruction. Neither model gives a clean demographics-only condition for all users.
+    <ul>
+      <li><i>Cleaner subsets:</i> the clean conditions are GPT-6 Luna's complete descriptions and GPT-4o's demographics-only
+      descriptions. They show a benefit for some users, but none on average for the others.</li>
+      <li><i>A stricter test:</i> filter or rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the
+      attributes from SocialVec's classifiers directly.</li>
+    </ul></li>
     <li><b>Demographics are a coarse summary of taste.</b> Even when the description was complete, ranking from four
     attributes did not beat ranking from 12 account names, and it was far from SocialVec's full-profile embedding
     ({o['socialvec']:.3f}). The account names carry information beyond the demographic groups they imply.</li>
@@ -466,7 +640,8 @@ Output ranked_ids</pre>
   </ul>
 </section>
 
-<footer><p>Regenerate with <code>python run_llm_demographics.py</code> (model calls; cached responses are reused) and
+<footer><p>Regenerate with <code>python run_llm_demographics.py</code> and
+<code>python run_llm_demographics.py --describe-model gpt-4o</code> (model calls; cached responses are reused), then
 <code>python make_demographics_report.py</code>. Per-user scores are in <code>results/llm/demographics_per_user.csv.gz</code>;
 descriptions and usernames are in <code>data/llm_demographics/</code>, which is not tracked by git.</p></footer>
 </div>

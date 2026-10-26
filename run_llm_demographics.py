@@ -128,14 +128,23 @@ def debug_user(row, sample, candidates, followed, users_file, describe, rank, re
     return "\n\n".join(out)
 
 
-def run_all(sample, candidates, followed, users_file, describe, rank, cache, workers):
+def variant_suffix(variant):
+    return f"_{variant}" if variant else ""
+
+
+def run_all(sample, candidates, followed, users_file, describe, rank, cache, workers, variant=""):
+    """
+    Describe and rank every sampled user. `variant` names the description model when it
+    differs from the ranking model; it separates the cache keys and output files.
+    """
     cjson = {t: candidates_json(c, by_popularity=True) for t, c in candidates.items()}
+    tag = f"{variant}|" if variant else ""
 
     def job(row):
         text = followed["text"][row]
-        desc = cache.call(f"{PROMPT_VERSION}|describe|{row}", lambda: describe(text))
+        desc = cache.call(f"{PROMPT_VERSION}|describe|{tag}{row}", lambda: describe(text))
         topic = sample.at[row, "topic"]
-        ranked = cache.call(f"{PROMPT_VERSION}|rank|{row}", lambda: rank(desc, cjson[topic]))
+        ranked = cache.call(f"{PROMPT_VERSION}|rank|{tag}{row}", lambda: rank(desc, cjson[topic]))
         return row, desc, ranked
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -153,27 +162,29 @@ def run_all(sample, candidates, followed, users_file, describe, rank, cache, wor
                         "twitter_user_id": users_file.at[row, "twitter_user_id"],
                         "screen_name": users_file.at[row, "screen_name"],
                         "description": desc, "ranking_response": ranked})
-    pd.DataFrame(private).to_csv(PRIVATE_DIR / "descriptions.csv", index=False)
+    s = variant_suffix(variant)
+    pd.DataFrame(private).to_csv(PRIVATE_DIR / f"descriptions{s}.csv", index=False)
     res = pd.DataFrame(rows)
-    res.to_csv(OUT / "demographics_per_user.csv.gz", index=False)
+    res.to_csv(OUT / f"demographics_per_user{s}.csv.gz", index=False)
     return res
 
 
-def summarize(res):
+def summarize(res, variant=""):
+    s = variant_suffix(variant)
     band = pd.read_csv(OUT / "band_per_user.csv.gz")
     m = band.merge(res[["user", "llm_demographics", "n_accounts_described"]], on="user")
     cols = ["random", "popularity", "socialvec", "llm_baseline", "llm_demographics", "llm_k12", "llm_k25", "llm_k50"]
     table = by_category(m, cols)
-    table.to_csv(OUT / "demographics_by_category.csv")
+    table.to_csv(OUT / f"demographics_by_category{s}.csv")
     tests = {f"llm_demographics vs {c}": p_value(m["llm_demographics"], m[c])
              for c in ["popularity", "llm_baseline", "llm_k12", "llm_k50", "socialvec"]}
-    pd.Series(tests).to_csv(OUT / "demographics_tests.csv")
+    pd.Series(tests).to_csv(OUT / f"demographics_tests{s}.csv")
     shown = table.copy()
     shown.index = [CATEGORY_LABELS.get(i, "**Overall**") for i in shown.index]
     text = (markdown_table(shown) + "\n\nPaired Wilcoxon p: "
             + ", ".join(f"{k} {v:.3g}" for k, v in tests.items()))
-    (OUT / "demographics_tables.md").write_text("# Demographics-only LLM ranking (ranks 81-100)\n\n" + text + "\n",
-                                                encoding="utf-8")
+    title = "Demographics-only LLM ranking (ranks 81-100)" + (f", descriptions by {variant}" if variant else "")
+    (OUT / f"demographics_tables{s}.md").write_text(f"# {title}\n\n" + text + "\n", encoding="utf-8")
     print(text)
 
 
@@ -183,8 +194,10 @@ def main():
     p.add_argument("--user", type=int, default=None, help="internal row of the debug user (default: first musical-artist user)")
     p.add_argument("--user-index", type=int, default=0,
                    help="with no --user, take the n-th sampled musical-artist user (0 = first)")
-    p.add_argument("--model", default="gpt-6-luna")
-    p.add_argument("--effort", default="low")
+    p.add_argument("--model", default="gpt-6-luna", help="model that ranks the candidates")
+    p.add_argument("--effort", default="low", help="reasoning effort of --model")
+    p.add_argument("--describe-model", default=None,
+                   help="model that writes the descriptions (default: --model), e.g. gpt-4o")
     p.add_argument("--budget", type=float, default=0.5, help="stop calling the model at this cost (USD)")
     p.add_argument("--workers", type=int, default=16)
     args = p.parse_args()
@@ -199,10 +212,13 @@ def main():
     followed = {"ids": ids, "text": ids.apply(lambda a: names_of(a, names))}
 
     import dspy
-    lm = dspy.LM(f"openai/{args.model}", api_key=load_openai_key(), reasoning_effort=args.effort,
-                 cache=False, num_retries=8)
-    cap = SpendingCap(lm, args.budget)
-    describe, rank, render = make_demographic_programs(lm)
+    key = load_openai_key()
+    lm = dspy.LM(f"openai/{args.model}", api_key=key, reasoning_effort=args.effort, cache=False, num_retries=8)
+    describe_model = args.describe_model or args.model
+    variant = "" if describe_model == args.model else describe_model
+    describe_lm = lm if not variant else dspy.LM(f"openai/{describe_model}", api_key=key, cache=False, num_retries=8)
+    cap = SpendingCap([lm] if not variant else [lm, describe_lm], args.budget)
+    describe, rank, render = make_demographic_programs(lm, describe_lm)
     describe, rank = cap.guard(describe), cap.guard(rank)
     cache = ResponseCache(OUT / "cache" / "demographics.jsonl")
 
@@ -215,17 +231,19 @@ def main():
             print(report)
             print(f"\n(saved to {path})")
         else:
-            summarize(run_all(sample, candidates, followed, users_file, describe, rank, cache, args.workers))
+            summarize(run_all(sample, candidates, followed, users_file, describe, rank, cache, args.workers, variant), variant)
     finally:
         cap.update()
         info_path = OUT / "run_info.json"
         runs = json.loads(info_path.read_text()) if info_path.exists() else []
         if cap.calls:
-            runs.append({"model": args.model, "reasoning_effort": args.effort,
-                         "parts": ["demographics-debug" if args.debug else "demographics"],
-                         "calls": cap.calls, "cost_usd": round(cap.spent, 4), "budget_usd": args.budget})
+            runs.append({"model": args.model, "reasoning_effort": args.effort, "describe_model": describe_model,
+                         "parts": ["demographics-debug" if args.debug else "demographics" + variant_suffix(variant)],
+                         "calls": cap.calls, "cost_usd": round(cap.spent, 4), "budget_usd": args.budget,
+                         "cost_by_model": {k: round(v, 4) for k, v in cap.spent_by_model.items()},
+                         "calls_by_model": cap.calls_by_model})
             info_path.write_text(json.dumps(runs, indent=2))
-        print(f"{cap.calls} model calls, ${cap.spent:.4f}")
+        print(f"{cap.calls} model calls, ${cap.spent:.4f}", {k: round(v, 4) for k, v in cap.spent_by_model.items()})
 
 
 if __name__ == "__main__":

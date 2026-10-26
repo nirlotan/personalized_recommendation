@@ -18,11 +18,13 @@ def clean_description(text: str) -> str:
     return re.sub(r"\[\[\s*##\s*completed\s*##\s*\]\]", "", str(text)).strip()
 
 
-def make_demographic_programs(lm):
+def make_demographic_programs(lm, describe_lm=None):
     """
     The two dspy programs: describe(followed_names) -> description and
-    rank(description, candidates_json) -> ranked ids. Both run with `lm`.
+    rank(description, candidates_json) -> ranked ids. Ranking runs with `lm`;
+    the description with `describe_lm` (default: `lm`).
     """
+    describe_lm = describe_lm or lm
     import dspy
 
     class DemographicDescription(dspy.Signature):
@@ -51,7 +53,7 @@ def make_demographic_programs(lm):
     rank_program = dspy.Predict(TwitterDemographicRecommendation)
 
     def describe(followed: str) -> str:
-        with dspy.context(lm=lm):
+        with dspy.context(lm=describe_lm):
             return clean_description(describe_program(followed_accounts=followed).description)
 
     def rank(description: str, candidates: str) -> str:

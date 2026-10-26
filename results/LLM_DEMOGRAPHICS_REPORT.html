@@ -137,9 +137,10 @@ pre.prompt{white-space:pre-wrap;font-size:12.5px}
   then ranks less popular entities given only that inferred description. I compare this with ranking from the account
   names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users.</p>
   <div class="tiles">
-    <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">0.312</div><div class="sub">vs. 0.304 with no user information (p = 0.63)</div></div>
-    <div class="tile"><div class="label">Descriptions where the model declined</div><div class="value">198 / 270</div><div class="sub">despite being told to always guess</div></div>
-    <div class="tile"><div class="label">MAP when all four attributes were guessed</div><div class="value">0.387</div><div class="sub">vs. 0.315 without user information; 0.396 from 12 account names (67 users)</div></div>
+    <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">0.312 · 0.352</div><div class="sub">descriptions by GPT-6 Luna · by GPT-4o; 0.304 with no user information</div></div>
+    <div class="tile"><div class="label">Users the model declined to describe</div><div class="value">198 · 0</div><div class="sub">of 270: GPT-6 Luna · GPT-4o, despite being told to always guess</div></div>
+    <div class="tile"><div class="label">GPT-4o descriptions that also name interests</div><div class="value">60 / 270</div><div class="sub">MAP 0.508 for those users; 0.307 for demographics-only descriptions</div></div>
+    <div class="tile"><div class="label">MAP when GPT-6 Luna guessed all four attributes</div><div class="value">0.387</div><div class="sub">vs. 0.315 without user information; 0.396 from 12 account names (67 users)</div></div>
   </div>
 </header>
 
@@ -195,6 +196,12 @@ Output ranked_ids</pre>
   </ul>
   Differences are tested with two-sided paired Wilcoxon signed-rank tests on per-user AP.</p>
 
+  <p><b>Repeating Stage 1 with GPT-4o.</b> Because GPT-6 Luna often refused to infer the attributes (Section 3), we
+  repeated Stage 1 with GPT-4o (default sampling settings), using the identical prompt and inputs. Stage 2 was left
+  unchanged: GPT-6 Luna ranks the candidates from GPT-4o's description, so the two runs differ only in who wrote the
+  description. Since the prompt forbids mentioning interests, we also flag descriptions that name topics or interests (for
+  example politics, sports, music or news) as <i>leaking</i> information beyond demographics.</p>
+
   <p><b>Implementation.</b> GPT-6 Luna with reasoning effort <i>low</i>, called through dspy without caching, under a
   spending cap. Responses are cached locally per prompt version (this run uses version v3).
   dspy's end-of-output marker, which the model sometimes leaves inside the description, is removed before Stage 2.
@@ -206,31 +213,33 @@ Output ranked_ids</pre>
 
 <section>
   <h2><span class="num">2</span>Results</h2>
-  <p class="intro">Overall, the demographic description adds almost nothing: 0.312 MAP, compared with
-  0.304 for the LLM without user information and 0.295 for popularity. Naming 12 followed accounts
-  gives 0.402.</p>
-  <div class="card"><svg viewBox="0 0 760 340" class="chart" role="img" aria-label="Overall MAP by method">
-<line class="grid" x1="250.0" x2="250.0" y1="10" y2="316"/><text class="tick" x="250.0" y="332" text-anchor="middle">0.0</text>
-<line class="grid" x1="331.8" x2="331.8" y1="10" y2="316"/><text class="tick" x="331.8" y="332" text-anchor="middle">0.1</text>
-<line class="grid" x1="413.6" x2="413.6" y1="10" y2="316"/><text class="tick" x="413.6" y="332" text-anchor="middle">0.2</text>
-<line class="grid" x1="495.5" x2="495.5" y1="10" y2="316"/><text class="tick" x="495.5" y="332" text-anchor="middle">0.3</text>
-<line class="grid" x1="577.3" x2="577.3" y1="10" y2="316"/><text class="tick" x="577.3" y="332" text-anchor="middle">0.4</text>
-<line class="grid" x1="659.1" x2="659.1" y1="10" y2="316"/><text class="tick" x="659.1" y="332" text-anchor="middle">0.5</text>
+  <p class="intro">With GPT-6 Luna's descriptions, demographics add almost nothing: 0.312 MAP, compared with
+  0.304 for the LLM without user information and 0.295 for popularity. GPT-4o's descriptions
+  give 0.352, but most of that gain comes from descriptions that break the prompt by naming the user's
+  interests (Section 4). Naming 12 followed accounts gives 0.402.</p>
+  <div class="card"><svg viewBox="0 0 760 370" class="chart" role="img" aria-label="Overall MAP by method">
+<line class="grid" x1="250.0" x2="250.0" y1="10" y2="346"/><text class="tick" x="250.0" y="362" text-anchor="middle">0.0</text>
+<line class="grid" x1="331.8" x2="331.8" y1="10" y2="346"/><text class="tick" x="331.8" y="362" text-anchor="middle">0.1</text>
+<line class="grid" x1="413.6" x2="413.6" y1="10" y2="346"/><text class="tick" x="413.6" y="362" text-anchor="middle">0.2</text>
+<line class="grid" x1="495.5" x2="495.5" y1="10" y2="346"/><text class="tick" x="495.5" y="362" text-anchor="middle">0.3</text>
+<line class="grid" x1="577.3" x2="577.3" y1="10" y2="346"/><text class="tick" x="577.3" y="362" text-anchor="middle">0.4</text>
+<line class="grid" x1="659.1" x2="659.1" y1="10" y2="346"/><text class="tick" x="659.1" y="362" text-anchor="middle">0.5</text>
 <text class="cat" x="240" y="27" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M250,16 h210.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-210.2 z"/><text class="delta" x="472.2" y="27">0.262</text><rect class="hit" x="250" y="14" width="214.2" height="18" data-tip="Random ranking (expected)<br>MAP <b>0.262</b> · Non-personalized"/>
 <text class="cat" x="240" y="57" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M250,46 h237.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-237.3 z"/><text class="delta" x="499.3" y="57">0.295</text><rect class="hit" x="250" y="44" width="241.3" height="18" data-tip="Popularity (follower count)<br>MAP <b>0.295</b> · Non-personalized"/>
 <text class="cat" x="240" y="87" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M250,76 h244.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-244.4 z"/><text class="delta" x="506.4" y="87">0.304</text><rect class="hit" x="250" y="74" width="248.4" height="18" data-tip="LLM, no user information<br>MAP <b>0.304</b> · Non-personalized"/>
-<text class="cat" x="240" y="117" text-anchor="end" font-weight="650">LLM, demographic description</text><path class="bar s1" d="M250,106 h251.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-251.3 z"/><text class="delta" x="513.3" y="117" font-weight="650">0.312</text><rect class="hit" x="250" y="104" width="255.3" height="18" data-tip="LLM, demographic description<br>MAP <b>0.312</b> · This experiment"/>
-<text class="cat" x="240" y="147" text-anchor="end">SocialVec, 12 accounts</text><path class="bar muted-bar" d="M250,136 h292.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-292.6 z"/><text class="delta" x="554.6" y="147">0.362</text><rect class="hit" x="250" y="134" width="296.6" height="18" data-tip="SocialVec, 12 accounts<br>MAP <b>0.362</b> · Same 12 accounts"/>
-<text class="cat" x="240" y="177" text-anchor="end">LLM, 12 account names</text><path class="bar muted-bar" d="M250,166 h324.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-324.8 z"/><text class="delta" x="586.8" y="177">0.402</text><rect class="hit" x="250" y="164" width="328.8" height="18" data-tip="LLM, 12 account names<br>MAP <b>0.402</b> · Same 12 accounts"/>
-<text class="cat" x="240" y="207" text-anchor="end">SocialVec, 25 accounts</text><path class="bar muted-bar" d="M250,196 h294.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-294.4 z"/><text class="delta" x="556.4" y="207">0.365</text><rect class="hit" x="250" y="194" width="298.4" height="18" data-tip="SocialVec, 25 accounts<br>MAP <b>0.365</b> · Same 25 accounts"/>
-<text class="cat" x="240" y="237" text-anchor="end">LLM, 25 account names</text><path class="bar muted-bar" d="M250,226 h340.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-340.8 z"/><text class="delta" x="602.8" y="237">0.421</text><rect class="hit" x="250" y="224" width="344.8" height="18" data-tip="LLM, 25 account names<br>MAP <b>0.421</b> · Same 25 accounts"/>
-<text class="cat" x="240" y="267" text-anchor="end">LLM, 50 accounts</text><path class="bar muted-bar" d="M250,256 h405.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-405.7 z"/><text class="delta" x="667.7" y="267">0.501</text><rect class="hit" x="250" y="254" width="409.7" height="18" data-tip="LLM, 50 accounts<br>MAP <b>0.501</b> · Full or large profile"/>
-<text class="cat" x="240" y="297" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M250,286 h364.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-364.9 z"/><text class="delta" x="626.9" y="297">0.451</text><rect class="hit" x="250" y="284" width="368.9" height="18" data-tip="SocialVec, all followed entities<br>MAP <b>0.451</b> · Full or large profile"/>
+<text class="cat" x="240" y="117" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M250,106 h251.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-251.3 z"/><text class="delta" x="513.3" y="117" font-weight="650">0.312</text><rect class="hit" x="250" y="104" width="255.3" height="18" data-tip="LLM, demographics by GPT-6 Luna<br>MAP <b>0.312</b> · This experiment"/>
+<text class="cat" x="240" y="147" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M250,136 h283.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-283.7 z"/><text class="delta" x="545.7" y="147" font-weight="650">0.352</text><rect class="hit" x="250" y="134" width="287.7" height="18" data-tip="LLM, demographics by GPT-4o<br>MAP <b>0.352</b> · This experiment"/>
+<text class="cat" x="240" y="177" text-anchor="end">SocialVec, 12 accounts</text><path class="bar muted-bar" d="M250,166 h292.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-292.6 z"/><text class="delta" x="554.6" y="177">0.362</text><rect class="hit" x="250" y="164" width="296.6" height="18" data-tip="SocialVec, 12 accounts<br>MAP <b>0.362</b> · Same 12 accounts"/>
+<text class="cat" x="240" y="207" text-anchor="end">LLM, 12 account names</text><path class="bar muted-bar" d="M250,196 h324.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-324.8 z"/><text class="delta" x="586.8" y="207">0.402</text><rect class="hit" x="250" y="194" width="328.8" height="18" data-tip="LLM, 12 account names<br>MAP <b>0.402</b> · Same 12 accounts"/>
+<text class="cat" x="240" y="237" text-anchor="end">SocialVec, 25 accounts</text><path class="bar muted-bar" d="M250,226 h294.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-294.4 z"/><text class="delta" x="556.4" y="237">0.365</text><rect class="hit" x="250" y="224" width="298.4" height="18" data-tip="SocialVec, 25 accounts<br>MAP <b>0.365</b> · Same 25 accounts"/>
+<text class="cat" x="240" y="267" text-anchor="end">LLM, 25 account names</text><path class="bar muted-bar" d="M250,256 h340.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-340.8 z"/><text class="delta" x="602.8" y="267">0.421</text><rect class="hit" x="250" y="254" width="344.8" height="18" data-tip="LLM, 25 account names<br>MAP <b>0.421</b> · Same 25 accounts"/>
+<text class="cat" x="240" y="297" text-anchor="end">LLM, 50 accounts</text><path class="bar muted-bar" d="M250,286 h405.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-405.7 z"/><text class="delta" x="667.7" y="297">0.501</text><rect class="hit" x="250" y="284" width="409.7" height="18" data-tip="LLM, 50 accounts<br>MAP <b>0.501</b> · Full or large profile"/>
+<text class="cat" x="240" y="327" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M250,316 h364.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-364.9 z"/><text class="delta" x="626.9" y="327">0.451</text><rect class="hit" x="250" y="314" width="368.9" height="18" data-tip="SocialVec, all followed entities<br>MAP <b>0.451</b> · Full or large profile"/>
 </svg>
   <p class="caption">Overall MAP (mean over nine categories) on the same 270 users. The highlighted bar is this experiment.</p></div>
 
   <h3>Per category</h3>
-  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, demographic description</th><th>SocialVec, 12 accounts</th><th>LLM, 12 account names</th><th>SocialVec, 25 accounts</th><th>LLM, 25 account names</th><th>LLM, 50 accounts</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td class=''>0.252</td><td class=''>0.453</td><td class=''>0.316</td><td class='hl'>0.414</td><td class=''>0.489</td><td class=''>0.395</td><td class=''>0.498</td><td class=''>0.369</td><td class=''>0.489</td><td class=''><b>0.611</b></td></tr><tr><th>News outlets</th><td class=''>0.253</td><td class=''>0.267</td><td class=''>0.268</td><td class='hl'>0.374</td><td class=''>0.331</td><td class=''>0.532</td><td class=''>0.353</td><td class=''><b>0.546</b></td><td class=''>0.533</td><td class=''>0.396</td></tr><tr><th>Comedians</th><td class=''>0.217</td><td class=''>0.290</td><td class=''>0.154</td><td class='hl'>0.195</td><td class=''>0.222</td><td class=''>0.290</td><td class=''>0.243</td><td class=''>0.272</td><td class=''><b>0.351</b></td><td class=''>0.281</td></tr><tr><th>Politicians</th><td class=''>0.386</td><td class=''>0.328</td><td class=''>0.540</td><td class='hl'>0.405</td><td class=''>0.413</td><td class=''>0.484</td><td class=''>0.412</td><td class=''><b>0.546</b></td><td class=''>0.519</td><td class=''>0.463</td></tr><tr><th>TV stations</th><td class=''>0.191</td><td class=''>0.149</td><td class=''>0.236</td><td class='hl'>0.205</td><td class=''>0.338</td><td class=''>0.353</td><td class=''>0.334</td><td class=''>0.463</td><td class=''><b>0.666</b></td><td class=''>0.444</td></tr><tr><th>Actors</th><td class=''>0.268</td><td class=''>0.320</td><td class=''>0.271</td><td class='hl'>0.311</td><td class=''>0.464</td><td class=''>0.353</td><td class=''>0.441</td><td class=''>0.403</td><td class=''>0.487</td><td class=''><b>0.518</b></td></tr><tr><th>TV shows</th><td class=''>0.213</td><td class=''>0.276</td><td class=''>0.334</td><td class='hl'>0.316</td><td class=''>0.371</td><td class=''>0.485</td><td class=''>0.374</td><td class=''>0.456</td><td class=''><b>0.570</b></td><td class=''>0.407</td></tr><tr><th>Sports teams</th><td class=''>0.252</td><td class=''>0.269</td><td class=''>0.222</td><td class='hl'>0.236</td><td class=''>0.292</td><td class=''>0.302</td><td class=''>0.284</td><td class=''>0.315</td><td class=''>0.426</td><td class=''><b>0.516</b></td></tr><tr><th>Journalists</th><td class=''>0.324</td><td class=''>0.303</td><td class=''>0.392</td><td class='hl'>0.352</td><td class=''>0.343</td><td class=''>0.424</td><td class=''>0.343</td><td class=''>0.423</td><td class=''><b>0.467</b></td><td class=''>0.423</td></tr><tr class='total'><th>Overall</th><td class=''>0.262</td><td class=''>0.295</td><td class=''>0.304</td><td class='hl'>0.312</td><td class=''>0.362</td><td class=''>0.402</td><td class=''>0.365</td><td class=''>0.421</td><td class=''><b>0.501</b></td><td class=''>0.451</td></tr></tbody></table></div>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, demographics by GPT-6 Luna</th><th>LLM, demographics by GPT-4o</th><th>SocialVec, 12 accounts</th><th>LLM, 12 account names</th><th>SocialVec, 25 accounts</th><th>LLM, 25 account names</th><th>LLM, 50 accounts</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td class=''>0.252</td><td class=''>0.453</td><td class=''>0.316</td><td class='hl'>0.414</td><td class='hl'>0.398</td><td class=''>0.489</td><td class=''>0.395</td><td class=''>0.498</td><td class=''>0.369</td><td class=''>0.489</td><td class=''><b>0.611</b></td></tr><tr><th>News outlets</th><td class=''>0.253</td><td class=''>0.267</td><td class=''>0.268</td><td class='hl'>0.374</td><td class='hl'>0.318</td><td class=''>0.331</td><td class=''>0.532</td><td class=''>0.353</td><td class=''><b>0.546</b></td><td class=''>0.533</td><td class=''>0.396</td></tr><tr><th>Comedians</th><td class=''>0.217</td><td class=''>0.290</td><td class=''>0.154</td><td class='hl'>0.195</td><td class='hl'>0.220</td><td class=''>0.222</td><td class=''>0.290</td><td class=''>0.243</td><td class=''>0.272</td><td class=''><b>0.351</b></td><td class=''>0.281</td></tr><tr><th>Politicians</th><td class=''>0.386</td><td class=''>0.328</td><td class=''>0.540</td><td class='hl'>0.405</td><td class='hl'>0.452</td><td class=''>0.413</td><td class=''>0.484</td><td class=''>0.412</td><td class=''><b>0.546</b></td><td class=''>0.519</td><td class=''>0.463</td></tr><tr><th>TV stations</th><td class=''>0.191</td><td class=''>0.149</td><td class=''>0.236</td><td class='hl'>0.205</td><td class='hl'>0.290</td><td class=''>0.338</td><td class=''>0.353</td><td class=''>0.334</td><td class=''>0.463</td><td class=''><b>0.666</b></td><td class=''>0.444</td></tr><tr><th>Actors</th><td class=''>0.268</td><td class=''>0.320</td><td class=''>0.271</td><td class='hl'>0.311</td><td class='hl'>0.369</td><td class=''>0.464</td><td class=''>0.353</td><td class=''>0.441</td><td class=''>0.403</td><td class=''>0.487</td><td class=''><b>0.518</b></td></tr><tr><th>TV shows</th><td class=''>0.213</td><td class=''>0.276</td><td class=''>0.334</td><td class='hl'>0.316</td><td class='hl'>0.436</td><td class=''>0.371</td><td class=''>0.485</td><td class=''>0.374</td><td class=''>0.456</td><td class=''><b>0.570</b></td><td class=''>0.407</td></tr><tr><th>Sports teams</th><td class=''>0.252</td><td class=''>0.269</td><td class=''>0.222</td><td class='hl'>0.236</td><td class='hl'>0.324</td><td class=''>0.292</td><td class=''>0.302</td><td class=''>0.284</td><td class=''>0.315</td><td class=''>0.426</td><td class=''><b>0.516</b></td></tr><tr><th>Journalists</th><td class=''>0.324</td><td class=''>0.303</td><td class=''>0.392</td><td class='hl'>0.352</td><td class='hl'>0.357</td><td class=''>0.343</td><td class=''>0.424</td><td class=''>0.343</td><td class=''>0.423</td><td class=''><b>0.467</b></td><td class=''>0.423</td></tr><tr class='total'><th>Overall</th><td class=''>0.262</td><td class=''>0.295</td><td class=''>0.304</td><td class='hl'>0.312</td><td class='hl'>0.352</td><td class=''>0.362</td><td class=''>0.402</td><td class=''>0.365</td><td class=''>0.421</td><td class=''><b>0.501</b></td><td class=''>0.451</td></tr></tbody></table></div>
   <p class="caption">MAP per category; bold marks the best method in each row. With 30 users per category, per-category MAP has a
   standard error of about 0.05. The demographic ranking helps most for musical artists (0.414 vs.
   0.316 without user information) and news outlets (0.374 vs.
@@ -238,9 +247,10 @@ Output ranked_ids</pre>
   0.540).</p></div>
 
   <h3>Statistical tests</h3>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographic description vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-6 Luna vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
   <tbody><tr><th>Random ranking (expected)</th><td>+0.050</td><td>0.834</td></tr><tr><th>Popularity (follower count)</th><td>+0.017</td><td>0.063</td></tr><tr><th>LLM, no user information</th><td>+0.008</td><td>0.630</td></tr><tr><th>SocialVec, 12 accounts</th><td>−0.050</td><td>&lt; 0.001</td></tr><tr><th>LLM, 12 account names</th><td>−0.090</td><td>&lt; 0.001</td></tr><tr><th>SocialVec, 25 accounts</th><td>−0.053</td><td>&lt; 0.001</td></tr><tr><th>LLM, 25 account names</th><td>−0.109</td><td>&lt; 0.001</td></tr><tr><th>LLM, 50 accounts</th><td>−0.189</td><td>&lt; 0.001</td></tr><tr><th>SocialVec, all followed entities</th><td>−0.139</td><td>&lt; 0.001</td></tr></tbody></table></div>
-  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method.</p></div>
+  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method. The same tests for
+  GPT-4o's descriptions are in Section 4.</p></div>
 </section>
 
 <section>
@@ -288,7 +298,109 @@ Output ranked_ids</pre>
 </section>
 
 <section>
-  <h2><span class="num">4</span>Examples</h2>
+  <h2><span class="num">4</span>Repeating the inference with GPT-4o</h2>
+  <p class="intro">GPT-4o's policy is looser: it described every user. But it also often ignored the instruction to describe
+  demographics only, and the extra information it added explains most of its advantage.</p>
+
+  <div class="panels">
+    <div class="panel"><h4>Description outcomes</h4><div class="scroll"><table class="data compact">
+    <thead><tr><th>Stage 1 model</th><th>Complete</th><th>Partial</th><th>Declined</th><th>Names interests</th></tr></thead>
+    <tbody><tr><th>GPT-6 Luna</th><td>67</td><td>5</td><td>198</td><td>0</td></tr><tr><th>GPT-4o</th><td>268</td><td>2</td><td>0</td><td>60</td></tr></tbody></table></div>
+    <p class="caption">Users out of 270. GPT-4o's two "partial" descriptions do guess all four attributes, but in wording the
+    parser misses ("twenties", "diverse ethnicity"). The last column counts descriptions that name topics or interests.</p></div>
+    <div class="panel"><h4>Cost</h4><div class="scroll"><table class="data compact"><thead><tr><th>Model</th><th>Role</th><th>Cost</th></tr></thead><tbody>
+    <tr><th>GPT-4o</th><td>Stage 1, 270 descriptions</td><td>$0.39</td></tr>
+    <tr><th>GPT-6 Luna</th><td>Stage 2, 270 rankings</td><td>$0.05</td></tr>
+    <tr class="total"><th>Total</th><td></td><td>$0.44</td></tr></tbody></table></div></div>
+  </div>
+
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Users</th><th>n</th><th>Demographics by GPT-4o</th>
+  <th>Demographics by GPT-6 Luna</th><th>LLM, no information</th><th>p (GPT-4o vs. no information)</th></tr></thead>
+  <tbody><tr><th>All users</th><td>270</td><td class='hl'>0.352</td><td>0.312</td><td>0.304</td><td>0.130</td></tr><tr><th>GPT-4o description names interests or topics</th><td>60</td><td class='hl'>0.508</td><td>0.335</td><td>0.313</td><td>0.001</td></tr><tr><th>GPT-4o description is demographics only</th><td>210</td><td class='hl'>0.307</td><td>0.305</td><td>0.301</td><td>0.783</td></tr><tr><th>GPT-6 Luna declined; GPT-4o described</th><td>198</td><td class='hl'>0.343</td><td>0.291</td><td>0.303</td><td>0.367</td></tr><tr><th>Both models gave complete descriptions</th><td>66</td><td class='hl'>0.388</td><td>0.391</td><td>0.312</td><td>0.167</td></tr></tbody></table></div>
+  <p class="caption">MAP over the users in each row, pooled across categories. In every row, Stage 2 is GPT-6 Luna.</p></div>
+
+  <p><b>More descriptions, mostly from leaked interests.</b>
+  <ul>
+    <li><i>Overall:</i> GPT-4o's descriptions improve on GPT-6 Luna's (0.352 vs. 0.312
+    overall MAP, p = 0.008).</li>
+    <li><i>Leaking descriptions:</i> 60 of them (22%) also name the user's interests, despite the instruction,
+    for example "…with a higher education level, likely due to the interest in diverse media and sports analysts,
+    personalities, and NFL-related accounts". For these users the ranking reaches 0.508, far above the no-information
+    baseline (0.313, p = 0.001).</li>
+    <li><i>Demographics-only descriptions:</i> for the remaining 210 users the score is 0.307, indistinguishable from
+    the baseline (0.301, p = 0.78).</li>
+  </ul>
+  So GPT-4o's advantage reflects interest information, not demographics.</p>
+
+  <p><b>Same users, both models.</b>
+  <ul>
+    <li><i>Both models complete:</i> where GPT-6 Luna had given a complete description, GPT-4o's descriptions perform the same
+    (0.388 vs. 0.391, 66 users, p = 0.36).</li>
+    <li><i>GPT-6 Luna declined:</i> for the 198 users GPT-6 Luna refused, GPT-4o's descriptions raise MAP from
+    0.291 to 0.343 (p &lt; 0.001). Most of this gain comes from the 39 of them whose
+    GPT-4o description leaked interests (0.321 → 0.543).
+    For the other 159, MAP rises only from 0.283 to
+    0.294 (p = 0.098).</li>
+  </ul>
+  Taken together, explicit demographic guesses help most for the users whose followed accounts point clearly to a
+  demographic group, which are also the users GPT-6 Luna was willing to describe.</p>
+
+  <h3>GPT-4o's guesses vs. SocialVec's trait classifiers</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Attribute</th><th>Users with a parsed guess</th>
+  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>GPT-4o guesses</th></tr></thead><tbody><tr><th>Gender (female / male)</th><td>270</td><td>72%</td><td>64%</td><td class='muted'>Male 160, Female 110</td></tr><tr><th>Ethnicity (Caucasian / African American)</th><td>267</td><td>97%</td><td>92%</td><td class='muted'>Caucasian 244, AfrAmerican 23</td></tr><tr><th>Education (degree / high school)</th><td>270</td><td>79%</td><td>77%</td><td class='muted'>Degree 264, HighSchool 6</td></tr><tr><th>Age (over / under 25)</th><td>241</td><td>97%</td><td>95%</td><td class='muted'>Over25 237, Under25 4</td></tr></tbody></table></div>
+  <p class="caption">As in Section 3, using the same parsing rules, on all users GPT-4o described.</p></div>
+  <p>GPT-4o's guesses lean heavily toward the most common class: 264 of its education guesses are Degree, 237 of its age guesses are Over25, 244 of its ethnicity guesses are Caucasian. Agreement with SocialVec is therefore close to the majority-class rate, except for gender (72% vs. 64%).</p>
+
+  <h3>Statistical tests for GPT-4o's descriptions</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-4o vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <tbody><tr><th>Popularity (follower count)</th><td>+0.057</td><td>&lt; 0.001</td></tr><tr><th>LLM, no user information</th><td>+0.048</td><td>0.130</td></tr><tr><th>LLM, demographics by GPT-6 Luna</th><td>+0.040</td><td>0.008</td></tr><tr><th>SocialVec, 12 accounts</th><td>−0.011</td><td>0.397</td></tr><tr><th>LLM, 12 account names</th><td>−0.050</td><td>0.009</td></tr><tr><th>SocialVec, 25 accounts</th><td>−0.013</td><td>0.334</td></tr><tr><th>LLM, 25 account names</th><td>−0.070</td><td>&lt; 0.001</td></tr><tr><th>LLM, 50 accounts</th><td>−0.149</td><td>&lt; 0.001</td></tr><tr><th>SocialVec, all followed entities</th><td>−0.099</td><td>&lt; 0.001</td></tr></tbody></table></div></div>
+
+  <h3>GPT-4o examples</h3>
+  
+    <div class="example card">
+      <h4>GPT-6 Luna declined; GPT-4o described · user row 1808 · Musical artists</h4>
+      <div class="ex-grid">
+        <div>
+          <p class="step"><span>1</span>Accounts given to the model (5 names)</p>
+          <p class="quote small">The Talk, Gwen Stefani, Official Selenators, Bebe Rexha, Stranger Things</p>
+          <p class="step"><span>2</span>Description by GPT-4o (all four attributes guessed)</p>
+          <p class="quote">The user is most likely a female in her teens or early twenties, probably of Caucasian or Hispanic ethnicity, and likely has a high school or slightly higher level of education.</p>
+          <p class='step'><span>·</span>For comparison, GPT-6 Luna's description</p><p class='quote small'>I can’t infer someone’s gender or ethnicity from the accounts they follow.</p>
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
+          <ol class="ranking"><li class=''>SUMMER WALKER</li><li class=''>Ari Lennox</li><li class=''>TEYANA M.J. SHUMPERT</li><li class=''>Polo.G🐐</li><li class=''>Janelle Monáe, Cindi</li><li class=''>ICE T</li><li class=''>Kaya Jones</li><li class=''>Barbra Streisand</li><li class=''>Dionne Warwick</li><li class=''>Bruce Springsteen</li><li class=''>Tom Morello</li><li class='hit-item'>STINKY JOE ✓</li><li class=''>Big Speaker</li><li class=''>Nancy Sinatra</li><li class=''>Richard Marx</li><li class=''>Kid Rock</li><li class=''>John Rich</li><li class=''>Travis Tritt</li><li class=''>Ted Nugent</li><li class=''>Scott Gottlieb, MD</li></ol>
+          
+        </div>
+        <div>
+          <p class="step"><span>4</span>Score</p>
+          <p class="ap">AP = (1/12) / 1 = <b>0.083</b></p>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.180</td></tr><tr><th>Popularity</th><td>0.200</td></tr><tr><th>LLM, no information</th><td>0.050</td></tr><tr><th>LLM, demographics by GPT-6 Luna</th><td>0.056</td></tr><tr class=hl-row><th>LLM, demographics by GPT-4o</th><td>0.083</td></tr><tr><th>LLM, 12 names</th><td>0.071</td></tr><tr><th>SocialVec, same 12</th><td>0.143</td></tr><tr><th>SocialVec, all entities</th><td>0.250</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="example card">
+      <h4>A GPT-4o description that names interests · user row 4219 · Politicians</h4>
+      <div class="ex-grid">
+        <div>
+          <p class="step"><span>1</span>Accounts given to the model (25 names)</p>
+          <p class="quote small">Amy Güth, Raúl E. Esparza, kayla kumari upadhyaya, Juliet Funt, jonny sun, Dr. Dorothy Kim, Molly Lambert 🦔, Eighth Blackbird, Tom Zohar, Andrew Chappelle, Elizabeth Tsurkov, Annoying Actor Friend, Rebecca Traister, quinta brunson, Teju Cole, McNally Jackson, E S T H E R, Maya Phillips, donika kelly, San Francisco Opera, Lilith Fund, AbortionCareNetwork, Poetry Foundation, Caitlin Moran, Letters of Note</p>
+          <p class="step"><span>2</span>Description by GPT-4o (all four attributes guessed; also names interests)</p>
+          <p class="quote">The user is most likely a woman in her 30s or 40s of Caucasian or mixed ethnicity with a higher education level, possibly possessing a strong interest in literature, arts, and social issues.</p>
+          <p class='step'><span>·</span>For comparison, GPT-6 Luna's description</p><p class='quote small'>Gender, age, ethnicity, and education level cannot be reliably inferred from followed accounts.</p>
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
+          <ol class="ranking"><li class='hit-item'>Sherrilyn Ifill ✓</li><li class=''>Rep. Pramila Jayapal</li><li class=''>Rep. Jamie Raskin</li><li class=''>Jen Psaki</li><li class=''>Brian Schatz</li><li class=''>Jon Ossoff</li><li class=''>Karine Jean-Pierre</li><li class=''>Hakeem Jeffries</li><li class=''>Captain Mark Kelly</li><li class=''>John Dean</li><li class='hit-item'>Cori Bush ✓</li><li class='hit-item'>John Fetterman ✓</li><li class=''>Josh Shapiro</li><li class='hit-item'>Jaime Harrison ✓</li><li class=''>Ronald Klain</li><li class=''>Raja Krishnamoorthi</li><li class=''>Nikki Fried</li><li class=''>Thomas Massie</li><li class=''>Josh Hawley</li><li class=''>Sen. Marsha Blackburn</li></ol>
+          
+        </div>
+        <div>
+          <p class="step"><span>4</span>Score</p>
+          <p class="ap">AP = (1/1 + 2/11 + 3/12 + 4/14) / 4 = <b>0.429</b></p>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.309</td></tr><tr><th>Popularity</th><td>0.248</td></tr><tr><th>LLM, no information</th><td>0.258</td></tr><tr><th>LLM, demographics by GPT-6 Luna</th><td>0.211</td></tr><tr class=hl-row><th>LLM, demographics by GPT-4o</th><td>0.429</td></tr><tr><th>LLM, 12 names</th><td>0.193</td></tr><tr><th>SocialVec, same 12</th><td>0.229</td></tr><tr><th>SocialVec, all entities</th><td>0.296</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section>
+  <h2><span class="num">5</span>Examples</h2>
   <p class="intro">The cases are chosen by rule rather than by hand: the highest and the lowest AP among complete descriptions
   for users who follow at least two candidates; a declined description with typical AP; and the user used for debugging.
   Users are identified by internal row only.</p>
@@ -299,16 +411,17 @@ Output ranked_ids</pre>
         <div>
           <p class="step"><span>1</span>Accounts given to the model (42 names)</p>
           <p class="quote small">soulPhoodie, United Black Library, Juanita Tolliver, Primerica, Sarah Betancourt, Jacqueline Howard, Annie Karni, Sheryl Underwood, Paula Reid, Neil deGrasse Tyson, NYC PBA, Miller&#x27;s Lab, Kym Whitley, Legal Defense Fund, Amanda Seales 🇬🇩✊🏾 △⃒⃘, Alan &quot;CantLookAway&quot; Dornan, Alan Grayson, Michael de Adder, Karen Finney, Chris Hayes, Bonnie Schneider, Xfinity, Anita Baker, USS NIMITZ (CVN 68), Seth Meyers, Mika Brzezinski, YouTube, Yamiche Alcindor, Naval War College, Keisha Lance Bottoms, (((DeanObeidallah))), Anushay Hossain, U.S. Marines, Rep Josh Gottheimer, Ayọ (fka Opal) Tometi 🇳🇬🇺🇸, Sasha Grey, VP Biden (Archived), Black Girls CODE, Mike Biv, Omari Hardy, George Wallace, U.S. Pacific Fleet</p>
-          <p class="step"><span>2</span>Generated description (all four attributes guessed)</p>
+          <p class="step"><span>2</span>Description by GPT-6 Luna (all four attributes guessed)</p>
           <p class="quote">The user is most likely a Black woman in her 30s or 40s with some higher education, such as college experience.</p>
-          <p class="step"><span>3</span>Ranking from the description only (✓ = followed by the user)</p>
+          
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking"><li class='hit-item'>Hakeem Jeffries ✓</li><li class='hit-item'>Cori Bush ✓</li><li class='hit-item'>Sherrilyn Ifill ✓</li><li class=''>Jaime Harrison</li><li class='hit-item'>Karine Jean-Pierre ✓</li><li class='hit-item'>Rep. Pramila Jayapal ✓</li><li class='hit-item'>Jon Ossoff ✓</li><li class=''>John Fetterman</li><li class='hit-item'>Jen Psaki ✓</li><li class=''>Rep. Jamie Raskin</li><li class=''>Brian Schatz</li><li class=''>Ronald Klain</li><li class=''>Raja Krishnamoorthi</li><li class=''>Captain Mark Kelly</li><li class=''>Josh Shapiro</li><li class=''>Nikki Fried</li><li class=''>Sen. Marsha Blackburn</li><li class=''>Josh Hawley</li><li class=''>Thomas Massie</li><li class=''>John Dean</li></ol>
           
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
           <p class="ap">AP = (1/1 + 2/2 + 3/3 + 4/5 + 5/6 + 6/7 + 7/9) / 7 = <b>0.895</b></p>
-          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.439</td></tr><tr><th>Popularity</th><td>0.377</td></tr><tr><th>LLM, no information</th><td>0.687</td></tr><tr class=hl-row><th>LLM, demographics</th><td>0.895</td></tr><tr><th>LLM, 12 names</th><td>0.763</td></tr><tr><th>SocialVec, same 12</th><td>0.518</td></tr><tr><th>SocialVec, all entities</th><td>0.699</td></tr></tbody></table>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.439</td></tr><tr><th>Popularity</th><td>0.377</td></tr><tr><th>LLM, no information</th><td>0.687</td></tr><tr class=hl-row><th>LLM, demographics by GPT-6 Luna</th><td>0.895</td></tr><tr><th>LLM, demographics by GPT-4o</th><td>0.948</td></tr><tr><th>LLM, 12 names</th><td>0.763</td></tr><tr><th>SocialVec, same 12</th><td>0.518</td></tr><tr><th>SocialVec, all entities</th><td>0.699</td></tr></tbody></table>
         </div>
       </div>
     </div>
@@ -318,16 +431,17 @@ Output ranked_ids</pre>
         <div>
           <p class="step"><span>1</span>Accounts given to the model (39 names)</p>
           <p class="quote small">Anna Sanders, eThrive, McKay Coppins, Emily Jashinsky, Brad Lander, Chelsi Bennett, J.D., Kathleen Kingsbury, Derek T. Dingle, María Elvira Salazar 🇺🇸, Politics Insider, Samson, Allison Kaden, Washington Free Beacon, The Atlantic, David J. Bruno 📺, Jillian Jorgensen, Ponzi Finance, Jodi 🇺🇸, HarlemOneStop.com, INOE Media, Mark Barnes, Bernard B. Kerik, Brigitte Gabriel, The Washington Times, Jillian Mele, Jonathan Landman, Regina Puckett, Terry Powell, David Brody, Justen, Carrie Sheffield, #NABJ Headquarters, Julia Sun ☀️, Flag Eagle, Senator Ted Cruz, Richard Moore, IndividualInitiative, Jason Russell, Regina Brown</p>
-          <p class="step"><span>2</span>Generated description (all four attributes guessed)</p>
+          <p class="step"><span>2</span>Description by GPT-6 Luna (all four attributes guessed)</p>
           <p class="quote">Most likely a middle-aged man, around 40–60, of White or European American ethnicity, with a college or other higher-education background.</p>
-          <p class="step"><span>3</span>Ranking from the description only (✓ = followed by the user)</p>
+          
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking"><li class=''>HBO Documentaries</li><li class=''>TCM</li><li class=''>12 News</li><li class=''>ABC 7 News - WJLA</li><li class=''>WESH 2 News</li><li class=''>KXAN News</li><li class=''>WeatherNation</li><li class=''>SNY</li><li class=''>NBCSports Washington</li><li class='hit-item'>MSG Networks ✓</li><li class=''>Celtics on NBC Sports Boston</li><li class=''>SportsNet LA</li><li class=''>STARZ</li><li class=''>SYFY WIRE</li><li class=''>CNN Communications</li><li class=''>Hawaii News Now</li><li class=''>Florida Democrats</li><li class='hit-item'>New York GOP ✓</li><li class=''>NC Democratic Party</li><li class=''>Logo 🏳️‍🌈</li></ol>
           
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
           <p class="ap">AP = (1/10 + 2/18) / 2 = <b>0.106</b></p>
-          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.081</td></tr><tr><th>LLM, no information</th><td>0.086</td></tr><tr class=hl-row><th>LLM, demographics</th><td>0.106</td></tr><tr><th>LLM, 12 names</th><td>0.583</td></tr><tr><th>SocialVec, same 12</th><td>0.117</td></tr><tr><th>SocialVec, all entities</th><td>0.556</td></tr></tbody></table>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.081</td></tr><tr><th>LLM, no information</th><td>0.086</td></tr><tr class=hl-row><th>LLM, demographics by GPT-6 Luna</th><td>0.106</td></tr><tr><th>LLM, demographics by GPT-4o</th><td>0.086</td></tr><tr><th>LLM, 12 names</th><td>0.583</td></tr><tr><th>SocialVec, same 12</th><td>0.117</td></tr><tr><th>SocialVec, all entities</th><td>0.556</td></tr></tbody></table>
         </div>
       </div>
     </div>
@@ -337,16 +451,17 @@ Output ranked_ids</pre>
         <div>
           <p class="step"><span>1</span>Accounts given to the model (29 names)</p>
           <p class="quote small">Brendan Nyhan, The Hoarse Whisperer, Mika Brzezinski, Geoff Bennett, City of Reno, Fernand R. Amandi, Tom Winter, PatriotTakes 🇺🇸, Olivia Nuzzi, CNN Newsroom, Yamiche Alcindor, Joel McHale, Amy Gardner, Bradley P. Moss, Chris Hayes, Richard Ferrar, Disney World Facts, Randy Rainbow, Alex Padilla, 20th Century Studios, Adam Levine, Roger Sollenberger, andrew kaczynski, Reliable Sources, Andrew Desiderio, Rolling Stone, Padma Lakshmi, Max Boot 🇺🇦🇺🇸, Julie Bowen</p>
-          <p class="step"><span>2</span>Generated description (declined to guess)</p>
+          <p class="step"><span>2</span>Description by GPT-6 Luna (declined to guess)</p>
           <p class="quote">I can’t infer a person’s gender, age, ethnicity, or education from the accounts they follow.</p>
-          <p class="step"><span>3</span>Ranking from the description only (✓ = followed by the user)</p>
+          
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking"><li class=''>Nate Bargatze</li><li class=''>Phoebe Robinson</li><li class=''>Melissa Villaseñor</li><li class='hit-item'>(((DeanObeidallah))) ✓</li><li class=''>Sam Morril</li><li class=''>James Adomian</li><li class=''>Laurie Kilmartin</li><li class=''>yannispappas</li><li class=''>Jena Friedman</li><li class=''>Hal Sparks</li><li class=''>Aamer Rahman</li><li class=''>Jackie Kashian</li><li class='hit-item'>Steve Hofstetter ✓</li><li class=''>Sara “Bo” Schaefer</li><li class=''>Karen Chee</li><li class=''>Daniel Kibblesmith</li><li class=''>You’re Not Alone.</li><li class=''>blaine capatch</li><li class=''>Tom Shillue</li><li class=''>Tomlin and Wagner</li></ol>
           
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
           <p class="ap">AP = (1/4 + 2/13) / 2 = <b>0.202</b></p>
-          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.600</td></tr><tr><th>LLM, no information</th><td>0.183</td></tr><tr class=hl-row><th>LLM, demographics</th><td>0.202</td></tr><tr><th>LLM, 12 names</th><td>0.611</td></tr><tr><th>SocialVec, same 12</th><td>0.643</td></tr><tr><th>SocialVec, all entities</th><td>0.108</td></tr></tbody></table>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.600</td></tr><tr><th>LLM, no information</th><td>0.183</td></tr><tr class=hl-row><th>LLM, demographics by GPT-6 Luna</th><td>0.202</td></tr><tr><th>LLM, demographics by GPT-4o</th><td>0.244</td></tr><tr><th>LLM, 12 names</th><td>0.611</td></tr><tr><th>SocialVec, same 12</th><td>0.643</td></tr><tr><th>SocialVec, all entities</th><td>0.108</td></tr></tbody></table>
         </div>
       </div>
     </div>
@@ -356,28 +471,34 @@ Output ranked_ids</pre>
         <div>
           <p class="step"><span>1</span>Accounts given to the model (30 names)</p>
           <p class="quote small">Mayor LaToya Cantrell, Jeff Timmer, Russel L. Honore&#x27;, Wentworth, 🔥Reverend Dr. Aiden, Jonathan Franks, Coinbase, Andy Cohen, Charles (GOOD Luck Chuck), CNN Breaking News, Mark Ruffalo, Michelle &quot;ATLien&quot; Brown, americanair, GrisGrisGurl, Gambit, Donn Gunvalson, McDonald&#x27;s, Cal Cunningham, Cajun Rogue🌊🌊⚜️⚜️🇺🇦🚫DMs, Anonymous, ya girl, Floyd Mayweather, Foo Fighters, MichaelRapaport, NOLA.com, Bittrex, Joan Jett, FearTWD, BitPay, Bob south florida water man</p>
-          <p class="step"><span>2</span>Generated description (all four attributes guessed)</p>
+          <p class="step"><span>2</span>Description by GPT-6 Luna (all four attributes guessed)</p>
           <p class="quote">Most likely a woman in her 30s or 40s, White, with some higher education, such as college or university.</p>
-          <p class="step"><span>3</span>Ranking from the description only (✓ = followed by the user)</p>
+          
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking"><li class=''>Barbra Streisand</li><li class=''>Dionne Warwick</li><li class=''>Bruce Springsteen</li><li class=''>Janelle Monáe, Cindi</li><li class='hit-item'>Nancy Sinatra ✓</li><li class=''>Ari Lennox</li><li class=''>Tom Morello</li><li class=''>Richard Marx</li><li class=''>TEYANA M.J. SHUMPERT</li><li class=''>SUMMER WALKER</li><li class='hit-item'>ICE T ✓</li><li class=''>Scott Gottlieb, MD</li><li class=''>Kid Rock</li><li class=''>Travis Tritt</li><li class=''>John Rich</li><li class=''>Kaya Jones</li><li class=''>Polo.G🐐</li><li class=''>STINKY JOE</li><li class=''>Big Speaker</li></ol>
           <p class='caption'>Not returned by the model: Ted Nugent.</p>
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
           <p class="ap">AP = (1/5 + 2/11) / 2 = <b>0.191</b></p>
-          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.559</td></tr><tr><th>LLM, no information</th><td>0.341</td></tr><tr class=hl-row><th>LLM, demographics</th><td>0.191</td></tr><tr><th>LLM, 12 names</th><td>0.174</td></tr><tr><th>SocialVec, same 12</th><td>0.833</td></tr><tr><th>SocialVec, all entities</th><td>1.000</td></tr></tbody></table>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.559</td></tr><tr><th>LLM, no information</th><td>0.341</td></tr><tr class=hl-row><th>LLM, demographics by GPT-6 Luna</th><td>0.191</td></tr><tr><th>LLM, demographics by GPT-4o</th><td>0.174</td></tr><tr><th>LLM, 12 names</th><td>0.174</td></tr><tr><th>SocialVec, same 12</th><td>0.833</td></tr><tr><th>SocialVec, all entities</th><td>1.000</td></tr></tbody></table>
         </div>
       </div>
     </div>
 </section>
 
 <section>
-  <h2><span class="num">5</span>Discussion and limitations</h2>
+  <h2><span class="num">6</span>Discussion and limitations</h2>
   <ul class="highlights">
-    <li><b>The main limitation is the model's own policy.</b> GPT-6 Luna declined to infer demographics for 73% of users,
-    even when told to rely on stereotypes. The experiment therefore measures a mix of demographic personalization and refusals.
-    A cleaner test would reframe Stage 1, for example asking for the typical audience of the listed accounts rather than for
-    attributes of an individual. Alternatively, it could supply the attributes from SocialVec's classifiers directly.</li>
+    <li><b>Model policies shape the result.</b> GPT-6 Luna declined to infer demographics for 73% of users, even
+    when told to rely on stereotypes. GPT-4o described every user, but in 22% of cases it also named the user's
+    interests, against the instruction. Neither model gives a clean demographics-only condition for all users.
+    <ul>
+      <li><i>Cleaner subsets:</i> the clean conditions are GPT-6 Luna's complete descriptions and GPT-4o's demographics-only
+      descriptions. They show a benefit for some users, but none on average for the others.</li>
+      <li><i>A stricter test:</i> filter or rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the
+      attributes from SocialVec's classifiers directly.</li>
+    </ul></li>
     <li><b>Demographics are a coarse summary of taste.</b> Even when the description was complete, ranking from four
     attributes did not beat ranking from 12 account names, and it was far from SocialVec's full-profile embedding
     (0.451). The account names carry information beyond the demographic groups they imply.</li>
@@ -390,7 +511,8 @@ Output ranked_ids</pre>
   </ul>
 </section>
 
-<footer><p>Regenerate with <code>python run_llm_demographics.py</code> (model calls; cached responses are reused) and
+<footer><p>Regenerate with <code>python run_llm_demographics.py</code> and
+<code>python run_llm_demographics.py --describe-model gpt-4o</code> (model calls; cached responses are reused), then
 <code>python make_demographics_report.py</code>. Per-user scores are in <code>results/llm/demographics_per_user.csv.gz</code>;
 descriptions and usernames are in <code>data/llm_demographics/</code>, which is not tracked by git.</p></footer>
 </div>

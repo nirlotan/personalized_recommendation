@@ -43,23 +43,31 @@ class BudgetExceeded(RuntimeError):
 class SpendingCap:
     """
     Stops making model calls once the cost reported by litellm (summed over the
-    dspy LM's call history) reaches `limit_usd`.
+    call histories of one or more dspy LMs) reaches `limit_usd`.
     """
 
     def __init__(self, lm, limit_usd: float):
-        self.lm, self.limit = lm, limit_usd
+        self.lms = list(lm) if isinstance(lm, (list, tuple)) else [lm]
+        self.limit = limit_usd
         self.lock = threading.Lock()
-        self.seen, self.spent, self.calls = 0, 0.0, 0
+        self.seen = [0] * len(self.lms)
+        self.spent, self.calls = 0.0, 0
+        self.spent_by_model: Dict[str, float] = {}
+        self.calls_by_model: Dict[str, int] = {}
 
     def update(self) -> float:
         with self.lock:
-            history = self.lm.history
-            if len(history) < self.seen:  # history was trimmed; count from its new end
-                self.seen = len(history)
-            for entry in history[self.seen:]:
-                self.spent += entry.get("cost") or 0.0
-                self.calls += 1
-            self.seen = len(history)
+            for i, lm in enumerate(self.lms):
+                history = lm.history
+                if len(history) < self.seen[i]:  # history was trimmed; count from its new end
+                    self.seen[i] = len(history)
+                for entry in history[self.seen[i]:]:
+                    cost = entry.get("cost") or 0.0
+                    self.spent += cost
+                    self.calls += 1
+                    self.spent_by_model[lm.model] = self.spent_by_model.get(lm.model, 0.0) + cost
+                    self.calls_by_model[lm.model] = self.calls_by_model.get(lm.model, 0) + 1
+                self.seen[i] = len(history)
             return self.spent
 
     def guard(self, fn):

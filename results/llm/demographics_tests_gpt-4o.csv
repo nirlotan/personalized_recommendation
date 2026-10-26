@@ -1,0 +1,6 @@
+,0
+llm_demographics vs popularity,0.0001132078206787895
+llm_demographics vs llm_baseline,0.12715615634184216
+llm_demographics vs llm_k12,0.009424321740254439
+llm_demographics vs llm_k50,1.7208944832780754e-15
+llm_demographics vs socialvec,9.326987643896095e-06
