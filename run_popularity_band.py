@@ -3,8 +3,9 @@ Social similarity vs. popularity when the candidates are less popular entities.
 
     python run_popularity_band.py                  # entities ranked 81-100 by follower count
     python run_popularity_band.py --start 41 --end 60
+    python run_popularity_band.py --start 181 --end 200 --source extended   # extended lists
 
-Outputs go to results/popularity_band_<start>_<end>/.
+Outputs go to results/popularity_band_<start>_<end>[_extended]/.
 """
 
 import argparse
@@ -17,6 +18,7 @@ from reproduction.data import load_categories, load_users
 from reproduction.embeddings import SocialVec
 from reproduction.popularity_bands import (
     load_category_sheets,
+    load_extended_sheets,
     matched_comparison,
     run_band_experiment,
     summarize,
@@ -65,15 +67,24 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--start", type=int, default=81)
     p.add_argument("--end", type=int, default=100)
+    p.add_argument("--source", default="original", choices=["original", "extended"],
+                   help="original sheets ranked by follower count, or the extended lists "
+                        "(data/popular_accounts_extended.xlsx) in their SocialVec popularity order")
     args = p.parse_args()
 
-    out = RESULTS_DIR / f"popularity_band_{args.start}_{args.end}"
+    suffix = "_extended" if args.source == "extended" else ""
+    out = RESULTS_DIR / f"popularity_band_{args.start}_{args.end}{suffix}"
     out.mkdir(parents=True, exist_ok=True)
 
     head = load_categories()
     users = load_users(head)
-    sheets = load_category_sheets()
-    per_user, bands = run_band_experiment(users, sheets, head, SocialVec("2020"), args.start, args.end)
+    original = load_category_sheets()
+    if args.source == "extended":
+        # profiles exclude the whole extended list and the original sheet of the category
+        per_user, bands = run_band_experiment(users, load_extended_sheets(), head, SocialVec("2020"), args.start, args.end,
+                                              by="rank_in_category", also_exclude=original)
+    else:
+        per_user, bands = run_band_experiment(users, original, head, SocialVec("2020"), args.start, args.end)
     per_user.to_csv(out / "per_user_ap.csv.gz", index=False)
     bands.to_csv(out / "band_entities.csv", index=False)
 

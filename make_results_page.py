@@ -14,6 +14,7 @@ import pickle
 
 import numpy as np
 import pandas as pd
+from scipy.stats import wilcoxon
 
 from reproduction import paper_results as paper
 from reproduction.config import CATEGORY_LABELS, MODELS_DIR, PAPER_CATEGORY_ORDER, ROOT
@@ -75,6 +76,10 @@ def pct(x):
 
 def pval(p):
     return "&lt; 0.001" if p < 0.001 else f"{p:.3f}"
+
+
+def signed_short(v):
+    return f"{v:+.3f}".replace("-", "−")
 
 
 def p_text(p):
@@ -212,7 +217,7 @@ def table2_html():
             f"<tbody>{''.join(rows)}</tbody></table></div>")
 
 
-def matched_html(tables):
+def matched_html(tables, band_label="Ranks 81–100"):
     head, band = tables["head"], tables["band"]
     rows = []
     for cat in band.index:
@@ -228,7 +233,7 @@ def matched_html(tables):
             f"<td class='grp'>{rel(b['relevant_per_user'])}</td><td>{b['random']:.3f}</td><td{below}>{b['popularity']:.3f}</td>"
             f"<td>{b['socialvec']:.3f}</td><td{neg(b['gain'])}>{pct(b['gain'])}</td><td class='p'>{pval(b['p_value'])}</td></tr>")
     return ("<div class='scroll'><table class='data'><thead>"
-            "<tr class='super'><th></th><th></th><th colspan='5'>Ranks 1–20 (original candidates)</th><th colspan='6' class='grp'>Ranks 81–100</th></tr>"
+            f"<tr class='super'><th></th><th></th><th colspan='5'>Ranks 1–20 (original candidates)</th><th colspan='6' class='grp'>{band_label}</th></tr>"
             "<tr><th>Category</th><th>Users</th><th>Rel./user</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th>"
             "<th class='grp'>Rel./user</th><th>Random</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div>")
@@ -318,11 +323,12 @@ def order_html():
         f"<tbody>{bbody}</tbody></table></div></div></div>")
 
 
-def band_llm_html():
+def band_llm_html(table=None):
+    table = band_llm if table is None else table
     cols = ["random", "popularity", "socialvec", "socialvec_k12", "socialvec_k25"] + LLM_COLS
     group_start = {"socialvec", "llm_baseline"}
     rows = []
-    for cat, r in band_llm.iterrows():
+    for cat, r in table.iterrows():
         cls = " class='total'" if cat == "Overall" else ""
         best = max(r[c] for c in cols)
         cells = "".join(f"<td{' class=grp' if c in group_start else ''}>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>" for c in cols)
@@ -350,13 +356,14 @@ def table1d_html():
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
 
-def entities_html():
+def entities_html(entities=None, label="ranks 81–100"):
+    entities = band_entities if entities is None else entities
     rows = []
-    for cat, g in band_entities.groupby("category", sort=False):
+    for cat, g in entities.groupby("category", sort=False):
         names = ", ".join(esc(n) + ("<sup>*</sup>" if not v else "") for n, v in zip(g["twitter_screen_name"], g["in_socialvec"]))
         rng = f"{g['followers_count'].min()/1e3:,.0f}K – {g['followers_count'].max()/1e3:,.0f}K"
         rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td class='nowrap'>{rng}</td><td class='names'>{names}</td></tr>")
-    return ("<details><summary>Candidate entities, ranks 81–100 (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
+    return (f"<details><summary>Candidate entities, {label} (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
             "<thead><tr><th>Category</th><th>Followers</th><th>Entities</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
@@ -383,6 +390,39 @@ band_tests = pd.read_csv(LLM / "band_tests.csv", index_col=0).iloc[:, 0]
 _band_users = pd.read_csv(LLM / "band_per_user.csv.gz", usecols=["n_k12_accounts", "n_k25_accounts"])
 band_llm_n = {k: _band_users[f"n_k{k}_accounts"].mean() for k in (12, 25)}
 band_llm_wins = {k: int((band_llm.drop("Overall")[f"llm_k{k}"] > band_llm.drop("Overall")[f"socialvec_k{k}"]).sum()) for k in (12, 25)}
+
+# Ranks 181-200 of the extended lists (build_extended_categories.py, run_popularity_band.py --source extended)
+BAND2 = R / "popularity_band_181_200_extended"
+mA2 = {c: pd.read_csv(BAND2 / f"matched_category_{c}.csv", index_col=0) for c in ("head", "band")}
+mB2 = {c: pd.read_csv(BAND2 / f"matched_all_{c}.csv", index_col=0) for c in ("head", "band")}
+band2_entities = pd.read_csv(BAND2 / "band_entities.csv")
+A2_h, A2_b = mA2["head"].loc["Overall"], mA2["band"].loc["Overall"]
+B2_h, B2_b = mB2["head"].loc["Overall"], mB2["band"].loc["Overall"]
+below2 = [CATEGORY_LABELS[c] for c in mA2["band"].index if c != "Overall" and mA2["band"].loc[c, "popularity"] < mA2["band"].loc[c, "random"]]
+band2_llm = pd.read_csv(LLM / "band_by_category_181_200_extended.csv", index_col=0)
+band2_tests = pd.read_csv(LLM / "band_tests_181_200_extended.csv", index_col=0).iloc[:, 0]
+_band2_users = pd.read_csv(LLM / "band_per_user_181_200_extended.csv.gz", usecols=["n_k12_accounts", "n_k25_accounts"])
+band2_llm_n = {k: _band2_users[f"n_k{k}_accounts"].mean() for k in (12, 25)}
+band2_llm_wins = {k: int((band2_llm.drop("Overall")[f"llm_k{k}"] > band2_llm.drop("Overall")[f"socialvec_k{k}"]).sum()) for k in (12, 25)}
+_extended = pd.read_excel(ROOT / "data" / "popular_accounts_extended.xlsx", sheet_name=None)
+_band2_sv = pd.concat([s.loc[(s["rank_in_category"] > 180) & (s["rank_in_category"] <= 200), "socialvec_popularity_rank"]
+                       for name, s in _extended.items() if name != "summary" and len(s) >= 200])
+band2_sv_median, band2_below_10k = int(_band2_sv.median()), float((_band2_sv > 10_000).mean())
+band2_cost = sum(r["cost_usd"] for r in json.loads((LLM / "run_info.json").read_text()) if r.get("band") == [181, 200, "extended"])
+_b2 = pd.read_csv(LLM / "band_per_user_181_200_extended.csv.gz", usecols=["llm_k50", "socialvec"])
+k50_vs_full = wilcoxon(_b2["llm_k50"] - _b2["socialvec"]).pvalue
+
+
+def bands_overview():
+    """Overall MAP for the top 20 and each lower band, on each band's matched users (Table A populations)."""
+    rows = [("Ranks 1–20, users of the 81–100 table", A_h), ("Ranks 81–100", A_b),
+            ("Ranks 1–20, users of the 181–200 table", A2_h), ("Ranks 181–200", A2_b)]
+    body = "".join(
+        f"<tr><th>{label if label.startswith('Ranks 1–20') else f'<b>{label}</b>'}</th><td>{r['users']:,.0f}</td><td>{r['random']:.3f}</td>"
+        f"<td{' class=below' if r['popularity'] < r['random'] else ''}>{r['popularity']:.3f}</td><td>{r['socialvec']:.3f}</td>"
+        f"<td>{pct(r['gain'])}</td></tr>" for label, r in rows)
+    return ("<div class='scroll'><table class='data compact'><thead><tr><th>Candidates</th><th>Users</th><th>Random</th>"
+            "<th>Popularity</th><th>Social</th><th>Δ</th></tr></thead>" f"<tbody>{body}</tbody></table></div>")
 llm_runs = [r for r in json.loads((LLM / "run_info.json").read_text()) if r["calls"] > 0]
 llm_calls, llm_cost = sum(r["calls"] for r in llm_runs), sum(r["cost_usd"] for r in llm_runs)
 model_name = {"gpt-6-luna": "GPT-6 Luna"}.get(llm_runs[0]["model"], llm_runs[0]["model"])
@@ -414,12 +454,12 @@ page = f"""<!doctype html>
   checked every reported number, and extended the evaluation to less popular entities, where a
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
-  <a href="#tail">3 · Less popular entities</a><a href="#order">4 · LLM candidate order</a><a href="#open">5 · Open items</a></nav>
+  <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a><a href="#open">6 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Table 2 values matching the paper</div><div class="value">42 / 42</div><div class="sub">largest difference {max_t2:.4f}</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">{ov['se1_all_legacy']:.3f}</div><div class="sub">vs. {ov['popularity']:.3f} · {pct(ov['se1_all_legacy_gain'])}, as in the paper</div></div>
-    <div class="tile"><div class="label">Gain on entities ranked 81–100</div><div class="value">{pct(A_b['gain'])}</div><div class="sub">vs. {pct(A_h['gain'])} on the top 20, same users</div></div>
-    <div class="tile"><div class="label">Popularity above chance, ranks 81–100</div><div class="value">+{A_b['popularity']-A_b['random']:.3f}</div><div class="sub">MAP; social similarity is +{A_b['socialvec']-A_b['random']:.3f}</div></div>
+    <div class="tile"><div class="label">Gain on less popular entities</div><div class="value">{pct(A_b['gain'])} · {pct(A2_b['gain'])}</div><div class="sub">ranks 81–100 · 181–200, vs. {pct(A_h['gain'])} and {pct(A2_h['gain'])} on the top 20 for the same users</div></div>
+    <div class="tile"><div class="label">Popularity vs. chance, ranks 81–100 · 181–200</div><div class="value">{signed_short(A_b['popularity']-A_b['random'])} · {signed_short(A2_b['popularity']-A2_b['random'])}</div><div class="sub">MAP; social similarity is {signed_short(A_b['socialvec']-A_b['random'])} · {signed_short(A2_b['socialvec']-A2_b['random'])}</div></div>
     <div class="tile"><div class="label">LLM gain from 12 favored entities</div><div class="value">{pct(llm_stats.loc['llm_k12','gain vs LLM baseline'])}</div><div class="sub">{model_name}; GPT-4o in the paper: +13%</div></div>
   </div>
 </header>
@@ -506,7 +546,7 @@ page = f"""<!doctype html>
   <h2><span class="num">3</span>Extension · Less popular entities</h2>
   <p class="intro">Does social user modeling still help when the candidates aren't the most famous entities in their category?</p>
   <p>In the 9 categories that list 100 typed entities, I sorted the entities by Twitter follower count and ranked those
-  at positions <b>81–100</b> instead of the top 20. No category lists more, so ranks 100–120 were not possible.
+  at positions <b>81–100</b> instead of the top 20. No original sheet lists more; Section 4 goes further with extended lists.
   User profiles exclude <i>every</i> listed entity of the target category. As a matched control, I ranked the original
   top 20 for the same users with the same profiles. A random ranking (exact expected AP) provides a chance level, and
   paired Wilcoxon tests compare the two methods.</p>
@@ -568,8 +608,80 @@ page = f"""<!doctype html>
   only {mA['band']['relevant_per_user'].min():.1f}–{mA['band']['relevant_per_user'].max():.1f} band candidates each, so per-user AP is noisy in the smaller categories.</p>
 </section>
 
+<section id="tail2">
+  <h2><span class="num">4</span>Even less popular · Ranks 181–200</h2>
+  <p class="intro">The original sheets stop at 100 entities per category. To go further, I built extended category lists from
+  Wikidata and DBpedia (no LLM, no manual validation; see <code>results/EXTENDED_CATEGORIES_REPORT.md</code>) and repeated every
+  experiment of Section 3 with the accounts ranked <b>181–200</b>.</p>
+  <ul>
+    <li><i>Categories:</i> the {len(mA2['band']) - 1} categories whose extended list reaches 200 accounts.</li>
+    <li><i>Ranking:</i> the extended lists rank accounts by SocialVec popularity, while ranks 81–100 were by Twitter follower count.
+    The median candidate is the {band2_sv_median:,}th most popular SocialVec entity, and {band2_below_10k:.0%} of the candidates lie
+    beyond the top 10,000.</li>
+    <li><i>Profiles:</i> user profiles exclude every account of the category's extended list (up to 1,000) and of its original
+    sheet.</li>
+  </ul>
+
+  <ul class="highlights">
+    <li><b>Popularity now ranks worse than chance.</b> At ranks 181–200 it scores {A2_b['popularity']:.3f} against
+    {A2_b['random']:.3f} for a random ranking, and falls below chance in {len(below2)} of {len(mA2['band']) - 1} categories.</li>
+    <li><b>Social similarity still personalizes well.</b> It scores {A2_b['socialvec']:.3f}, {pct(A2_b['gain'])} over popularity,
+    significant in every category (p &lt; 0.001), compared with {pct(A2_h['gain'])} on the top 20 for the same users.</li>
+    <li><b>The same holds on all users.</b> On {B2_b['users']:,.0f} user–category pairs, the gain is {pct(B2_b['gain'])}, vs.
+    {pct(B2_h['gain'])} on the top 20.</li>
+    <li><b>The LLM pattern repeats.</b>
+    <ul>
+      <li><i>No user information:</i> {model_name} stays close to chance ({band2_llm.loc['Overall','llm_baseline']:.3f} vs.
+      {band2_llm.loc['Overall','random']:.3f} for a random ranking).</li>
+      <li><i>12 or 25 account names:</i> it beats SocialVec on the same accounts
+      ({band2_llm.loc['Overall','llm_k12']:.3f} vs. {band2_llm.loc['Overall','socialvec_k12']:.3f} and
+      {band2_llm.loc['Overall','llm_k25']:.3f} vs. {band2_llm.loc['Overall','socialvec_k25']:.3f}).</li>
+      <li><i>50 accounts:</i> it scores about as well as SocialVec's full profile ({band2_llm.loc['Overall','llm_k50']:.3f} vs.
+      {band2_llm.loc['Overall','socialvec']:.3f}; p = {k50_vs_full:.2f}, not significant).</li>
+    </ul></li>
+  </ul>
+
+  <div class="card"><h4 style="margin:0 0 6px">Overall MAP by popularity band</h4>{bands_overview()}
+  <p class="caption">Each lower band is compared with the original top 20 on the same users (its Table A population), so
+  the two top-20 rows differ. Dotted red marks popularity below the random ranking.</p></div>
+
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s2)"></i>Popularity</span>
+    <span class="key"><i class="sq" style="background:var(--s1)"></i>Social similarity</span>
+    <span class="key"><i class="tick"></i>Random ranking (expected)</span></div>
+    <div class="panels">
+      <div class="panel"><h4>Original top 20</h4><p class="note">Same users and profiles as on the right</p>{bar_panel(mA2['head'], 'Ranks 1–20')}</div>
+      <div class="panel"><h4>Ranks 181–200</h4><p class="note">Users sampled for each category</p>{bar_panel(mA2['band'], 'Ranks 181–200')}</div>
+    </div>
+    <p class="caption">MAP per category; Δ is the gain of social similarity over popularity. The values are in Table A′ below.</p>
+  </div>
+
+  <h3>Table A′ · Users sampled for each category</h3>
+  <div class="card">{matched_html(mA2, 'Ranks 181–200')}
+  <p class="caption">{A2_b['users']:,.0f} users who follow at least one entity ranked 181–200 in their category. As in Table A.</p></div>
+
+  <h3>Table B′ · Robustness: all experiment users</h3>
+  <div class="card">{matched_html(mB2, 'Ranks 181–200')}{entities_html(band2_entities, 'ranks 181–200 of the extended lists')}</div>
+
+  <h3>Table C′ · LLM ranking of ranks 181–200</h3>
+  <p>The Table C protocol, for 30 random users per category, with every account of the category's extended list and
+  original sheet removed from the prompts. The baseline prompt lists the candidates in the extended list's (popularity) order.
+  The SocialVec k = 12 and k = 25 columns use exactly the accounts in the LLM's prompts ({band2_llm_n[12]:.1f} and
+  {band2_llm_n[25]:.1f} on average). Given the same evidence, the LLM ranks better at both sizes:
+  p {p_text(band2_tests['llm_k12 vs socialvec_k12'])} with 12 accounts, ahead in {band2_llm_wins[12]} of {len(band2_llm) - 1} categories;
+  p {p_text(band2_tests['llm_k25 vs socialvec_k25'])} with 25, ahead in {band2_llm_wins[25]} of {len(band2_llm) - 1}.</p>
+  <div class="card">{band_llm_html(band2_llm)}
+  <p class="caption">Bold marks the best method in each row. With 30 users per category, per-category MAP has a standard error of
+  about 0.05. These {model_name} runs cost ${band2_cost:.2f}.</p></div>
+
+  <h3>Limitations</h3>
+  <p>The extended lists are not manually validated. Known errors, such as people with acting credits listed as actors, team PR
+  accounts and DBpedia mistypings, are described in the extended-lists report; they affect the candidate sets here. The
+  LLM results use 30 users per category.</p>
+</section>
+
 <section id="order">
-  <h2><span class="num">4</span>Does the LLM depend on the order of the candidates?</h2>
+  <h2><span class="num">5</span>Does the LLM depend on the order of the candidates?</h2>
   <p class="intro">The original prompts list the candidates sorted by follower count, which an order-following model could
   turn into popularity ranking for free.</p>
   <p>For the same 700 users, I re-ran the k = 25 prompts twice: once unchanged, to measure run-to-run noise, and once with the
@@ -594,23 +706,29 @@ page = f"""<!doctype html>
 </section>
 
 <section id="open">
-  <h2><span class="num">5</span>Open items</h2>
+  <h2><span class="num">6</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
-    <p>The LLM results use samples of 50 users per category (30 for ranks 81–100), which keeps overall MAP within about ±0.01.
-    A full-population run takes about 45K calls. The same command runs it with larger samples, and cached responses are reused.</p></div>
+    <p>The LLM results use samples of 50 users per category (30 for ranks 81–100 and 181–200), which keeps overall MAP within
+    about ±0.01. A full-population run takes about 45K calls. The same command runs it with larger samples, and cached
+    responses are reused.</p></div>
     <div class="callout"><span class="tag">Next</span><h4>Description-based tail candidates</h4>
-    <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i> and requires them to be
-    below the top 10K/20K SocialVec entities. My band used the existing typed lists and follower counts: 20 candidates per
-    category, of which only {n_below_10k} of {n_band_in_sv} fall below the top 10K. The ranking protocol carries over unchanged.</p></div>
+    <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i>, below the top 10K/20K
+    SocialVec entities. The ranks 81–100 band used the original typed lists: only {n_below_10k} of {n_band_in_sv} candidates fall
+    below the top 10K. The ranks 181–200 band, from the extended lists, gets closer: {band2_below_10k:.0%} of its candidates do.
+    It still uses 20 candidates typed by Wikidata and DBpedia rather than by description.</p></div>
   </div>
 </section>
 
 <footer>
   <p>Regenerate the underlying results with <code>python run_reproduction.py</code>,
-  <code>python run_popularity_band.py --start 81 --end 100</code> and <code>python run_llm_experiments.py</code>, then
-  rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
-  <code>results/POPULARITY_BAND_REPORT.md</code> and <code>results/LLM_REPORT.md</code>.</p>
+  <code>python run_popularity_band.py --start 81 --end 100</code> and <code>python run_llm_experiments.py</code>. For ranks
+  181–200, run <code>python build_extended_categories.py</code>,
+  <code>python run_popularity_band.py --start 181 --end 200 --source extended</code> and
+  <code>python run_llm_experiments.py --parts band --band-start 181 --band-end 200 --band-source extended</code>.
+  Then rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
+  <code>results/POPULARITY_BAND_REPORT.md</code>, <code>results/LLM_REPORT.md</code> and
+  <code>results/EXTENDED_CATEGORIES_REPORT.md</code>.</p>
 </footer>
 </div>
 <script>{JS}</script>

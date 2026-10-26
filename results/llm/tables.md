@@ -84,3 +84,21 @@
 | **Overall** | 270 | 0.262 | 0.295 | 0.451 | 0.362 | 0.365 | 0.304 | 0.402 | 0.421 | 0.501 |
 
 socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: socialvec vs popularity 1e-12, socialvec_k12 vs popularity 1.52e-07, socialvec_k25 vs popularity 3.06e-08, llm_baseline vs popularity 0.567, llm_k12 vs popularity 9.33e-10, llm_k25 vs popularity 2.03e-12, llm_k50 vs popularity 2.57e-23, llm_k12 vs socialvec_k12 0.006, llm_k25 vs socialvec_k25 0.000186
+
+## Ranks 181-200 (extended) (per category MAP)
+
+|  | users | random | popularity | socialvec | socialvec_k12 | socialvec_k25 | llm_baseline | llm_k12 | llm_k25 | llm_k50 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Musical artists | 30 | 0.230 | 0.229 | 0.476 | 0.284 | 0.297 | 0.214 | 0.283 | 0.245 | 0.389 |
+| News outlets | 30 | 0.209 | 0.189 | 0.421 | 0.504 | 0.499 | 0.243 | 0.543 | 0.520 | 0.560 |
+| Comedians | 30 | 0.201 | 0.139 | 0.445 | 0.325 | 0.362 | 0.256 | 0.368 | 0.373 | 0.434 |
+| Politicians | 30 | 0.242 | 0.215 | 0.457 | 0.413 | 0.386 | 0.257 | 0.543 | 0.469 | 0.537 |
+| TV stations | 30 | 0.190 | 0.194 | 0.604 | 0.401 | 0.385 | 0.130 | 0.533 | 0.539 | 0.756 |
+| Actors | 30 | 0.253 | 0.245 | 0.565 | 0.428 | 0.441 | 0.279 | 0.480 | 0.444 | 0.491 |
+| TV shows | 30 | 0.197 | 0.205 | 0.394 | 0.220 | 0.197 | 0.215 | 0.295 | 0.284 | 0.434 |
+| Sports teams | 30 | 0.213 | 0.430 | 0.626 | 0.189 | 0.181 | 0.167 | 0.219 | 0.211 | 0.578 |
+| Journalists | 30 | 0.337 | 0.382 | 0.462 | 0.338 | 0.333 | 0.498 | 0.573 | 0.597 | 0.593 |
+| TV hosts | 30 | 0.199 | 0.125 | 0.532 | 0.336 | 0.328 | 0.127 | 0.455 | 0.477 | 0.581 |
+| **Overall** | 300 | 0.227 | 0.235 | 0.498 | 0.344 | 0.341 | 0.239 | 0.429 | 0.416 | 0.535 |
+
+socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: socialvec vs popularity 1.58e-26, socialvec_k12 vs popularity 4.72e-08, socialvec_k25 vs popularity 1.44e-07, llm_baseline vs popularity 0.00644, llm_k12 vs popularity 1.33e-16, llm_k25 vs popularity 2.83e-15, llm_k50 vs popularity 1.95e-30, llm_k12 vs socialvec_k12 9.63e-05, llm_k25 vs socialvec_k25 0.000537

@@ -63,6 +63,7 @@ svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .chart .hit{fill:transparent;cursor:default}
 .chart .hit:hover{fill:rgba(127,127,127,.10)}
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panels>.panel{min-width:0}
 .panel h4{margin:0 0 4px;font-size:15px;font-weight:620}
 .panel .note{font-size:13px;color:var(--muted);margin:0 0 6px}
 @media (max-width:820px){.panels{grid-template-columns:1fr}}
@@ -119,12 +120,12 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   checked every reported number, and extended the evaluation to less popular entities, where a
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
-  <a href="#tail">3 · Less popular entities</a><a href="#order">4 · LLM candidate order</a><a href="#open">5 · Open items</a></nav>
+  <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a><a href="#open">6 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Table 2 values matching the paper</div><div class="value">42 / 42</div><div class="sub">largest difference 0.0005</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">0.571</div><div class="sub">vs. 0.468 · +22%, as in the paper</div></div>
-    <div class="tile"><div class="label">Gain on entities ranked 81–100</div><div class="value">+39%</div><div class="sub">vs. +22% on the top 20, same users</div></div>
-    <div class="tile"><div class="label">Popularity above chance, ranks 81–100</div><div class="value">+0.039</div><div class="sub">MAP; social similarity is +0.154</div></div>
+    <div class="tile"><div class="label">Gain on less popular entities</div><div class="value">+39% · +120%</div><div class="sub">ranks 81–100 · 181–200, vs. +22% and +22% on the top 20 for the same users</div></div>
+    <div class="tile"><div class="label">Popularity vs. chance, ranks 81–100 · 181–200</div><div class="value">+0.039 · −0.012</div><div class="sub">MAP; social similarity is +0.154 · +0.244</div></div>
     <div class="tile"><div class="label">LLM gain from 12 favored entities</div><div class="value">+16%</div><div class="sub">GPT-6 Luna; GPT-4o in the paper: +13%</div></div>
   </div>
 </header>
@@ -311,7 +312,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   <h2><span class="num">3</span>Extension · Less popular entities</h2>
   <p class="intro">Does social user modeling still help when the candidates aren't the most famous entities in their category?</p>
   <p>In the 9 categories that list 100 typed entities, I sorted the entities by Twitter follower count and ranked those
-  at positions <b>81–100</b> instead of the top 20. No category lists more, so ranks 100–120 were not possible.
+  at positions <b>81–100</b> instead of the top 20. No original sheet lists more; Section 4 goes further with extended lists.
   User profiles exclude <i>every</i> listed entity of the target category. As a matched control, I ranked the original
   top 20 for the same users with the same profiles. A random ranking (exact expected AP) provides a chance level, and
   paired Wilcoxon tests compare the two methods.</p>
@@ -489,8 +490,206 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   only 1.4–5.6 band candidates each, so per-user AP is noisy in the smaller categories.</p>
 </section>
 
+<section id="tail2">
+  <h2><span class="num">4</span>Even less popular · Ranks 181–200</h2>
+  <p class="intro">The original sheets stop at 100 entities per category. To go further, I built extended category lists from
+  Wikidata and DBpedia (no LLM, no manual validation; see <code>results/EXTENDED_CATEGORIES_REPORT.md</code>) and repeated every
+  experiment of Section 3 with the accounts ranked <b>181–200</b>.</p>
+  <ul>
+    <li><i>Categories:</i> the 10 categories whose extended list reaches 200 accounts.</li>
+    <li><i>Ranking:</i> the extended lists rank accounts by SocialVec popularity, while ranks 81–100 were by Twitter follower count.
+    The median candidate is the 6,595th most popular SocialVec entity, and 30% of the candidates lie
+    beyond the top 10,000.</li>
+    <li><i>Profiles:</i> user profiles exclude every account of the category's extended list (up to 1,000) and of its original
+    sheet.</li>
+  </ul>
+
+  <ul class="highlights">
+    <li><b>Popularity now ranks worse than chance.</b> At ranks 181–200 it scores 0.214 against
+    0.226 for a random ranking, and falls below chance in 6 of 10 categories.</li>
+    <li><b>Social similarity still personalizes well.</b> It scores 0.470, +120% over popularity,
+    significant in every category (p &lt; 0.001), compared with +22% on the top 20 for the same users.</li>
+    <li><b>The same holds on all users.</b> On 32,487 user–category pairs, the gain is +113%, vs.
+    +20% on the top 20.</li>
+    <li><b>The LLM pattern repeats.</b>
+    <ul>
+      <li><i>No user information:</i> GPT-6 Luna stays close to chance (0.239 vs.
+      0.227 for a random ranking).</li>
+      <li><i>12 or 25 account names:</i> it beats SocialVec on the same accounts
+      (0.429 vs. 0.344 and
+      0.416 vs. 0.341).</li>
+      <li><i>50 accounts:</i> it scores about as well as SocialVec's full profile (0.535 vs.
+      0.498; p = 0.09, not significant).</li>
+    </ul></li>
+  </ul>
+
+  <div class="card"><h4 style="margin:0 0 6px">Overall MAP by popularity band</h4><div class='scroll'><table class='data compact'><thead><tr><th>Candidates</th><th>Users</th><th>Random</th><th>Popularity</th><th>Social</th><th>Δ</th></tr></thead><tbody><tr><th>Ranks 1–20, users of the 81–100 table</th><td>3,798</td><td>0.506</td><td>0.566</td><td>0.689</td><td>+22%</td></tr><tr><th><b>Ranks 81–100</b></th><td>3,798</td><td>0.259</td><td>0.298</td><td>0.413</td><td>+39%</td></tr><tr><th>Ranks 1–20, users of the 181–200 table</th><td>3,665</td><td>0.484</td><td>0.550</td><td>0.672</td><td>+22%</td></tr><tr><th><b>Ranks 181–200</b></th><td>3,665</td><td>0.226</td><td class=below>0.214</td><td>0.470</td><td>+120%</td></tr></tbody></table></div>
+  <p class="caption">Each lower band is compared with the original top 20 on the same users (its Table A population), so
+  the two top-20 rows differ. Dotted red marks popularity below the random ranking.</p></div>
+
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s2)"></i>Popularity</span>
+    <span class="key"><i class="sq" style="background:var(--s1)"></i>Social similarity</span>
+    <span class="key"><i class="tick"></i>Random ranking (expected)</span></div>
+    <div class="panels">
+      <div class="panel"><h4>Original top 20</h4><p class="note">Same users and profiles as on the right</p><svg viewBox="0 0 520 432" class="chart" role="img" aria-label="Ranks 1–20">
+<line class="grid" x1="118.0" x2="118.0" y1="24" y2="406"/><text class="tick" x="118.0" y="422" text-anchor="middle">0.0</text>
+<line class="grid" x1="199.4" x2="199.4" y1="24" y2="406"/><text class="tick" x="199.4" y="422" text-anchor="middle">0.2</text>
+<line class="grid" x1="280.8" x2="280.8" y1="24" y2="406"/><text class="tick" x="280.8" y="422" text-anchor="middle">0.4</text>
+<line class="grid" x1="362.2" x2="362.2" y1="24" y2="406"/><text class="tick" x="362.2" y="422" text-anchor="middle">0.6</text>
+<line class="grid" x1="443.6" x2="443.6" y1="24" y2="406"/><text class="tick" x="443.6" y="422" text-anchor="middle">0.8</text>
+<text class="col-head" x="516" y="18" text-anchor="end">Δ</text>
+<text class="cat" x="108" y="45" text-anchor="end">Musical artists</text>
+<path class="bar s2" d="M118,32 h237.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-237.2 z" /><rect class="hit" x="118" y="31" width="240.2" height="12" data-tip="Musical artists · Popularity<br>MAP <b>0.590</b>"/>
+<path class="bar s1" d="M118,44 h282.5 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-282.5 z" /><rect class="hit" x="118" y="43" width="285.5" height="12" data-tip="Musical artists · Social similarity<br>MAP <b>0.701</b>"/>
+<line class="rand" x1="334.3" x2="334.3" y1="29" y2="57"/><rect class="hit" x="329.3" y="29" width="10" height="28" data-tip="Musical artists · Random ranking<br>expected MAP <b>0.531</b>"/>
+<text class="delta" x="516" y="45" text-anchor="end">+19%</text>
+<text class="cat" x="108" y="79" text-anchor="end">News outlets</text>
+<path class="bar s2" d="M118,66 h261.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-261.4 z" /><rect class="hit" x="118" y="65" width="264.4" height="12" data-tip="News outlets · Popularity<br>MAP <b>0.650</b>"/>
+<path class="bar s1" d="M118,78 h300.6 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-300.6 z" /><rect class="hit" x="118" y="77" width="303.6" height="12" data-tip="News outlets · Social similarity<br>MAP <b>0.746</b>"/>
+<line class="rand" x1="353.2" x2="353.2" y1="63" y2="91"/><rect class="hit" x="348.2" y="63" width="10" height="28" data-tip="News outlets · Random ranking<br>expected MAP <b>0.578</b>"/>
+<text class="delta" x="516" y="79" text-anchor="end">+15%</text>
+<text class="cat" x="108" y="113" text-anchor="end">Comedians</text>
+<path class="bar s2" d="M118,100 h237.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-237.4 z" /><rect class="hit" x="118" y="99" width="240.4" height="12" data-tip="Comedians · Popularity<br>MAP <b>0.591</b>"/>
+<path class="bar s1" d="M118,112 h260.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-260.8 z" /><rect class="hit" x="118" y="111" width="263.8" height="12" data-tip="Comedians · Social similarity<br>MAP <b>0.648</b>"/>
+<line class="rand" x1="324.7" x2="324.7" y1="97" y2="125"/><rect class="hit" x="319.7" y="97" width="10" height="28" data-tip="Comedians · Random ranking<br>expected MAP <b>0.508</b>"/>
+<text class="delta" x="516" y="113" text-anchor="end">+10%</text>
+<text class="cat" x="108" y="147" text-anchor="end">Politicians</text>
+<path class="bar s2" d="M118,134 h297.6 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-297.6 z" /><rect class="hit" x="118" y="133" width="300.6" height="12" data-tip="Politicians · Popularity<br>MAP <b>0.738</b>"/>
+<path class="bar s1" d="M118,146 h331.1 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-331.1 z" /><rect class="hit" x="118" y="145" width="334.1" height="12" data-tip="Politicians · Social similarity<br>MAP <b>0.821</b>"/>
+<line class="rand" x1="406.6" x2="406.6" y1="131" y2="159"/><rect class="hit" x="401.6" y="131" width="10" height="28" data-tip="Politicians · Random ranking<br>expected MAP <b>0.709</b>"/>
+<text class="delta" x="516" y="147" text-anchor="end">+11%</text>
+<text class="cat" x="108" y="181" text-anchor="end">TV stations</text>
+<path class="bar s2" d="M118,168 h178.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-178.8 z" /><rect class="hit" x="118" y="167" width="181.8" height="12" data-tip="TV stations · Popularity<br>MAP <b>0.447</b>"/>
+<path class="bar s1" d="M118,180 h285.3 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-285.3 z" /><rect class="hit" x="118" y="179" width="288.3" height="12" data-tip="TV stations · Social similarity<br>MAP <b>0.708</b>"/>
+<line class="rand" x1="275.1" x2="275.1" y1="165" y2="193"/><rect class="hit" x="270.1" y="165" width="10" height="28" data-tip="TV stations · Random ranking<br>expected MAP <b>0.386</b>"/>
+<text class="delta" x="516" y="181" text-anchor="end">+59%</text>
+<text class="cat" x="108" y="215" text-anchor="end">Actors</text>
+<path class="bar s2" d="M118,202 h257.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-257.8 z" /><rect class="hit" x="118" y="201" width="260.8" height="12" data-tip="Actors · Popularity<br>MAP <b>0.641</b>"/>
+<path class="bar s1" d="M118,214 h275.0 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-275.0 z" /><rect class="hit" x="118" y="213" width="278.0" height="12" data-tip="Actors · Social similarity<br>MAP <b>0.683</b>"/>
+<line class="rand" x1="317.4" x2="317.4" y1="199" y2="227"/><rect class="hit" x="312.4" y="199" width="10" height="28" data-tip="Actors · Random ranking<br>expected MAP <b>0.490</b>"/>
+<text class="delta" x="516" y="215" text-anchor="end">+7%</text>
+<text class="cat" x="108" y="249" text-anchor="end">TV shows</text>
+<path class="bar s2" d="M118,236 h169.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-169.2 z" /><rect class="hit" x="118" y="235" width="172.2" height="12" data-tip="TV shows · Popularity<br>MAP <b>0.423</b>"/>
+<path class="bar s1" d="M118,248 h274.7 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-274.7 z" /><rect class="hit" x="118" y="247" width="277.7" height="12" data-tip="TV shows · Social similarity<br>MAP <b>0.682</b>"/>
+<line class="rand" x1="259.6" x2="259.6" y1="233" y2="261"/><rect class="hit" x="254.6" y="233" width="10" height="28" data-tip="TV shows · Random ranking<br>expected MAP <b>0.348</b>"/>
+<text class="delta" x="516" y="249" text-anchor="end">+61%</text>
+<text class="cat" x="108" y="283" text-anchor="end">Sports teams</text>
+<path class="bar s2" d="M118,270 h191.5 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-191.5 z" /><rect class="hit" x="118" y="269" width="194.5" height="12" data-tip="Sports teams · Popularity<br>MAP <b>0.478</b>"/>
+<path class="bar s1" d="M118,282 h250.6 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-250.6 z" /><rect class="hit" x="118" y="281" width="253.6" height="12" data-tip="Sports teams · Social similarity<br>MAP <b>0.623</b>"/>
+<line class="rand" x1="304.5" x2="304.5" y1="267" y2="295"/><rect class="hit" x="299.5" y="267" width="10" height="28" data-tip="Sports teams · Random ranking<br>expected MAP <b>0.458</b>"/>
+<text class="delta" x="516" y="283" text-anchor="end">+30%</text>
+<text class="cat" x="108" y="317" text-anchor="end">Journalists</text>
+<path class="bar s2" d="M118,304 h264.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-264.2 z" /><rect class="hit" x="118" y="303" width="267.2" height="12" data-tip="Journalists · Popularity<br>MAP <b>0.656</b>"/>
+<path class="bar s1" d="M118,316 h286.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-286.2 z" /><rect class="hit" x="118" y="315" width="289.2" height="12" data-tip="Journalists · Social similarity<br>MAP <b>0.711</b>"/>
+<line class="rand" x1="366.3" x2="366.3" y1="301" y2="329"/><rect class="hit" x="361.3" y="301" width="10" height="28" data-tip="Journalists · Random ranking<br>expected MAP <b>0.610</b>"/>
+<text class="delta" x="516" y="317" text-anchor="end">+8%</text>
+<text class="cat" x="108" y="351" text-anchor="end">TV hosts</text>
+<path class="bar s2" d="M118,338 h112.7 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-112.7 z" /><rect class="hit" x="118" y="337" width="115.7" height="12" data-tip="TV hosts · Popularity<br>MAP <b>0.284</b>"/>
+<path class="bar s1" d="M118,350 h159.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-159.8 z" /><rect class="hit" x="118" y="349" width="162.8" height="12" data-tip="TV hosts · Social similarity<br>MAP <b>0.400</b>"/>
+<line class="rand" x1="210.4" x2="210.4" y1="335" y2="363"/><rect class="hit" x="205.4" y="335" width="10" height="28" data-tip="TV hosts · Random ranking<br>expected MAP <b>0.227</b>"/>
+<text class="delta" x="516" y="351" text-anchor="end">+41%</text>
+<line class="sep" x1="8" x2="516" y1="365" y2="365"/>
+<text class="cat" x="108" y="385" text-anchor="end" font-weight="600">Overall</text>
+<path class="bar s2" d="M118,372 h220.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-220.8 z" /><rect class="hit" x="118" y="371" width="223.8" height="12" data-tip="Overall · Popularity<br>MAP <b>0.550</b>"/>
+<path class="bar s1" d="M118,384 h270.7 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-270.7 z" /><rect class="hit" x="118" y="383" width="273.7" height="12" data-tip="Overall · Social similarity<br>MAP <b>0.672</b>"/>
+<line class="rand" x1="315.2" x2="315.2" y1="369" y2="397"/><rect class="hit" x="310.2" y="369" width="10" height="28" data-tip="Overall · Random ranking<br>expected MAP <b>0.484</b>"/>
+<text class="delta" x="516" y="385" text-anchor="end" font-weight="600">+22%</text>
+</svg></div>
+      <div class="panel"><h4>Ranks 181–200</h4><p class="note">Users sampled for each category</p><svg viewBox="0 0 520 432" class="chart" role="img" aria-label="Ranks 181–200">
+<line class="grid" x1="118.0" x2="118.0" y1="24" y2="406"/><text class="tick" x="118.0" y="422" text-anchor="middle">0.0</text>
+<line class="grid" x1="199.4" x2="199.4" y1="24" y2="406"/><text class="tick" x="199.4" y="422" text-anchor="middle">0.2</text>
+<line class="grid" x1="280.8" x2="280.8" y1="24" y2="406"/><text class="tick" x="280.8" y="422" text-anchor="middle">0.4</text>
+<line class="grid" x1="362.2" x2="362.2" y1="24" y2="406"/><text class="tick" x="362.2" y="422" text-anchor="middle">0.6</text>
+<line class="grid" x1="443.6" x2="443.6" y1="24" y2="406"/><text class="tick" x="443.6" y="422" text-anchor="middle">0.8</text>
+<text class="col-head" x="516" y="18" text-anchor="end">Δ</text>
+<text class="cat" x="108" y="45" text-anchor="end">Musical artists</text>
+<path class="bar s2" d="M118,32 h82.6 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-82.6 z" /><rect class="hit" x="118" y="31" width="85.6" height="12" data-tip="Musical artists · Popularity<br>MAP <b>0.210</b>"/>
+<path class="bar s1" d="M118,44 h199.9 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-199.9 z" /><rect class="hit" x="118" y="43" width="202.9" height="12" data-tip="Musical artists · Social similarity<br>MAP <b>0.499</b>"/>
+<line class="rand" x1="215.3" x2="215.3" y1="29" y2="57"/><rect class="hit" x="210.3" y="29" width="10" height="28" data-tip="Musical artists · Random ranking<br>expected MAP <b>0.239</b>"/>
+<text class="delta" x="516" y="45" text-anchor="end">+137%</text>
+<text class="cat" x="108" y="79" text-anchor="end">News outlets</text>
+<path class="bar s2" d="M118,66 h80.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-80.4 z" /><rect class="hit" x="118" y="65" width="83.4" height="12" data-tip="News outlets · Popularity<br>MAP <b>0.205</b>"/>
+<path class="bar s1" d="M118,78 h128.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-128.2 z" /><rect class="hit" x="118" y="77" width="131.2" height="12" data-tip="News outlets · Social similarity<br>MAP <b>0.322</b>"/>
+<line class="rand" x1="201.3" x2="201.3" y1="63" y2="91"/><rect class="hit" x="196.3" y="63" width="10" height="28" data-tip="News outlets · Random ranking<br>expected MAP <b>0.205</b>"/>
+<text class="delta" x="516" y="79" text-anchor="end">+57%</text>
+<text class="cat" x="108" y="113" text-anchor="end">Comedians</text>
+<path class="bar s2" d="M118,100 h64.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-64.2 z" /><rect class="hit" x="118" y="99" width="67.2" height="12" data-tip="Comedians · Popularity<br>MAP <b>0.165</b>"/>
+<path class="bar s1" d="M118,112 h164.7 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-164.7 z" /><rect class="hit" x="118" y="111" width="167.7" height="12" data-tip="Comedians · Social similarity<br>MAP <b>0.412</b>"/>
+<line class="rand" x1="202.4" x2="202.4" y1="97" y2="125"/><rect class="hit" x="197.4" y="97" width="10" height="28" data-tip="Comedians · Random ranking<br>expected MAP <b>0.207</b>"/>
+<text class="delta" x="516" y="113" text-anchor="end">+150%</text>
+<text class="cat" x="108" y="147" text-anchor="end">Politicians</text>
+<path class="bar s2" d="M118,134 h97.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-97.4 z" /><rect class="hit" x="118" y="133" width="100.4" height="12" data-tip="Politicians · Popularity<br>MAP <b>0.247</b>"/>
+<path class="bar s1" d="M118,146 h193.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-193.4 z" /><rect class="hit" x="118" y="145" width="196.4" height="12" data-tip="Politicians · Social similarity<br>MAP <b>0.482</b>"/>
+<line class="rand" x1="222.3" x2="222.3" y1="131" y2="159"/><rect class="hit" x="217.3" y="131" width="10" height="28" data-tip="Politicians · Random ranking<br>expected MAP <b>0.256</b>"/>
+<text class="delta" x="516" y="147" text-anchor="end">+96%</text>
+<text class="cat" x="108" y="181" text-anchor="end">TV stations</text>
+<path class="bar s2" d="M118,168 h60.7 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-60.7 z" /><rect class="hit" x="118" y="167" width="63.7" height="12" data-tip="TV stations · Popularity<br>MAP <b>0.156</b>"/>
+<path class="bar s1" d="M118,180 h240.9 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-240.9 z" /><rect class="hit" x="118" y="179" width="243.9" height="12" data-tip="TV stations · Social similarity<br>MAP <b>0.599</b>"/>
+<line class="rand" x1="195.2" x2="195.2" y1="165" y2="193"/><rect class="hit" x="190.2" y="165" width="10" height="28" data-tip="TV stations · Random ranking<br>expected MAP <b>0.190</b>"/>
+<text class="delta" x="516" y="181" text-anchor="end">+283%</text>
+<text class="cat" x="108" y="215" text-anchor="end">Actors</text>
+<path class="bar s2" d="M118,202 h76.2 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-76.2 z" /><rect class="hit" x="118" y="201" width="79.2" height="12" data-tip="Actors · Popularity<br>MAP <b>0.195</b>"/>
+<path class="bar s1" d="M118,214 h204.3 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-204.3 z" /><rect class="hit" x="118" y="213" width="207.3" height="12" data-tip="Actors · Social similarity<br>MAP <b>0.509</b>"/>
+<line class="rand" x1="217.6" x2="217.6" y1="199" y2="227"/><rect class="hit" x="212.6" y="199" width="10" height="28" data-tip="Actors · Random ranking<br>expected MAP <b>0.245</b>"/>
+<text class="delta" x="516" y="215" text-anchor="end">+162%</text>
+<text class="cat" x="108" y="249" text-anchor="end">TV shows</text>
+<path class="bar s2" d="M118,236 h80.8 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-80.8 z" /><rect class="hit" x="118" y="235" width="83.8" height="12" data-tip="TV shows · Popularity<br>MAP <b>0.206</b>"/>
+<path class="bar s1" d="M118,248 h177.5 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-177.5 z" /><rect class="hit" x="118" y="247" width="180.5" height="12" data-tip="TV shows · Social similarity<br>MAP <b>0.443</b>"/>
+<line class="rand" x1="198.1" x2="198.1" y1="233" y2="261"/><rect class="hit" x="193.1" y="233" width="10" height="28" data-tip="TV shows · Random ranking<br>expected MAP <b>0.197</b>"/>
+<text class="delta" x="516" y="249" text-anchor="end">+115%</text>
+<text class="cat" x="108" y="283" text-anchor="end">Sports teams</text>
+<path class="bar s2" d="M118,270 h115.9 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-115.9 z" /><rect class="hit" x="118" y="269" width="118.9" height="12" data-tip="Sports teams · Popularity<br>MAP <b>0.292</b>"/>
+<path class="bar s1" d="M118,282 h197.3 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-197.3 z" /><rect class="hit" x="118" y="281" width="200.3" height="12" data-tip="Sports teams · Social similarity<br>MAP <b>0.492</b>"/>
+<line class="rand" x1="201.7" x2="201.7" y1="267" y2="295"/><rect class="hit" x="196.7" y="267" width="10" height="28" data-tip="Sports teams · Random ranking<br>expected MAP <b>0.206</b>"/>
+<text class="delta" x="516" y="283" text-anchor="end">+68%</text>
+<text class="cat" x="108" y="317" text-anchor="end">Journalists</text>
+<path class="bar s2" d="M118,304 h144.9 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-144.9 z" /><rect class="hit" x="118" y="303" width="147.9" height="12" data-tip="Journalists · Popularity<br>MAP <b>0.363</b>"/>
+<path class="bar s1" d="M118,316 h182.4 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-182.4 z" /><rect class="hit" x="118" y="315" width="185.4" height="12" data-tip="Journalists · Social similarity<br>MAP <b>0.456</b>"/>
+<line class="rand" x1="246.5" x2="246.5" y1="301" y2="329"/><rect class="hit" x="241.5" y="301" width="10" height="28" data-tip="Journalists · Random ranking<br>expected MAP <b>0.316</b>"/>
+<text class="delta" x="516" y="317" text-anchor="end">+25%</text>
+<text class="cat" x="108" y="351" text-anchor="end">TV hosts</text>
+<path class="bar s2" d="M118,338 h37.6 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-37.6 z" /><rect class="hit" x="118" y="337" width="40.6" height="12" data-tip="TV hosts · Popularity<br>MAP <b>0.100</b>"/>
+<path class="bar s1" d="M118,350 h194.0 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-194.0 z" /><rect class="hit" x="118" y="349" width="197.0" height="12" data-tip="TV hosts · Social similarity<br>MAP <b>0.484</b>"/>
+<line class="rand" x1="198.4" x2="198.4" y1="335" y2="363"/><rect class="hit" x="193.4" y="335" width="10" height="28" data-tip="TV hosts · Random ranking<br>expected MAP <b>0.198</b>"/>
+<text class="delta" x="516" y="351" text-anchor="end">+386%</text>
+<line class="sep" x1="8" x2="516" y1="365" y2="365"/>
+<text class="cat" x="108" y="385" text-anchor="end" font-weight="600">Overall</text>
+<path class="bar s2" d="M118,372 h84.1 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-84.1 z" /><rect class="hit" x="118" y="371" width="87.1" height="12" data-tip="Overall · Popularity<br>MAP <b>0.214</b>"/>
+<path class="bar s1" d="M118,384 h188.3 a3,3 0 0 1 3,3 v4 a3,3 0 0 1 -3,3 h-188.3 z" /><rect class="hit" x="118" y="383" width="191.3" height="12" data-tip="Overall · Social similarity<br>MAP <b>0.470</b>"/>
+<line class="rand" x1="209.9" x2="209.9" y1="369" y2="397"/><rect class="hit" x="204.9" y="369" width="10" height="28" data-tip="Overall · Random ranking<br>expected MAP <b>0.226</b>"/>
+<text class="delta" x="516" y="385" text-anchor="end" font-weight="600">+120%</text>
+</svg></div>
+    </div>
+    <p class="caption">MAP per category; Δ is the gain of social similarity over popularity. The values are in Table A′ below.</p>
+  </div>
+
+  <h3>Table A′ · Users sampled for each category</h3>
+  <div class="card"><div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='5'>Ranks 1–20 (original candidates)</th><th colspan='6' class='grp'>Ranks 181–200</th></tr><tr><th>Category</th><th>Users</th><th>Rel./user</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th><th class='grp'>Rel./user</th><th>Random</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th></tr></thead><tbody><tr><th>Musical artists</th><td>420</td><td>9.1</td><td>0.590</td><td>0.701</td><td>+19%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.4</td><td>0.239</td><td class="below">0.210</td><td>0.499</td><td>+137%</td><td class='p'>&lt; 0.001</td></tr><tr><th>News outlets</th><td>310</td><td>10.2</td><td>0.650</td><td>0.746</td><td>+15%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.6</td><td>0.205</td><td>0.205</td><td>0.322</td><td>+57%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Comedians</th><td>314</td><td>8.6</td><td>0.591</td><td>0.648</td><td>+10%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.6</td><td>0.207</td><td class="below">0.165</td><td>0.412</td><td>+150%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Politicians</th><td>477</td><td>12.6</td><td>0.738</td><td>0.821</td><td>+11%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.5</td><td>0.256</td><td class="below">0.247</td><td>0.482</td><td>+96%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV stations</th><td>187</td><td>5.8</td><td>0.447</td><td>0.708</td><td>+59%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.2</td><td>0.190</td><td class="below">0.156</td><td>0.599</td><td>+283%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Actors</th><td>467</td><td>8.2</td><td>0.641</td><td>0.683</td><td>+7%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.5</td><td>0.245</td><td class="below">0.195</td><td>0.509</td><td>+162%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV shows</th><td>171</td><td>4.9</td><td>0.423</td><td>0.682</td><td>+61%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.4</td><td>0.197</td><td>0.206</td><td>0.443</td><td>+115%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Sports teams</th><td>144</td><td>7.4</td><td>0.478</td><td>0.623</td><td>+30%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.6</td><td>0.206</td><td>0.292</td><td>0.492</td><td>+68%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Journalists</th><td>818</td><td>11.0</td><td>0.656</td><td>0.711</td><td>+8%</td><td class='p'>&lt; 0.001</td><td class='grp'>4.1</td><td>0.316</td><td>0.363</td><td>0.456</td><td>+25%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV hosts</th><td>357</td><td>2.1</td><td>0.284</td><td>0.400</td><td>+41%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.4</td><td>0.198</td><td class="below">0.100</td><td>0.484</td><td>+386%</td><td class='p'>&lt; 0.001</td></tr><tr class="total"><th>Overall</th><td>3,665</td><td></td><td>0.550</td><td>0.672</td><td>+22%</td><td class='p'>&lt; 0.001</td><td class='grp'></td><td>0.226</td><td class="below">0.214</td><td>0.470</td><td>+120%</td><td class='p'>&lt; 0.001</td></tr></tbody></table></div>
+  <p class="caption">3,665 users who follow at least one entity ranked 181–200 in their category. As in Table A.</p></div>
+
+  <h3>Table B′ · Robustness: all experiment users</h3>
+  <div class="card"><div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='5'>Ranks 1–20 (original candidates)</th><th colspan='6' class='grp'>Ranks 181–200</th></tr><tr><th>Category</th><th>Users</th><th>Rel./user</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th><th class='grp'>Rel./user</th><th>Random</th><th>Popularity</th><th>Social</th><th>Δ</th><th>p</th></tr></thead><tbody><tr><th>Musical artists</th><td>4,478</td><td>7.5</td><td>0.490</td><td>0.614</td><td>+25%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.3</td><td>0.236</td><td class="below">0.188</td><td>0.478</td><td>+154%</td><td class='p'>&lt; 0.001</td></tr><tr><th>News outlets</th><td>3,144</td><td>9.2</td><td>0.601</td><td>0.716</td><td>+19%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.6</td><td>0.206</td><td>0.221</td><td>0.337</td><td>+52%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Comedians</th><td>2,883</td><td>7.3</td><td>0.582</td><td>0.619</td><td>+6%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.5</td><td>0.204</td><td class="below">0.185</td><td>0.430</td><td>+132%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Politicians</th><td>4,946</td><td>11.1</td><td>0.695</td><td>0.803</td><td>+16%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.7</td><td>0.264</td><td>0.269</td><td>0.500</td><td>+86%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV stations</th><td>1,950</td><td>5.7</td><td>0.495</td><td>0.674</td><td>+36%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.3</td><td>0.193</td><td class="below">0.177</td><td>0.496</td><td>+179%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Actors</th><td>5,069</td><td>6.6</td><td>0.592</td><td>0.622</td><td>+5%</td><td class='p'>&lt; 0.001</td><td class='grp'>2.6</td><td>0.250</td><td class="below">0.199</td><td>0.502</td><td>+152%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV shows</th><td>2,338</td><td>4.0</td><td>0.435</td><td>0.598</td><td>+38%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.5</td><td>0.202</td><td>0.204</td><td>0.432</td><td>+112%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Sports teams</th><td>823</td><td>5.6</td><td>0.418</td><td>0.544</td><td>+30%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.5</td><td>0.200</td><td>0.289</td><td>0.460</td><td>+59%</td><td class='p'>&lt; 0.001</td></tr><tr><th>Journalists</th><td>5,084</td><td>8.6</td><td>0.547</td><td>0.669</td><td>+22%</td><td class='p'>&lt; 0.001</td><td class='grp'>3.5</td><td>0.290</td><td>0.334</td><td>0.463</td><td>+39%</td><td class='p'>&lt; 0.001</td></tr><tr><th>TV hosts</th><td>1,772</td><td>1.8</td><td>0.351</td><td>0.384</td><td>+9%</td><td class='p'>&lt; 0.001</td><td class='grp'>1.5</td><td>0.202</td><td class="below">0.107</td><td>0.528</td><td>+396%</td><td class='p'>&lt; 0.001</td></tr><tr class="total"><th>Overall</th><td>32,487</td><td></td><td>0.521</td><td>0.624</td><td>+20%</td><td class='p'>&lt; 0.001</td><td class='grp'></td><td>0.225</td><td class="below">0.217</td><td>0.463</td><td>+113%</td><td class='p'>&lt; 0.001</td></tr></tbody></table></div><details><summary>Candidate entities, ranks 181–200 of the extended lists (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Followers</th><th>Entities</th></tr></thead><tbody><tr><th>Musical artists</th><td class='nowrap'>887K – 5,942K</td><td class='names'>partynextdoor, PUSHA_T, TheRealNimoy, jason_mraz, SaraBareilles, janemarielynch, JanelleMonae, Tyrese, KaceyMusgraves, kevinjonas, falloutboy, KChenoweth, zacbrownband, markhoppus, 4everBrandy, machinegunkelly, PanicAtTheDisco, HoodieAllen, THEREALSWIZZZ, JackJ</td></tr><tr><th>News outlets</th><td class='nowrap'>87K – 1,035K</td><td class='names'>SFWeekly, ftfinancenews, coindesk, AndroidAuth, townhallcom, CivilEats, FaceTheNation, NOLAnews, TelegraphNews, CR, sbjsbd, starsandstripes, TheWeek, azcentral, indystar, RealClearNews, detroitnews, MadMoneyOnCNBC, nytimesmusic, MarshallProj</td></tr><tr><th>Comedians</th><td class='nowrap'>130K – 780K</td><td class='names'>paulapoundstone, kylekinane, TheoVon, iamdesibanks, danacarvey, KidFury, ScooterMagruder, nedfulmer, moshekasher, KarlousM, Jokoy, DougStanhope, Griz, garyowencomedy, julieklausner, BrianReganComic, BrendanSchaub, MRbelzer, davidcrosss, TheRichardLewis</td></tr><tr><th>Politicians</th><td class='nowrap'>158K – 737K</td><td class='names'>RonWyden, MarkWarner, JohnWDean, WalshFreedom, HeyTammyBruce, JeffFlake, EricCantor, JamesFallows, MicheleBachmann, EWErickson, vj44, RickSantorum, MartinOMalley, drmoore, RepKatiePorter<sup>*</sup>, marty_walsh, Paula_White, CLewandowski_, RudyGiuliani, JillWineBanks</td></tr><tr><th>TV stations</th><td class='nowrap'>95K – 732K</td><td class='names'>DenverChannel, CBSDFW, TBSNetwork, fox5ny, FOX59, QVC, TUDNUSA, NECN, ABC11_WTVD, FOX26Houston, Sportsnet, FOX13News, WGRZ, FOX2News, BlazeTV, NC5, WKRN, HawaiiNewsNow, 12News, CBSDenver</td></tr><tr><th>Actors</th><td class='nowrap'>905K – 4,079K</td><td class='names'>PatrickDempsey, ChloeGMoretz, ayeshacurry, SleepintheGardn, EdwardNorton, justsanaa, DarrenCriss, brielarson, TraceeEllisRoss, StephenAmell, 1capplegate, paulwesley, realjknoxville, Mariska, EmilyOsment, MrsSOsbourne, jessetyler, BrodyJenner, realmikefox, blakelively</td></tr><tr><th>TV shows</th><td class='nowrap'>120K – 2,435K</td><td class='names'>13ReasonsWhy, GameGrumps, drunkhistory, FearTWD, CommunityTV, TheRealDaytime, GilmoreGirls, lsb, Castle_ABC, CWJaneTheVirgin, MakingAMurderer, Victorious, nbcthegoodplace, ScreamQueens, archerfxx, TheCWSupergirl, Suits_USA, AmazingRaceCBS, SeinfeldTV, TestKitchen</td></tr><tr><th>Sports teams</th><td class='nowrap'>71K – 904K</td><td class='names'>12thMan, ClemsonTigers, WarriorsPR, umterps, OhioStateHoops, GopherSports, VandyBoys, BUFootball, Cuse, woodbrothers21, GoCards, UCFKnights, Cloud9, indyindians, HokiesFB, DurhamBulls, NHLFlames, IowaCubs, Senators, GoBEARCATS</td></tr><tr><th>Journalists</th><td class='nowrap'>183K – 817K</td><td class='names'>mkhammer, rezaaslan, matthewamiller, mehdirhasan, JackPosobiec, JRubinBlogger, peterbakernyt, jheil, JedediahBila, jimsciutto, arielhelwani, morninggloria, JaneMayerNYer, jbarro, AngryBlackLady, SharylAttkisson, ditzkoff, KatrinaNation, KristineLeahy, tombrokaw</td></tr><tr><th>TV hosts</th><td class='nowrap'>53K – 12,582K</td><td class='names'>Totalbiscuit, Fwiz, DylanRatigan, iamweeman, JohnBerman, ChrisMoyles, BiancaDLGarza, melrobbins, jaymee, jonsnowC4, gregjames, MarkSimoneNY, mayaharris_, tsnjamesduthie, Ehmee, annecurtissmith, gusjohnson, MikeRinder, higeorgeshelley, TiffanyDCross</td></tr></tbody></table></div></details></div>
+
+  <h3>Table C′ · LLM ranking of ranks 181–200</h3>
+  <p>The Table C protocol, for 30 random users per category, with every account of the category's extended list and
+  original sheet removed from the prompts. The baseline prompt lists the candidates in the extended list's (popularity) order.
+  The SocialVec k = 12 and k = 25 columns use exactly the accounts in the LLM's prompts (11.6 and
+  21.2 on average). Given the same evidence, the LLM ranks better at both sizes:
+  p &lt; 0.001 with 12 accounts, ahead in 9 of 10 categories;
+  p &lt; 0.001 with 25, ahead in 9 of 10.</p>
+  <div class="card"><div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='2'>Non-personalized</th><th colspan='3' class='grp'>SocialVec</th><th colspan='4' class='grp'>GPT-6 Luna</th></tr><tr><th>Category</th><th>Users</th><th>Random</th><th>Popularity</th><th class='grp'>All entities</th><th>k = 12</th><th>k = 25</th><th class='grp'>Baseline</th><th>k = 12</th><th>k = 25</th><th>k = 50</th></tr></thead><tbody><tr><th>Musical artists</th><td>30</td><td>0.230</td><td>0.229</td><td class=grp><b>0.476</b></td><td>0.284</td><td>0.297</td><td class=grp>0.214</td><td>0.283</td><td>0.245</td><td>0.389</td></tr><tr><th>News outlets</th><td>30</td><td>0.209</td><td>0.189</td><td class=grp>0.421</td><td>0.504</td><td>0.499</td><td class=grp>0.243</td><td>0.543</td><td>0.520</td><td><b>0.560</b></td></tr><tr><th>Comedians</th><td>30</td><td>0.201</td><td>0.139</td><td class=grp><b>0.445</b></td><td>0.325</td><td>0.362</td><td class=grp>0.256</td><td>0.368</td><td>0.373</td><td>0.434</td></tr><tr><th>Politicians</th><td>30</td><td>0.242</td><td>0.215</td><td class=grp>0.457</td><td>0.413</td><td>0.386</td><td class=grp>0.257</td><td><b>0.543</b></td><td>0.469</td><td>0.537</td></tr><tr><th>TV stations</th><td>30</td><td>0.190</td><td>0.194</td><td class=grp>0.604</td><td>0.401</td><td>0.385</td><td class=grp>0.130</td><td>0.533</td><td>0.539</td><td><b>0.756</b></td></tr><tr><th>Actors</th><td>30</td><td>0.253</td><td>0.245</td><td class=grp><b>0.565</b></td><td>0.428</td><td>0.441</td><td class=grp>0.279</td><td>0.480</td><td>0.444</td><td>0.491</td></tr><tr><th>TV shows</th><td>30</td><td>0.197</td><td>0.205</td><td class=grp>0.394</td><td>0.220</td><td>0.197</td><td class=grp>0.215</td><td>0.295</td><td>0.284</td><td><b>0.434</b></td></tr><tr><th>Sports teams</th><td>30</td><td>0.213</td><td>0.430</td><td class=grp><b>0.626</b></td><td>0.189</td><td>0.181</td><td class=grp>0.167</td><td>0.219</td><td>0.211</td><td>0.578</td></tr><tr><th>Journalists</th><td>30</td><td>0.337</td><td>0.382</td><td class=grp>0.462</td><td>0.338</td><td>0.333</td><td class=grp>0.498</td><td>0.573</td><td><b>0.597</b></td><td>0.593</td></tr><tr><th>TV hosts</th><td>30</td><td>0.199</td><td>0.125</td><td class=grp>0.532</td><td>0.336</td><td>0.328</td><td class=grp>0.127</td><td>0.455</td><td>0.477</td><td><b>0.581</b></td></tr><tr class='total'><th>Overall</th><td>300</td><td>0.227</td><td>0.235</td><td class=grp>0.498</td><td>0.344</td><td>0.341</td><td class=grp>0.239</td><td>0.429</td><td>0.416</td><td><b>0.535</b></td></tr></tbody></table></div>
+  <p class="caption">Bold marks the best method in each row. With 30 users per category, per-category MAP has a standard error of
+  about 0.05. These GPT-6 Luna runs cost $0.18.</p></div>
+
+  <h3>Limitations</h3>
+  <p>The extended lists are not manually validated. Known errors, such as people with acting credits listed as actors, team PR
+  accounts and DBpedia mistypings, are described in the extended-lists report; they affect the candidate sets here. The
+  LLM results use 30 users per category.</p>
+</section>
+
 <section id="order">
-  <h2><span class="num">4</span>Does the LLM depend on the order of the candidates?</h2>
+  <h2><span class="num">5</span>Does the LLM depend on the order of the candidates?</h2>
   <p class="intro">The original prompts list the candidates sorted by follower count, which an order-following model could
   turn into popularity ranking for free.</p>
   <p>For the same 700 users, I re-ran the k = 25 prompts twice: once unchanged, to measure run-to-run noise, and once with the
@@ -511,27 +710,33 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
     on average, but overall MAP is stable.</li>
   </ul>
   <div class="card"><div class='panels'><div class='panel'><h4>Personalized, k = 25 (700 users)</h4><div class='scroll'><table class='data compact'><thead><tr><th>Measure</th><th>Original order</th><th>Repeated</th><th>Shuffled</th></tr></thead><tbody><tr><th>MAP</th><td>0.554</td><td>0.553</td><td>0.541</td></tr><tr><th>p vs. original run</th><td></td><td>0.974</td><td>&lt; 0.001</td></tr><tr><th>Mean per-user |ΔAP| vs. original run</th><td></td><td>0.058</td><td>0.085</td></tr><tr><th>Kendall τ: output vs. presented order</th><td>0.315</td><td>0.315</td><td>0.091</td></tr><tr><th>Kendall τ: output vs. popularity order</th><td>0.315</td><td>0.315</td><td>0.200</td></tr><tr><th>Kendall τ: output vs. original-run output</th><td>1</td><td>0.776</td><td>0.667</td></tr></tbody></table></div></div><div class='panel'><h4>Non-personalized baseline (14 categories × 10 calls)</h4><div class='scroll'><table class='data compact'><thead><tr><th>Measure</th><th>Original order</th><th>Shuffled</th></tr></thead><tbody><tr><th>Overall MAP, mean of 10 calls</th><td>0.475</td><td>0.452</td></tr><tr><th>SD across calls</th><td>0.004</td><td>0.005</td></tr><tr><th>Kendall τ: output vs. presented order</th><td>0.513</td><td>0.133</td></tr><tr><th>Kendall τ: output vs. popularity order</th><td>0.426</td><td>0.324</td></tr><tr><th>Distinct rankings among 10 calls</th><td>9.9</td><td>10.0</td></tr></tbody></table></div></div></div></div>
-  <p class="caption">5,157 model calls in total across all LLM experiments, costing $0.94.</p>
+  <p class="caption">7,882 model calls in total across all LLM experiments, costing $1.79.</p>
 </section>
 
 <section id="open">
-  <h2><span class="num">5</span>Open items</h2>
+  <h2><span class="num">6</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
-    <p>The LLM results use samples of 50 users per category (30 for ranks 81–100), which keeps overall MAP within about ±0.01.
-    A full-population run takes about 45K calls. The same command runs it with larger samples, and cached responses are reused.</p></div>
+    <p>The LLM results use samples of 50 users per category (30 for ranks 81–100 and 181–200), which keeps overall MAP within
+    about ±0.01. A full-population run takes about 45K calls. The same command runs it with larger samples, and cached
+    responses are reused.</p></div>
     <div class="callout"><span class="tag">Next</span><h4>Description-based tail candidates</h4>
-    <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i> and requires them to be
-    below the top 10K/20K SocialVec entities. My band used the existing typed lists and follower counts: 20 candidates per
-    category, of which only 110 of 177 fall below the top 10K. The ranking protocol carries over unchanged.</p></div>
+    <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i>, below the top 10K/20K
+    SocialVec entities. The ranks 81–100 band used the original typed lists: only 110 of 177 candidates fall
+    below the top 10K. The ranks 181–200 band, from the extended lists, gets closer: 30% of its candidates do.
+    It still uses 20 candidates typed by Wikidata and DBpedia rather than by description.</p></div>
   </div>
 </section>
 
 <footer>
   <p>Regenerate the underlying results with <code>python run_reproduction.py</code>,
-  <code>python run_popularity_band.py --start 81 --end 100</code> and <code>python run_llm_experiments.py</code>, then
-  rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
-  <code>results/POPULARITY_BAND_REPORT.md</code> and <code>results/LLM_REPORT.md</code>.</p>
+  <code>python run_popularity_band.py --start 81 --end 100</code> and <code>python run_llm_experiments.py</code>. For ranks
+  181–200, run <code>python build_extended_categories.py</code>,
+  <code>python run_popularity_band.py --start 181 --end 200 --source extended</code> and
+  <code>python run_llm_experiments.py --parts band --band-start 181 --band-end 200 --band-source extended</code>.
+  Then rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
+  <code>results/POPULARITY_BAND_REPORT.md</code>, <code>results/LLM_REPORT.md</code> and
+  <code>results/EXTENDED_CATEGORIES_REPORT.md</code>.</p>
 </footer>
 </div>
 <script>

@@ -43,7 +43,7 @@ from reproduction.llm import (
     user_prompts,
     user_samples,
 )
-from reproduction.popularity_bands import load_category_sheets, make_candidates, popularity_band
+from reproduction.popularity_bands import load_category_sheets, load_extended_sheets, make_candidates, popularity_band
 from reproduction.report import markdown_table
 
 USERS_PER_CATEGORY = 50
@@ -78,31 +78,48 @@ def run_order(users, categories, names, rankers, out, workers):
     trials.to_csv(out / "baseline_trials.csv", index=False)
 
 
-def band_setup(users, categories):
-    """Band candidates (with SocialVec embeddings, in spreadsheet order), per-topic exclusions and the embeddings."""
-    sheets = load_category_sheets()
+DEFAULT_BAND = (BAND_START, BAND_END, "original")
+
+
+def band_suffix(band):
+    """Output-name suffix of a band: '' for the default ranks 81-100, else e.g. '_181_200_extended'."""
+    return "" if tuple(band) == DEFAULT_BAND else f"_{band[0]}_{band[1]}_{band[2]}"
+
+
+def band_setup(users, categories, band=DEFAULT_BAND):
+    """
+    Band candidates (with SocialVec embeddings, in spreadsheet order), per-topic exclusions and the embeddings.
+
+    `band` is (start, end, source): source 'original' bands the original sheets by follower count;
+    'extended' bands the extended lists in their SocialVec popularity order, and the exclusions then
+    cover the extended list as well as the original sheet.
+    """
+    start, end, source = band
+    original = load_category_sheets()
+    sheets = load_extended_sheets() if source == "extended" else original
     vocab = SocialVec("2020")
     candidates, exclude = {}, {}
     for topic in PAPER_CATEGORY_ORDER:
-        if topic not in sheets or len(sheets[topic]) < BAND_END:
+        if topic not in sheets or len(sheets[topic]) < end:
             continue
-        band = popularity_band(sheets[topic], BAND_START, BAND_END)
-        band = band[[i in vocab for i in band["twitter_user_id"]]].sort_values("sheet_row")
-        candidates[topic] = band[["twitter_user_id", "twitter_name", "followers_count"]].reset_index(drop=True)
+        entities = popularity_band(sheets[topic], start, end, by="rank_in_category" if source == "extended" else "followers_count")
+        entities = entities[[i in vocab for i in entities["twitter_user_id"]]].sort_values("sheet_row")
+        candidates[topic] = entities[["twitter_user_id", "twitter_name", "followers_count"]].reset_index(drop=True)
         exclude[topic] = ({int(i) for i in sheets[topic]["twitter_user_id"]}
+                          | {int(i) for i in original.get(topic, pd.DataFrame(columns=["twitter_user_id"]))["twitter_user_id"]}
                           | {int(i) for i in categories[topic]["twitter_user_id"]})
     return candidates, exclude, vocab
 
 
-def band_sample(users, categories):
+def band_sample(users, categories, band=DEFAULT_BAND):
     """
-    The users of the ranks 81-100 LLM experiment: per category, a random sample of the
+    The users of a band's LLM experiment: per category, a random sample of the
     users sampled for that category who follow at least one band candidate.
 
     Returns:
         (sample, band candidates, per-topic exclusions, SocialVec embeddings)
     """
-    candidates, exclude, sv = band_setup(users, categories)
+    candidates, exclude, sv = band_setup(users, categories, band)
     eligible = users[users["topic"].isin(candidates)].copy()
     ids = {t: set(c["twitter_user_id"]) for t, c in candidates.items()}
     eligible = eligible[[not ids[t].isdisjoint(f) for t, f in zip(eligible["topic"], eligible["friends_ids"])]]
@@ -110,10 +127,11 @@ def band_sample(users, categories):
     return sample, candidates, exclude, sv
 
 
-def run_band(users, categories, names, rankers, out, workers):
-    sample, candidates, exclude, sv = band_sample(users, categories)
+def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND):
+    suffix = band_suffix(band)
+    sample, candidates, exclude, sv = band_sample(users, categories, band)
     prompts = user_prompts(sample, categories, names, exclude=exclude)
-    res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / "band.jsonl", workers=workers)
+    res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / f"band{suffix}.jsonl", workers=workers)
 
     # SocialVec on the same accounts that the LLM's k=12 and k=25 prompts list
     samples = user_samples(sample, categories, names, exclude=exclude)
@@ -128,10 +146,12 @@ def run_band(users, categories, names, rankers, out, workers):
         res[f"socialvec_k{k}"] = res["user"].map(ap)
         res[f"n_k{k}_accounts"] = res["user"].map(samples[f"llm_k{k}"].apply(len))
 
-    band_ap = pd.read_csv(RESULTS_DIR / f"popularity_band_{BAND_START}_{BAND_END}" / "per_user_ap.csv.gz")
+    start, end, source = band
+    band_dir = RESULTS_DIR / f"popularity_band_{start}_{end}{'_extended' if source == 'extended' else ''}"
+    band_ap = pd.read_csv(band_dir / "per_user_ap.csv.gz")
     band_ap = band_ap[(band_ap["population"] == "category") & (band_ap["candidates"] == "band")
                       & (band_ap["exclusion"] == "exclude_category")][["user", "random", "popularity", "socialvec"]]
-    res.merge(band_ap, on="user").to_csv(out / "band_per_user.csv.gz", index=False)
+    res.merge(band_ap, on="user").to_csv(out / f"band_per_user{suffix}.csv.gz", index=False)
 
 
 # ---------------------------------------------------------------- analysis
@@ -252,21 +272,29 @@ def analyze(out, categories, main_users):
     sections += ["## Non-personalized baseline: 10 original-order and 10 shuffled calls per category\n",
                  markdown_table(base_stats, floatfmt="{:.4g}"), ""]
 
-    # ---- band
-    band = pd.read_csv(out / "band_per_user.csv.gz")
-    sv_cols = ["socialvec", "socialvec_k12", "socialvec_k25"]
-    t_band = by_category(band, ["random", "popularity"] + sv_cols + LLM_COLUMNS)
-    t_band.to_csv(out / "band_by_category.csv")
-    band_tests = {f"{c} vs popularity": p_value(band[c], band["popularity"]) for c in sv_cols + LLM_COLUMNS}
-    for k in (12, 25):
-        band_tests[f"llm_k{k} vs socialvec_k{k}"] = p_value(band[f"llm_k{k}"], band[f"socialvec_k{k}"])
-    sections += [f"## Ranks {BAND_START}-{BAND_END} (per category MAP)\n", markdown_table(labelled(t_band)), "",
-                 "socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: "
-                 + ", ".join(f"{k} {v:.3g}" for k, v in band_tests.items()), ""]
-    pd.Series(band_tests).to_csv(out / "band_tests.csv")
+    # ---- bands (ranks 81-100 and any other band that was run)
+    for path in sorted(out.glob("band_per_user*.csv.gz")):
+        suffix = path.name[len("band_per_user"):-len(".csv.gz")]
+        sections += analyze_band(out, suffix)
 
     (out / "tables.md").write_text("\n".join(sections), encoding="utf-8")
     print("\n".join(sections))
+
+
+def analyze_band(out, suffix=""):
+    """Per-category MAP and paired tests for one band's LLM results; returns markdown sections."""
+    band = pd.read_csv(out / f"band_per_user{suffix}.csv.gz")
+    sv_cols = ["socialvec", "socialvec_k12", "socialvec_k25"]
+    t_band = by_category(band, ["random", "popularity"] + sv_cols + LLM_COLUMNS)
+    t_band.to_csv(out / f"band_by_category{suffix}.csv")
+    band_tests = {f"{c} vs popularity": p_value(band[c], band["popularity"]) for c in sv_cols + LLM_COLUMNS}
+    for k in (12, 25):
+        band_tests[f"llm_k{k} vs socialvec_k{k}"] = p_value(band[f"llm_k{k}"], band[f"socialvec_k{k}"])
+    pd.Series(band_tests).to_csv(out / f"band_tests{suffix}.csv")
+    title = f"Ranks {BAND_START}-{BAND_END}" if not suffix else "Ranks " + suffix.strip("_").replace("_", "-", 1).replace("_", " (") + ")"
+    return [f"## {title} (per category MAP)\n", markdown_table(labelled(t_band)), "",
+            "socialvec_k12/k25 rank with the same accounts that the LLM's k = 12/25 prompts list. Paired Wilcoxon p: "
+            + ", ".join(f"{k} {v:.3g}" for k, v in band_tests.items()), ""]
 
 
 # ---------------------------------------------------------------- entry point
@@ -299,8 +327,13 @@ def main():
                    help="rebuild the per-user results from cached responses only (no model calls)")
     p.add_argument("--dry-run", action="store_true", help="use a fake model that echoes the candidate order")
     p.add_argument("--out", type=Path, default=RESULTS_DIR / "llm")
+    p.add_argument("--band-start", type=int, default=BAND_START)
+    p.add_argument("--band-end", type=int, default=BAND_END)
+    p.add_argument("--band-source", default="original", choices=["original", "extended"],
+                   help="band the original sheets (by follower count) or the extended lists (by popularity)")
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
+    band = (args.band_start, args.band_end, args.band_source)
 
     categories = load_categories()
     users = load_users(categories)
@@ -318,22 +351,28 @@ def main():
             rankers = cache_only_rankers()
         else:
             import dspy
-            spent_before = sum(r["cost_usd"] for r in runs)  # the budget covers earlier (resumed) runs too
+            job = {"parts": args.parts, "band": list(band)}
+            # the budget covers earlier (resumed) runs of the same job; older entries have no band (= default)
+            spent_before = sum(r["cost_usd"] for r in runs
+                               if r.get("parts") == args.parts and r.get("band", list(DEFAULT_BAND)) == list(band)
+                               and "describe_model" not in r)
             lm = dspy.LM(f"openai/{args.model}", api_key=load_openai_key(), reasoning_effort=args.effort,
                          cache=False, num_retries=8)
             cap = SpendingCap(lm, args.budget - spent_before)
             rankers = tuple(cap.guard(f) for f in make_dspy_rankers(lm=lm))
         try:
             for part in args.parts:
-                {"main": run_main, "order": run_order, "band": run_band}[part](
-                    users, categories, names, rankers, args.out, args.workers)
+                run_part = {"main": run_main, "order": run_order, "band": run_band}[part]
+                extra = {"band": band} if part == "band" else {}
+                run_part(users, categories, names, rankers, args.out, args.workers, **extra)
                 if cap is not None:
                     print(f"after {part}: {cap.calls} calls, ${cap.update():.3f} spent in this run")
         finally:
             if cap is not None:
                 cap.update()
                 runs.append({"model": args.model, "reasoning_effort": args.effort, "parts": args.parts,
-                             "calls": cap.calls, "cost_usd": round(cap.spent, 4), "budget_usd": args.budget})
+                             "band": list(band), "calls": cap.calls, "cost_usd": round(cap.spent, 4),
+                             "budget_usd": args.budget})
                 info_path.write_text(json.dumps(runs, indent=2))
     analyze(args.out, categories, main_users)
 

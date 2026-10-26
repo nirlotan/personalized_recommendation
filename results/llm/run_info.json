@@ -69,5 +69,30 @@
       "openai/gpt-4o": 270,
       "openai/gpt-6-luna": 270
     }
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band"
+    ],
+    "band": [
+      181,
+      200,
+      "extended"
+    ],
+    "calls": 910,
+    "cost_usd": 0.1834,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1275,
+    "cost_usd": 0.2205,
+    "budget_usd": 0.6
   }
 ]

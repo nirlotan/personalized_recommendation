@@ -63,6 +63,7 @@ svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .chart .hit{fill:transparent;cursor:default}
 .chart .hit:hover{fill:rgba(127,127,127,.10)}
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panels>.panel{min-width:0}
 .panel h4{margin:0 0 4px;font-size:15px;font-weight:620}
 .panel .note{font-size:13px;color:var(--muted);margin:0 0 6px}
 @media (max-width:820px){.panels{grid-template-columns:1fr}}
@@ -135,12 +136,14 @@ pre.prompt{white-space:pre-wrap;font-size:12.5px}
   <h1>Can demographics alone personalize an LLM's recommendations?</h1>
   <p class="lede">An LLM first infers a user's gender, age, ethnicity and education from the names of accounts they follow,
   then ranks less popular entities given only that inferred description. I compare this with ranking from the account
-  names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users.</p>
+  names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users. I then repeat the
+  ranking with shuffled candidates, for ranks 81–100 and 181–200 (Section 6).</p>
   <div class="tiles">
     <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">0.312 · 0.352</div><div class="sub">descriptions by GPT-6 Luna · by GPT-4o; 0.304 with no user information</div></div>
     <div class="tile"><div class="label">Users the model declined to describe</div><div class="value">198 · 0</div><div class="sub">of 270: GPT-6 Luna · GPT-4o, despite being told to always guess</div></div>
     <div class="tile"><div class="label">GPT-4o descriptions that also name interests</div><div class="value">60 / 270</div><div class="sub">MAP 0.508 for those users; 0.307 for demographics-only descriptions</div></div>
     <div class="tile"><div class="label">MAP when GPT-6 Luna guessed all four attributes</div><div class="value">0.387</div><div class="sub">vs. 0.315 without user information; 0.396 from 12 account names (67 users)</div></div>
+    <div class="tile"><div class="label">Shuffled candidates: demographics-only vs. no information</div><div class="value">0.328 vs. 0.275</div><div class="sub">GPT-4o's descriptions without interests, ranks 81–100 (0.422 vs. 0.317 at ranks 181–200)</div></div>
   </div>
 </header>
 
@@ -330,7 +333,8 @@ Output ranked_ids</pre>
     <li><i>Demographics-only descriptions:</i> for the remaining 210 users the score is 0.307, indistinguishable from
     the baseline (0.301, p = 0.78).</li>
   </ul>
-  So GPT-4o's advantage reflects interest information, not demographics.</p>
+  With the candidates sorted by popularity, GPT-4o's advantage therefore reflects interest information, not
+  demographics. Section 6 shows that this changes once the candidates are shuffled.</p>
 
   <p><b>Same users, both models.</b>
   <ul>
@@ -488,20 +492,133 @@ Output ranked_ids</pre>
 </section>
 
 <section>
-  <h2><span class="num">6</span>Discussion and limitations</h2>
+  <h2><span class="num">6</span>Shuffled candidates, ranks 81–100 and 181–200</h2>
+  <p class="intro">The rankings above listed the candidates by follower count, as in the original experiments. An LLM that
+  partly follows the order it is given (see the candidate-order experiment) then gets a popularity ranking for free, which
+  can hide what a description adds. We therefore repeated Stage 2 with the candidates in random order, for ranks 81–100 and
+  for the less popular ranks 181–200 of the extended category lists.</p>
+
+  <p><b>Setup.</b>
+  <ul>
+    <li><i>Descriptions:</i> the Stage 1 descriptions are reused unchanged, both GPT-6 Luna's and GPT-4o's. Only the ranking
+    is repeated, by GPT-6 Luna (reasoning effort low) with the same prompt.</li>
+    <li><i>Shared random order:</i> for every user and band, the candidates are put in one random order. That order is used for
+    all three rankings of the user: with no user information, from GPT-6 Luna's description, and from GPT-4o's description.
+    Differences between them therefore come from the description alone. The no-information ranking is a per-user call here,
+    not one call per category as before.</li>
+    <li><i>Ranks 81–100:</i> the same candidates and all 270 users as above.</li>
+    <li><i>Ranks 181–200:</i> the candidates are ranks 181–200 of the extended lists (by SocialVec popularity; see
+    <code>results/EXTENDED_CATEGORIES_REPORT.md</code>). We use the 155 of the same users who follow at least one of
+    these candidates. TV hosts are not part of this user sample.</li>
+    <li><i>Other methods:</i> random, popularity and SocialVec scores are those of the popularity-band experiments for the same
+    users and candidates.</li>
+    <li><i>Cost:</i> 1,275 calls, $0.22.</li>
+  </ul></p>
+
+  <div class="panels">
+    <div class="panel card"><h4>Ranks 81–100 · 270 users</h4><svg viewBox="0 0 520 202" class="chart" role="img" aria-label="Overall MAP by method, ranks 81-100">
+<line class="grid" x1="230.0" x2="230.0" y1="6" y2="180"/><text class="tick" x="230.0" y="196" text-anchor="middle">0.0</text>
+<line class="grid" x1="278.0" x2="278.0" y1="6" y2="180"/><text class="tick" x="278.0" y="196" text-anchor="middle">0.1</text>
+<line class="grid" x1="326.0" x2="326.0" y1="6" y2="180"/><text class="tick" x="326.0" y="196" text-anchor="middle">0.2</text>
+<line class="grid" x1="374.0" x2="374.0" y1="6" y2="180"/><text class="tick" x="374.0" y="196" text-anchor="middle">0.3</text>
+<line class="grid" x1="422.0" x2="422.0" y1="6" y2="180"/><text class="tick" x="422.0" y="196" text-anchor="middle">0.4</text>
+<line class="grid" x1="470.0" x2="470.0" y1="6" y2="180"/><text class="tick" x="470.0" y="196" text-anchor="middle">0.5</text>
+<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h121.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-121.6 z"/><text class="delta" x="363.6" y="22">0.262</text><rect class="hit" x="230" y="9" width="125.6" height="18" data-tip="Random ranking (expected), ranks 81-100<br>MAP <b>0.262</b>"/>
+<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h137.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-137.5 z"/><text class="delta" x="379.5" y="50">0.295</text><rect class="hit" x="230" y="37" width="141.5" height="18" data-tip="Popularity (follower count), ranks 81-100<br>MAP <b>0.295</b>"/>
+<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h128.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-128.6 z"/><text class="delta" x="370.6" y="78">0.276</text><rect class="hit" x="230" y="65" width="132.6" height="18" data-tip="LLM, no user information, ranks 81-100<br>MAP <b>0.276</b>"/>
+<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h138.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-138.5 z"/><text class="delta" x="380.5" y="106" font-weight="650">0.297</text><rect class="hit" x="230" y="93" width="142.5" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 81-100<br>MAP <b>0.297</b>"/>
+<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h166.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-166.4 z"/><text class="delta" x="408.4" y="134" font-weight="650">0.355</text><rect class="hit" x="230" y="121" width="170.4" height="18" data-tip="LLM, demographics by GPT-4o, ranks 81-100<br>MAP <b>0.355</b>"/>
+<text class="cat" x="220" y="162" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,151 h212.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-212.4 z"/><text class="delta" x="454.4" y="162">0.451</text><rect class="hit" x="230" y="149" width="216.4" height="18" data-tip="SocialVec, all followed entities, ranks 81-100<br>MAP <b>0.451</b>"/>
+</svg></div>
+    <div class="panel card"><h4>Ranks 181–200 · 155 users</h4><svg viewBox="0 0 520 202" class="chart" role="img" aria-label="Overall MAP by method, ranks 181-200">
+<line class="grid" x1="230.0" x2="230.0" y1="6" y2="180"/><text class="tick" x="230.0" y="196" text-anchor="middle">0.0</text>
+<line class="grid" x1="278.0" x2="278.0" y1="6" y2="180"/><text class="tick" x="278.0" y="196" text-anchor="middle">0.1</text>
+<line class="grid" x1="326.0" x2="326.0" y1="6" y2="180"/><text class="tick" x="326.0" y="196" text-anchor="middle">0.2</text>
+<line class="grid" x1="374.0" x2="374.0" y1="6" y2="180"/><text class="tick" x="374.0" y="196" text-anchor="middle">0.3</text>
+<line class="grid" x1="422.0" x2="422.0" y1="6" y2="180"/><text class="tick" x="422.0" y="196" text-anchor="middle">0.4</text>
+<line class="grid" x1="470.0" x2="470.0" y1="6" y2="180"/><text class="tick" x="470.0" y="196" text-anchor="middle">0.5</text>
+<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h108.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-108.6 z"/><text class="delta" x="350.6" y="22">0.234</text><rect class="hit" x="230" y="9" width="112.6" height="18" data-tip="Random ranking (expected), ranks 181-200<br>MAP <b>0.234</b>"/>
+<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h99.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-99.8 z"/><text class="delta" x="341.8" y="50">0.216</text><rect class="hit" x="230" y="37" width="103.8" height="18" data-tip="Popularity (follower count), ranks 181-200<br>MAP <b>0.216</b>"/>
+<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h146.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-146.1 z"/><text class="delta" x="388.1" y="78">0.313</text><rect class="hit" x="230" y="65" width="150.1" height="18" data-tip="LLM, no user information, ranks 181-200<br>MAP <b>0.313</b>"/>
+<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h161.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-161.8 z"/><text class="delta" x="403.8" y="106" font-weight="650">0.345</text><rect class="hit" x="230" y="93" width="165.8" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 181-200<br>MAP <b>0.345</b>"/>
+<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h200.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-200.6 z"/><text class="delta" x="442.6" y="134" font-weight="650">0.426</text><rect class="hit" x="230" y="121" width="204.6" height="18" data-tip="LLM, demographics by GPT-4o, ranks 181-200<br>MAP <b>0.426</b>"/>
+<text class="cat" x="220" y="162" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,151 h214.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-214.9 z"/><text class="delta" x="456.9" y="162">0.456</text><rect class="hit" x="230" y="149" width="218.9" height="18" data-tip="SocialVec, all followed entities, ranks 181-200<br>MAP <b>0.456</b>"/>
+</svg></div>
+  </div>
+  <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Highlighted bars: rankings from the
+  demographic descriptions.</p>
+
+  <p><b>Findings.</b>
+  <ul>
+    <li><b>Shuffling removes the order advantage of the no-information ranking.</b> At ranks 81–100 it drops from
+    0.304 (popularity-sorted candidates) to 0.276 with shuffled candidates
+    (p = 0.003). The description-based rankings barely change: GPT-6 Luna 0.312 →
+    0.297 (p = 0.35), GPT-4o 0.352 → 0.355
+    (p = 0.69).</li>
+    <li><b>With a fair baseline, demographic descriptions help in both bands.</b>
+    <ul>
+      <li><i>GPT-4o's descriptions:</i> they beat the no-information ranking at ranks 81–100 (0.355 vs.
+      0.276, p &lt; 0.001) and at ranks 181–200
+      (0.426 vs. 0.313, p &lt; 0.001).</li>
+      <li><i>GPT-6 Luna's descriptions:</i> they help less, because most of them are refusals. The gain is significant at ranks
+      81–100 (p = 0.024) but not at ranks 181–200
+      (p = 0.329).</li>
+    </ul></li>
+    <li><b>The gain does not depend on leaked interests.</b> GPT-4o's demographics-only descriptions beat the no-information
+    ranking in both bands (0.328 vs. 0.275 and
+    0.422 vs. 0.317, both p &lt; 0.001).
+    So do GPT-6 Luna's complete descriptions (0.373 vs. 0.300 and
+    0.425 vs. 0.327). Its refusals give exactly the no-information result.
+    With popularity-sorted candidates, the demographics-only descriptions had looked no better than the baseline (Section 4).</li>
+    <li><b>The LLM knows something about less popular accounts.</b> Even without user information, GPT-6 Luna ranks the
+    181–200 candidates better than chance (0.313 vs. 0.234,
+    p = 0.011). It also beats follower-count popularity, which is below chance in this band
+    (0.216).</li>
+    <li><b>Social embeddings still lead.</b> SocialVec, using all of the user's followed entities, scores
+    0.451 and 0.456. The best description-based ranking reaches
+    0.355 and 0.426. The gap is significant at ranks 81–100
+    (p &lt; 0.001) but not at ranks 181–200 (p = 0.41).</li>
+  </ul></p>
+
+  <h3>By description type</h3>
+  <h4>Ranks 81–100</h4>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Description</th><th>Users</th><th>Ranking from the description</th><th>LLM, no user information</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead><tbody><tr><th>GPT-6 Luna: all four attributes guessed</th><td>67</td><td class='hl'>0.373</td><td>0.300</td><td>+0.074</td><td>0.003</td></tr><tr><th>GPT-6 Luna: declined to guess</th><td>198</td><td class='hl'>0.273</td><td>0.272</td><td>+0.001</td><td>0.740</td></tr><tr><th>GPT-4o: demographics only</th><td>210</td><td class='hl'>0.328</td><td>0.275</td><td>+0.053</td><td>&lt; 0.001</td></tr><tr><th>GPT-4o: also names interests</th><td>60</td><td class='hl'>0.449</td><td>0.280</td><td>+0.169</td><td>&lt; 0.001</td></tr></tbody></table></div></div>
+  <h4>Ranks 181–200</h4>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Description</th><th>Users</th><th>Ranking from the description</th><th>LLM, no user information</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead><tbody><tr><th>GPT-6 Luna: all four attributes guessed</th><td>42</td><td class='hl'>0.425</td><td>0.327</td><td>+0.098</td><td>0.025</td></tr><tr><th>GPT-6 Luna: declined to guess</th><td>110</td><td class='hl'>0.331</td><td>0.333</td><td>−0.001</td><td>0.566</td></tr><tr><th>GPT-4o: demographics only</th><td>124</td><td class='hl'>0.422</td><td>0.317</td><td>+0.105</td><td>&lt; 0.001</td></tr><tr><th>GPT-4o: also names interests</th><td>31</td><td class='hl'>0.468</td><td>0.370</td><td>+0.098</td><td>0.055</td></tr></tbody></table></div></div>
+  <p class="caption">MAP over the users of each row, pooled across categories. Both rankings in a row used the same shuffled
+  candidates. GPT-6 Luna's partial descriptions (5 and 3 users) are omitted.</p>
+
+  <h3>Per category</h3>
+  <h4>Ranks 81–100</h4>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, demographics by GPT-6 Luna</th><th>LLM, demographics by GPT-4o</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td>30</td><td class=''>0.252</td><td class=''>0.453</td><td class=''>0.278</td><td class='hl'>0.347</td><td class='hl'>0.427</td><td class=''><b>0.611</b></td></tr><tr><th>News outlets</th><td>30</td><td class=''>0.253</td><td class=''>0.267</td><td class=''>0.294</td><td class='hl'>0.356</td><td class='hl'>0.324</td><td class=''><b>0.396</b></td></tr><tr><th>Comedians</th><td>30</td><td class=''>0.217</td><td class=''><b>0.290</b></td><td class=''>0.164</td><td class='hl'>0.173</td><td class='hl'>0.200</td><td class=''>0.281</td></tr><tr><th>Politicians</th><td>30</td><td class=''>0.386</td><td class=''>0.328</td><td class=''>0.401</td><td class='hl'>0.431</td><td class='hl'><b>0.490</b></td><td class=''>0.463</td></tr><tr><th>TV stations</th><td>30</td><td class=''>0.191</td><td class=''>0.149</td><td class=''>0.171</td><td class='hl'>0.222</td><td class='hl'>0.290</td><td class=''><b>0.444</b></td></tr><tr><th>Actors</th><td>30</td><td class=''>0.268</td><td class=''>0.320</td><td class=''>0.238</td><td class='hl'>0.281</td><td class='hl'>0.316</td><td class=''><b>0.518</b></td></tr><tr><th>TV shows</th><td>30</td><td class=''>0.213</td><td class=''>0.276</td><td class=''>0.331</td><td class='hl'>0.277</td><td class='hl'><b>0.467</b></td><td class=''>0.407</td></tr><tr><th>Sports teams</th><td>30</td><td class=''>0.252</td><td class=''>0.269</td><td class=''>0.252</td><td class='hl'>0.237</td><td class='hl'>0.300</td><td class=''><b>0.516</b></td></tr><tr><th>Journalists</th><td>30</td><td class=''>0.324</td><td class=''>0.303</td><td class=''>0.357</td><td class='hl'>0.348</td><td class='hl'>0.381</td><td class=''><b>0.423</b></td></tr><tr class='total'><th>Overall</th><td>270</td><td>0.262</td><td>0.295</td><td>0.276</td><td>0.297</td><td>0.355</td><td>0.451</td></tr></tbody></table></div></div>
+  <h4>Ranks 181–200</h4>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, demographics by GPT-6 Luna</th><th>LLM, demographics by GPT-4o</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td>21</td><td class=''>0.244</td><td class=''>0.215</td><td class=''>0.269</td><td class='hl'>0.357</td><td class='hl'>0.464</td><td class=''><b>0.482</b></td></tr><tr><th>News outlets</th><td>14</td><td class=''>0.214</td><td class=''>0.142</td><td class=''>0.225</td><td class='hl'>0.304</td><td class='hl'><b>0.451</b></td><td class=''>0.338</td></tr><tr><th>Comedians</th><td>15</td><td class=''>0.203</td><td class=''>0.144</td><td class=''>0.327</td><td class='hl'>0.368</td><td class='hl'><b>0.490</b></td><td class=''>0.444</td></tr><tr><th>Politicians</th><td>20</td><td class=''>0.245</td><td class=''>0.199</td><td class=''>0.289</td><td class='hl'>0.268</td><td class='hl'>0.354</td><td class=''><b>0.412</b></td></tr><tr><th>TV stations</th><td>14</td><td class=''>0.201</td><td class=''>0.172</td><td class=''>0.270</td><td class='hl'>0.317</td><td class='hl'><b>0.436</b></td><td class=''>0.436</td></tr><tr><th>Actors</th><td>15</td><td class=''>0.269</td><td class=''>0.201</td><td class=''>0.355</td><td class='hl'>0.358</td><td class='hl'>0.401</td><td class=''><b>0.448</b></td></tr><tr><th>TV shows</th><td>13</td><td class=''>0.196</td><td class=''>0.089</td><td class=''>0.443</td><td class='hl'>0.541</td><td class='hl'><b>0.561</b></td><td class=''>0.476</td></tr><tr><th>Sports teams</th><td>14</td><td class=''>0.198</td><td class=''>0.402</td><td class=''>0.134</td><td class='hl'>0.140</td><td class='hl'>0.187</td><td class=''><b>0.607</b></td></tr><tr><th>Journalists</th><td>29</td><td class=''>0.339</td><td class=''>0.383</td><td class=''><b>0.501</b></td><td class='hl'>0.456</td><td class='hl'>0.493</td><td class=''>0.461</td></tr><tr class='total'><th>Overall</th><td>155</td><td>0.234</td><td>0.216</td><td>0.313</td><td>0.345</td><td>0.426</td><td>0.456</td></tr></tbody></table></div>
+  <p class="caption">MAP per category with shuffled candidates; bold marks the best method in each row. Categories have 30 users at
+  ranks 81–100 and 13–29 at ranks 181–200, so per-category values are noisy.</p></div>
+
+  <p class="caption">Ranking completeness: in each band, at least 82% of the responses of every condition
+  listed all candidates (legacy scoring skips missing ones).</p>
+</section>
+
+<section>
+  <h2><span class="num">7</span>Discussion and limitations</h2>
   <ul class="highlights">
     <li><b>Model policies shape the result.</b> GPT-6 Luna declined to infer demographics for 73% of users, even
     when told to rely on stereotypes. GPT-4o described every user, but in 22% of cases it also named the user's
     interests, against the instruction. Neither model gives a clean demographics-only condition for all users.
     <ul>
       <li><i>Cleaner subsets:</i> the clean conditions are GPT-6 Luna's complete descriptions and GPT-4o's demographics-only
-      descriptions. They show a benefit for some users, but none on average for the others.</li>
+      descriptions.</li>
       <li><i>A stricter test:</i> filter or rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the
       attributes from SocialVec's classifiers directly.</li>
     </ul></li>
+    <li><b>The candidate order matters for this comparison.</b> With popularity-sorted candidates, the no-information ranking
+    partly copies the presented order, and demographics-only descriptions looked no better than it. With shuffled candidates, the
+    clean descriptions give a consistent, significant gain in both popularity bands (Section 6). Comparisons with a
+    non-personalized LLM ranking should therefore use randomized candidate orders.</li>
     <li><b>Demographics are a coarse summary of taste.</b> Even when the description was complete, ranking from four
-    attributes did not beat ranking from 12 account names, and it was far from SocialVec's full-profile embedding
-    (0.451). The account names carry information beyond the demographic groups they imply.</li>
+    attributes did not beat ranking from 12 account names, and it scored below SocialVec's full-profile embedding overall in
+    both bands. The account names carry information beyond the demographic groups they imply.</li>
     <li><b>Stereotype-based inference.</b> The method asks a model to apply stereotypes about gender, age, ethnicity and
     education. The resulting descriptions are guesses about real people. They are stored outside the repository, and this page
     identifies users by internal row only. Conclusions about which groups like which entities should not be drawn from them.</li>
@@ -511,9 +628,10 @@ Output ranked_ids</pre>
   </ul>
 </section>
 
-<footer><p>Regenerate with <code>python run_llm_demographics.py</code> and
-<code>python run_llm_demographics.py --describe-model gpt-4o</code> (model calls; cached responses are reused), then
-<code>python make_demographics_report.py</code>. Per-user scores are in <code>results/llm/demographics_per_user.csv.gz</code>;
+<footer><p>Regenerate with <code>python run_llm_demographics.py</code>,
+<code>python run_llm_demographics.py --describe-model gpt-4o</code> and <code>python run_llm_demographics_bands.py</code>
+(model calls; cached responses are reused), then <code>python make_demographics_report.py</code>. Per-user scores are in
+<code>results/llm/demographics_per_user*.csv.gz</code> and <code>results/llm/demographics_bands_per_user.csv.gz</code>;
 descriptions and usernames are in <code>data/llm_demographics/</code>, which is not tracked by git.</p></footer>
 </div>
 <script>

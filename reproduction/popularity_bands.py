@@ -3,18 +3,22 @@ Ranking less popular entities: the Table 2 comparison (social similarity vs.
 popularity) repeated with candidates taken from a lower popularity band of
 each category, e.g. the entities ranked 81-100 by Twitter follower count.
 
-Each category sheet lists up to 100 typed entities; only categories with at
-least `end` entities can supply a band ending at rank `end`.
+The original category sheets list up to 100 typed entities; the extended lists
+(data/popular_accounts_extended.xlsx, see build_extended_categories.py) list up to
+1,000, ranked by SocialVec popularity. Only categories with at least `end` entities
+can supply a band ending at rank `end`.
 """
 
 from pathlib import Path
-from typing import Dict, Set, Tuple
+from typing import Dict, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy.stats import wilcoxon
 
-from .config import CATEGORIES_XLSX, PAPER_CATEGORY_ORDER
+from .config import CATEGORIES_XLSX, DATA_DIR, PAPER_CATEGORY_ORDER
+
+EXTENDED_XLSX = DATA_DIR / "popular_accounts_extended.xlsx"
 from .embeddings import SocialVec
 from .experiments import Candidates
 from .ranking import average_precision, popularity_ranks
@@ -31,9 +35,27 @@ def load_category_sheets(path: Path = CATEGORIES_XLSX) -> Dict[str, pd.DataFrame
     return sheets
 
 
-def popularity_band(sheet: pd.DataFrame, start: int, end: int) -> pd.DataFrame:
-    """The entities ranked `start`..`end` (1-based, inclusive) by follower count."""
-    ranked = sheet.rename_axis("sheet_row").sort_values("followers_count", ascending=False).reset_index()
+def load_extended_sheets(path: Path = EXTENDED_XLSX) -> Dict[str, pd.DataFrame]:
+    """The extended category lists, each in its SocialVec popularity order (`rank_in_category`)."""
+    sheets = {}
+    for name, df in pd.read_excel(path, sheet_name=None).items():
+        if name == "summary":
+            continue
+        df = df.dropna(subset=["twitter_user_id"]).copy()
+        df["twitter_user_id"] = df["twitter_user_id"].astype(np.int64)
+        sheets[name] = df[["twitter_screen_name", "twitter_user_id", "twitter_name", "followers_count",
+                           "use", "rank_in_category"]].sort_values("rank_in_category").reset_index(drop=True)
+    return sheets
+
+
+def popularity_band(sheet: pd.DataFrame, start: int, end: int, by: str = "followers_count") -> pd.DataFrame:
+    """
+    The entities ranked `start`..`end` (1-based, inclusive), by follower count
+    (`by="followers_count"`) or by the sheet's own popularity order (`by="rank_in_category"`).
+    """
+    sheet = sheet.rename_axis("sheet_row")
+    ranked = (sheet.sort_values("followers_count", ascending=False) if by == "followers_count"
+              else sheet.sort_values(by)).reset_index()
     ranked.insert(0, "popularity_rank", np.arange(1, len(ranked) + 1))
     return ranked.iloc[start - 1:end].reset_index(drop=True)
 
@@ -90,9 +112,12 @@ def evaluate_candidates(users: pd.DataFrame, cand: Candidates, excluded: Set[int
 
 def run_band_experiment(users: pd.DataFrame, sheets: Dict[str, pd.DataFrame],
                         head: Dict[str, pd.DataFrame], sv: SocialVec,
-                        start: int, end: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                        start: int, end: int, by: str = "followers_count",
+                        also_exclude: Optional[Dict[str, pd.DataFrame]] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Evaluate the popularity band in every category that has at least `end` entities.
+    `by` sets the ranking (see popularity_band); `also_exclude` adds more lists whose
+    entities count as the category's (e.g. the original sheets when banding the extended lists).
 
     For each category and each user population ('category': the users sampled
     for that category; 'all': every experiment user), only users who follow at
@@ -109,7 +134,7 @@ def run_band_experiment(users: pd.DataFrame, sheets: Dict[str, pd.DataFrame],
     results, bands = [], []
     categories = [c for c in PAPER_CATEGORY_ORDER if c in sheets and len(sheets[c]) >= end]
     for category in categories:
-        band = popularity_band(sheets[category], start, end)
+        band = popularity_band(sheets[category], start, end, by=by)
         band["in_socialvec"] = [i in sv for i in band["twitter_user_id"]]
         band.insert(0, "category", category)
         bands.append(band)
@@ -120,6 +145,8 @@ def run_band_experiment(users: pd.DataFrame, sheets: Dict[str, pd.DataFrame],
         band_ids = {int(i) for i in band["twitter_user_id"]}
         category_ids = ({int(i) for i in sheets[category]["twitter_user_id"]}
                         | {int(i) for i in head[category]["twitter_user_id"]})
+        if also_exclude and category in also_exclude:
+            category_ids |= {int(i) for i in also_exclude[category]["twitter_user_id"]}
 
         for population, pop_users in [("category", users[users["topic"] == category]), ("all", users)]:
             follows_band = pop_users["friends_ids"].apply(lambda f: not band_ids.isdisjoint(f))

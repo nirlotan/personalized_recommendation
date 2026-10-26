@@ -65,6 +65,7 @@ svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .chart .hit{fill:transparent;cursor:default}
 .chart .hit:hover{fill:rgba(127,127,127,.10)}
 .panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panels>.panel{min-width:0}
 .panel h4{margin:0 0 4px;font-size:15px;font-weight:620}
 .panel .note{font-size:13px;color:var(--muted);margin:0 0 6px}
 @media (max-width:820px){.panels{grid-template-columns:1fr}}
