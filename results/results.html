@@ -121,7 +121,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
   <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a>
-  <a href="#demographics">6 · Demographics-only LLM</a><a href="#open">7 · Open items</a></nav>
+  <a href="#demographics">6 · Demographics-only LLM</a><a href="#all200">7 · Ranking 200 candidates</a><a href="#open">8 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Table 2 values matching the paper</div><div class="value">42 / 42</div><div class="sub">largest difference 0.0005</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">0.571</div><div class="sub">vs. 0.468 · +22%, as in the paper</div></div>
@@ -492,7 +492,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
 </section>
 
 <section id="tail2">
-  <h2><span class="num">4</span>Even less popular · Ranks 181–200</h2>
+  <h2><span class="num">4</span>Further down the category lists · Ranks 181–200</h2>
   <p class="intro">The original sheets stop at 100 entities per category. To go further, I built extended category lists from
   Wikidata and DBpedia (no LLM, no manual validation; see <code>results/EXTENDED_CATEGORIES_REPORT.md</code>) and repeated every
   experiment of Section 3 with the accounts ranked <b>181–200</b>.</p>
@@ -500,7 +500,8 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
     <li><i>Categories:</i> the 10 categories whose extended list reaches 200 accounts.</li>
     <li><i>Ranking:</i> the extended lists rank accounts by SocialVec popularity, while ranks 81–100 were by Twitter follower count.
     The median candidate is the 6,595th most popular SocialVec entity, and 30% of the candidates lie
-    beyond the top 10,000.</li>
+    beyond the top 10,000. Globally, these candidates are more popular than those of ranks 81–100 (see below): the lists
+    differ, so a lower rank within a category does not mean a less popular account.</li>
     <li><i>Profiles:</i> user profiles exclude every account of the category's extended list (up to 1,000) and of its original
     sheet.</li>
   </ul>
@@ -523,6 +524,680 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
       0.498; p = 0.09, not significant).</li>
     </ul></li>
   </ul>
+
+  <h3>How popular are the candidates overall?</h3>
+  <p>Each band's position is set within its own category list. To compare bands across lists, I placed every candidate in the
+  popularity ranking of all 201,346 SocialVec accounts, which are sorted by how many users follow them (rank 1 is the most
+  followed). The original top 20 are shown for reference.</p>
+  <ul class="highlights">
+    <li class="warn"><b>Ranks 181–200 are not less popular than ranks 81–100.</b> Their median global rank is
+    8,098, against 13,672 for ranks 81–100 (Mann–Whitney
+    p &lt; 0.001), and their median follower count is 287,582 against
+    165,190. They are globally more popular in 7 of the 9
+    categories that have both bands.</li>
+    <li><b>Why:</b> the original sheets hold 100 manually validated accounts per category, while the extended lists hold up to 1,000
+    accounts typed by Wikidata and DBpedia. Many popular accounts are missing from the original sheets (only 44–85 of each sheet's 100
+    fall in the extended top 200), so position 181 in an extended list can be more popular than position 81 in an original sheet.
+    Actors and musical artists show the largest gap. Because the extended lists are sorted by this same global rank, each category's
+    181–200 band is a narrow slice of it, either entirely inside or entirely outside the top 10,000. The ranks 81–100 bands, chosen
+    by follower count, spread much more widely.</li>
+    <li><b>Both bands are far from the top.</b> The original top 20 have a median global rank of
+    559. Of the ranks 81–100 candidates, 38% are in
+    the global top 10,000, and 65% of the ranks 181–200 candidates are.</li>
+  </ul>
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s1)"></i>Original ranks 1–20</span><span class="key"><i class="sq" style="background:var(--s2)"></i>Original ranks 81–100</span><span class="key"><i class="sq" style="background:var(--s3)"></i>Extended ranks 181–200</span>
+    <span class="key"><i class="tick"></i>Median</span></div>
+    <svg viewBox="0 0 760 544" class="chart" role="img" aria-label="Global popularity rank of the candidates by category">
+<line class="grid" x1="130.0" x2="130.0" y1="8" y2="522"/><text class="tick" x="130.0" y="538" text-anchor="middle">1</text>
+<line class="grid" x1="245.8" x2="245.8" y1="8" y2="522"/><text class="tick" x="245.8" y="538" text-anchor="middle">10</text>
+<line class="grid" x1="361.5" x2="361.5" y1="8" y2="522"/><text class="tick" x="361.5" y="538" text-anchor="middle">100</text>
+<line class="grid" x1="477.3" x2="477.3" y1="8" y2="522"/><text class="tick" x="477.3" y="538" text-anchor="middle">1,000</text>
+<line class="grid" x1="593.1" x2="593.1" y1="8" y2="522"/><text class="tick" x="593.1" y="538" text-anchor="middle">10,000</text>
+<line class="grid" x1="708.8" x2="708.8" y1="8" y2="522"/><text class="tick" x="708.8" y="538" text-anchor="middle">100,000</text>
+<text class="cat" x="120" y="31.5" text-anchor="end">Musical artists</text>
+<circle class="dot s1" cx="262.7" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Rihanna · Original ranks 1–20<br>global rank <b>14</b> · 96,169,997 followers"/>
+<circle class="dot s1" cx="245.8" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="ye · Original ranks 1–20<br>global rank <b>10</b> · 29,493,380 followers"/>
+<circle class="dot s1" cx="250.6" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Taylor Swift · Original ranks 1–20<br>global rank <b>11</b> · 85,988,026 followers"/>
+<circle class="dot s1" cx="283.1" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Ariana Grande · Original ranks 1–20<br>global rank <b>21</b> · 72,794,047 followers"/>
+<circle class="dot s1" cx="448.0" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="HOT GIRL MEG · Original ranks 1–20<br>global rank <b>559</b> · 2,587,158 followers"/>
+<circle class="dot s1" cx="376.2" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Snoop Dogg · Original ranks 1–20<br>global rank <b>134</b> · 18,446,399 followers"/>
+<circle class="dot s1" cx="351.5" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="YIKES · Original ranks 1–20<br>global rank <b>82</b> · 20,528,831 followers"/>
+<circle class="dot s1" cx="293.8" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="KATY PERRY · Original ranks 1–20<br>global rank <b>26</b> · 108,525,012 followers"/>
+<circle class="dot s1" cx="272.4" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Justin Timberlake · Original ranks 1–20<br>global rank <b>17</b> · 64,805,844 followers"/>
+<circle class="dot s1" cx="447.7" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Bette Midler · Original ranks 1–20<br>global rank <b>555</b> · 1,929,340 followers"/>
+<circle class="dot s1" cx="369.8" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="John Legend · Original ranks 1–20<br>global rank <b>118</b> · 13,437,942 followers"/>
+<circle class="dot s1" cx="336.7" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Kendrick Lamar · Original ranks 1–20<br>global rank <b>61</b> · 11,908,013 followers"/>
+<circle class="dot s1" cx="354.5" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Marshall Mathers · Original ranks 1–20<br>global rank <b>87</b> · 23,029,571 followers"/>
+<circle class="dot s1" cx="291.8" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Miley Ray Cyrus · Original ranks 1–20<br>global rank <b>25</b> · 45,008,722 followers"/>
+<circle class="dot s1" cx="356.2" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Britney Spears · Original ranks 1–20<br>global rank <b>90</b> · 56,133,229 followers"/>
+<circle class="dot s1" cx="304.2" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Wiz Khalifa · Original ranks 1–20<br>global rank <b>32</b> · 36,295,633 followers"/>
+<circle class="dot s1" cx="366.3" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="The Weeknd · Original ranks 1–20<br>global rank <b>110</b> · 11,738,788 followers"/>
+<circle class="dot s1" cx="421.6" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Cher · Original ranks 1–20<br>global rank <b>330</b> · 3,794,200 followers"/>
+<circle class="dot s1" cx="334.1" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Selena Gomez · Original ranks 1–20<br>global rank <b>58</b> · 60,609,293 followers"/>
+<circle class="dot s1" cx="285.4" cy="14.5" r="3.2" fill-opacity="0.55" data-tip="Justin Bieber · Original ranks 1–20<br>global rank <b>22</b> · 111,215,956 followers"/>
+<line class="line s1" x1="335.4" x2="335.4" y1="8.5" y2="20.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="470.5" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="ICE T · Original ranks 81–100<br>global rank <b>874</b> · 1,481,624 followers"/>
+<circle class="dot s2" cx="492.1" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="TEYANA M.J. SHUMPERT · Original ranks 81–100<br>global rank <b>1,343</b> · 1,268,862 followers"/>
+<circle class="dot s2" cx="479.5" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Janelle Monáe, Cindi · Original ranks 81–100<br>global rank <b>1,044</b> · 1,219,731 followers"/>
+<circle class="dot s2" cx="512.7" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Bruce Springsteen · Original ranks 81–100<br>global rank <b>2,023</b> · 1,218,035 followers"/>
+<circle class="dot s2" cx="580.2" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="STINKY JOE · Original ranks 81–100<br>global rank <b>7,751</b> · 976,868 followers"/>
+<circle class="dot s2" cx="555.2" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="SUMMER WALKER · Original ranks 81–100<br>global rank <b>4,710</b> · 871,141 followers"/>
+<circle class="dot s2" cx="555.1" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Big Speaker · Original ranks 81–100<br>global rank <b>4,702</b> · 834,646 followers"/>
+<circle class="dot s2" cx="533.4" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Kid Rock · Original ranks 81–100<br>global rank <b>3,055</b> · 667,999 followers"/>
+<circle class="dot s2" cx="538.1" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Barbra Streisand · Original ranks 81–100<br>global rank <b>3,351</b> · 656,245 followers"/>
+<circle class="dot s2" cx="539.2" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Tom Morello · Original ranks 81–100<br>global rank <b>3,424</b> · 607,895 followers"/>
+<circle class="dot s2" cx="651.6" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Polo.G🐐 · Original ranks 81–100<br>global rank <b>32,025</b> · 497,638 followers"/>
+<circle class="dot s2" cx="577.4" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Ari Lennox · Original ranks 81–100<br>global rank <b>7,325</b> · 404,860 followers"/>
+<circle class="dot s2" cx="553.6" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Ted Nugent · Original ranks 81–100<br>global rank <b>4,560</b> · 381,310 followers"/>
+<circle class="dot s2" cx="569.8" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Kaya Jones · Original ranks 81–100<br>global rank <b>6,295</b> · 356,029 followers"/>
+<circle class="dot s2" cx="627.6" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Scott Gottlieb, MD · Original ranks 81–100<br>global rank <b>19,886</b> · 295,259 followers"/>
+<circle class="dot s2" cx="594.3" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Richard Marx · Original ranks 81–100<br>global rank <b>10,252</b> · 225,040 followers"/>
+<circle class="dot s2" cx="581.6" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Nancy Sinatra · Original ranks 81–100<br>global rank <b>7,968</b> · 221,375 followers"/>
+<circle class="dot s2" cx="589.4" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="John Rich · Original ranks 81–100<br>global rank <b>9,296</b> · 220,625 followers"/>
+<circle class="dot s2" cx="618.8" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Travis Tritt · Original ranks 81–100<br>global rank <b>16,703</b> · 111,110 followers"/>
+<circle class="dot s2" cx="721.8" cy="27.5" r="3.2" fill-opacity="0.55" data-tip="Dionne Warwick · Original ranks 81–100<br>global rank <b>129,478</b> · 23,305 followers"/>
+<line class="line s2" x1="563.0" x2="563.0" y1="21.5" y2="33.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="477.7" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="PARTYNEXTDOOR · Extended ranks 181–200<br>global rank <b>1,009</b> · 1,492,294 followers"/>
+<circle class="dot s3" cx="475.8" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="King Push · Extended ranks 181–200<br>global rank <b>970</b> · 1,657,717 followers"/>
+<circle class="dot s3" cx="477.7" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Leonard Nimoy · Extended ranks 181–200<br>global rank <b>1,008</b> · 971,985 followers"/>
+<circle class="dot s3" cx="480.5" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Jason Mraz · Extended ranks 181–200<br>global rank <b>1,066</b> · 5,620,343 followers"/>
+<circle class="dot s3" cx="480.5" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Sara Bareilles · Extended ranks 181–200<br>global rank <b>1,065</b> · 2,999,216 followers"/>
+<circle class="dot s3" cx="480.4" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Jane Lynch · Extended ranks 181–200<br>global rank <b>1,064</b> · 1,770,314 followers"/>
+<circle class="dot s3" cx="479.5" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Janelle Monáe, Cindi · Extended ranks 181–200<br>global rank <b>1,044</b> · 1,216,489 followers"/>
+<circle class="dot s3" cx="478.7" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="#VisionImplementor · Extended ranks 181–200<br>global rank <b>1,029</b> · 3,071,451 followers"/>
+<circle class="dot s3" cx="480.8" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="K A C E Y · Extended ranks 181–200<br>global rank <b>1,073</b> · 886,794 followers"/>
+<circle class="dot s3" cx="482.4" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="kevin jonas · Extended ranks 181–200<br>global rank <b>1,106</b> · 5,421,251 followers"/>
+<circle class="dot s3" cx="483.1" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Fall Out Boy · Extended ranks 181–200<br>global rank <b>1,123</b> · 3,226,835 followers"/>
+<circle class="dot s3" cx="482.3" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Kristin Chenoweth · Extended ranks 181–200<br>global rank <b>1,104</b> · 1,187,593 followers"/>
+<circle class="dot s3" cx="483.4" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Zac Brown Band · Extended ranks 181–200<br>global rank <b>1,129</b> · 1,693,890 followers"/>
+<circle class="dot s3" cx="483.9" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Ḿå℟₭ · Extended ranks 181–200<br>global rank <b>1,141</b> · 2,831,542 followers"/>
+<circle class="dot s3" cx="482.2" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="b r a n d y ♠️ · Extended ranks 181–200<br>global rank <b>1,103</b> · 3,090,606 followers"/>
+<circle class="dot s3" cx="483.6" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="colson · Extended ranks 181–200<br>global rank <b>1,134</b> · 1,335,528 followers"/>
+<circle class="dot s3" cx="485.9" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Panic! At The Disco · Extended ranks 181–200<br>global rank <b>1,186</b> · 3,158,669 followers"/>
+<circle class="dot s3" cx="487.2" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="Hoodie Allen · Extended ranks 181–200<br>global rank <b>1,217</b> · 1,201,811 followers"/>
+<circle class="dot s3" cx="483.0" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="SWIZZ BEATZ · Extended ranks 181–200<br>global rank <b>1,121</b> · 2,398,462 followers"/>
+<circle class="dot s3" cx="487.6" cy="40.5" r="3.2" fill-opacity="0.55" data-tip="J · Extended ranks 181–200<br>global rank <b>1,228</b> · 5,942,111 followers"/>
+<line class="line s3" x1="482.2" x2="482.2" y1="34.5" y2="46.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="82.5" text-anchor="end">News outlets</text>
+<circle class="dot s1" cx="240.5" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The New York Times · Original ranks 1–20<br>global rank <b>9</b> · 46,204,009 followers"/>
+<circle class="dot s1" cx="227.8" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="CNN Breaking News · Original ranks 1–20<br>global rank <b>7</b> · 57,385,221 followers"/>
+<circle class="dot s1" cx="316.7" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The Associated Press · Original ranks 1–20<br>global rank <b>41</b> · 13,991,916 followers"/>
+<circle class="dot s1" cx="347.7" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The Washington Post · Original ranks 1–20<br>global rank <b>76</b> · 15,487,060 followers"/>
+<circle class="dot s1" cx="365.9" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="BBC News (World) · Original ranks 1–20<br>global rank <b>109</b> · 27,715,984 followers"/>
+<circle class="dot s1" cx="210.9" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="SportsCenter · Original ranks 1–20<br>global rank <b>5</b> · 36,481,309 followers"/>
+<circle class="dot s1" cx="319.1" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The Onion · Original ranks 1–20<br>global rank <b>43</b> · 11,429,820 followers"/>
+<circle class="dot s1" cx="379.2" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="Reuters · Original ranks 1–20<br>global rank <b>142</b> · 21,747,636 followers"/>
+<circle class="dot s1" cx="436.8" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="MSNBC · Original ranks 1–20<br>global rank <b>447</b> · 3,218,106 followers"/>
+<circle class="dot s1" cx="382.2" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="ABC News · Original ranks 1–20<br>global rank <b>151</b> · 15,390,534 followers"/>
+<circle class="dot s1" cx="365.4" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="Fox News · Original ranks 1–20<br>global rank <b>108</b> · 18,910,253 followers"/>
+<circle class="dot s1" cx="346.4" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="Bleacher Report · Original ranks 1–20<br>global rank <b>74</b> · 8,520,296 followers"/>
+<circle class="dot s1" cx="391.4" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="NBC News · Original ranks 1–20<br>global rank <b>181</b> · 7,488,418 followers"/>
+<circle class="dot s1" cx="479.1" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="Maddow Blog · Original ranks 1–20<br>global rank <b>1,036</b> · 1,073,140 followers"/>
+<circle class="dot s1" cx="342.1" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="HuffPost · Original ranks 1–20<br>global rank <b>68</b> · 11,492,651 followers"/>
+<circle class="dot s1" cx="553.9" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="One America News · Original ranks 1–20<br>global rank <b>4,587</b> · 724,542 followers"/>
+<circle class="dot s1" cx="380.9" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The Economist · Original ranks 1–20<br>global rank <b>147</b> · 24,622,783 followers"/>
+<circle class="dot s1" cx="427.7" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="The Guardian · Original ranks 1–20<br>global rank <b>373</b> · 8,672,475 followers"/>
+<circle class="dot s1" cx="467.7" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="New York Post · Original ranks 1–20<br>global rank <b>827</b> · 1,633,809 followers"/>
+<circle class="dot s1" cx="399.1" cy="65.5" r="3.2" fill-opacity="0.55" data-tip="USA TODAY · Original ranks 1–20<br>global rank <b>211</b> · 4,067,832 followers"/>
+<line class="line s1" x1="372.9" x2="372.9" y1="59.5" y2="71.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="569.9" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="HARRISFAULKNER · Original ranks 81–100<br>global rank <b>6,308</b> · 324,913 followers"/>
+<circle class="dot s2" cx="522.4" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="All Things Considered · Original ranks 81–100<br>global rank <b>2,453</b> · 320,142 followers"/>
+<circle class="dot s2" cx="563.2" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Erin Burnett · Original ranks 81–100<br>global rank <b>5,527</b> · 280,866 followers"/>
+<circle class="dot s2" cx="555.6" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Twitchy Team · Original ranks 81–100<br>global rank <b>4,752</b> · 249,087 followers"/>
+<circle class="dot s2" cx="735.6" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="BNO Newsroom · Original ranks 81–100<br>global rank <b>170,503</b> · 225,286 followers"/>
+<circle class="dot s2" cx="619.0" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="BlazeTV · Original ranks 81–100<br>global rank <b>16,757</b> · 223,892 followers"/>
+<circle class="dot s2" cx="584.4" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Washington Examiner · Original ranks 81–100<br>global rank <b>8,411</b> · 223,451 followers"/>
+<circle class="dot s2" cx="547.8" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Texas Tribune · Original ranks 81–100<br>global rank <b>4,068</b> · 222,664 followers"/>
+<circle class="dot s2" cx="608.1" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Heather Childers · Original ranks 81–100<br>global rank <b>13,485</b> · 166,049 followers"/>
+<circle class="dot s2" cx="596.4" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="RealClearPolitics · Original ranks 81–100<br>global rank <b>10,695</b> · 164,330 followers"/>
+<circle class="dot s2" cx="568.6" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Mediaite · Original ranks 81–100<br>global rank <b>6,144</b> · 161,413 followers"/>
+<circle class="dot s2" cx="589.4" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Townhall.com · Original ranks 81–100<br>global rank <b>9,293</b> · 160,376 followers"/>
+<circle class="dot s2" cx="612.0" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Dagen McDowell · Original ranks 81–100<br>global rank <b>14,577</b> · 158,912 followers"/>
+<circle class="dot s2" cx="604.5" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Karen Attiah · Original ranks 81–100<br>global rank <b>12,564</b> · 155,548 followers"/>
+<circle class="dot s2" cx="646.9" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="BNO News · Original ranks 81–100<br>global rank <b>29,194</b> · 153,191 followers"/>
+<circle class="dot s2" cx="573.8" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="G O L D I E. · Original ranks 81–100<br>global rank <b>6,825</b> · 149,172 followers"/>
+<circle class="dot s2" cx="603.0" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Bianna Golodryga · Original ranks 81–100<br>global rank <b>12,180</b> · 148,599 followers"/>
+<circle class="dot s2" cx="626.1" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="John Berman · Original ranks 81–100<br>global rank <b>19,286</b> · 116,950 followers"/>
+<circle class="dot s2" cx="609.7" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Newsmax · Original ranks 81–100<br>global rank <b>13,934</b> · 110,792 followers"/>
+<circle class="dot s2" cx="653.4" cy="78.5" r="3.2" fill-opacity="0.55" data-tip="Ana Cabrera · Original ranks 81–100<br>global rank <b>33,230</b> · 74,492 followers"/>
+<line class="line s2" x1="599.8" x2="599.8" y1="72.5" y2="84.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="586.9" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="SF Weekly · Extended ranks 181–200<br>global rank <b>8,840</b> · 210,522 followers"/>
+<circle class="dot s3" cx="585.7" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Finance News · Extended ranks 181–200<br>global rank <b>8,638</b> · 615,201 followers"/>
+<circle class="dot s3" cx="586.7" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="CoinDesk · Extended ranks 181–200<br>global rank <b>8,816</b> · 834,873 followers"/>
+<circle class="dot s3" cx="589.0" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Android Authority · Extended ranks 181–200<br>global rank <b>9,218</b> · 1,034,753 followers"/>
+<circle class="dot s3" cx="589.4" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Townhall.com · Extended ranks 181–200<br>global rank <b>9,293</b> · 156,628 followers"/>
+<circle class="dot s3" cx="589.6" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Civil Eats · Extended ranks 181–200<br>global rank <b>9,335</b> · 102,840 followers"/>
+<circle class="dot s3" cx="590.5" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Face The Nation · Extended ranks 181–200<br>global rank <b>9,505</b> · 487,979 followers"/>
+<circle class="dot s3" cx="591.3" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="NOLA.com · Extended ranks 181–200<br>global rank <b>9,655</b> · 246,153 followers"/>
+<circle class="dot s3" cx="592.1" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Telegraph Breaking News · Extended ranks 181–200<br>global rank <b>9,812</b> · 767,921 followers"/>
+<circle class="dot s3" cx="592.8" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Conservative Review · Extended ranks 181–200<br>global rank <b>9,951</b> · 194,754 followers"/>
+<circle class="dot s3" cx="593.1" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Sports Business Journal · Extended ranks 181–200<br>global rank <b>10,018</b> · 103,324 followers"/>
+<circle class="dot s3" cx="593.1" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Stars and Stripes · Extended ranks 181–200<br>global rank <b>10,008</b> · 226,811 followers"/>
+<circle class="dot s3" cx="595.7" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="The Week · Extended ranks 181–200<br>global rank <b>10,543</b> · 130,015 followers"/>
+<circle class="dot s3" cx="594.5" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="azcentral · Extended ranks 181–200<br>global rank <b>10,287</b> · 383,556 followers"/>
+<circle class="dot s3" cx="595.3" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="IndyStar · Extended ranks 181–200<br>global rank <b>10,453</b> · 269,914 followers"/>
+<circle class="dot s3" cx="596.4" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="RealClearPolitics · Extended ranks 181–200<br>global rank <b>10,695</b> · 159,212 followers"/>
+<circle class="dot s3" cx="597.1" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="The Detroit News · Extended ranks 181–200<br>global rank <b>10,832</b> · 289,108 followers"/>
+<circle class="dot s3" cx="595.7" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="Mad Money On CNBC · Extended ranks 181–200<br>global rank <b>10,536</b> · 307,836 followers"/>
+<circle class="dot s3" cx="597.1" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="New York Times Music · Extended ranks 181–200<br>global rank <b>10,843</b> · 173,872 followers"/>
+<circle class="dot s3" cx="597.9" cy="91.5" r="3.2" fill-opacity="0.55" data-tip="The Marshall Project · Extended ranks 181–200<br>global rank <b>11,021</b> · 86,727 followers"/>
+<line class="line s3" x1="592.9" x2="592.9" y1="85.5" y2="97.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="133.5" text-anchor="end">Comedians</text>
+<circle class="dot s1" cx="295.7" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Stephen Colbert · Original ranks 1–20<br>global rank <b>27</b> · 18,816,618 followers"/>
+<circle class="dot s1" cx="199.7" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="jimmy fallon · Original ranks 1–20<br>global rank <b>4</b> · 51,954,929 followers"/>
+<circle class="dot s1" cx="164.8" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Ellen DeGeneres · Original ranks 1–20<br>global rank <b>2</b> · 80,101,425 followers"/>
+<circle class="dot s1" cx="406.8" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Joe Rogan · Original ranks 1–20<br>global rank <b>246</b> · 5,950,298 followers"/>
+<circle class="dot s1" cx="349.0" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Jimmy Kimmel · Original ranks 1–20<br>global rank <b>78</b> · 11,757,494 followers"/>
+<circle class="dot s1" cx="378.1" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Bill Maher · Original ranks 1–20<br>global rank <b>139</b> · 11,070,328 followers"/>
+<circle class="dot s1" cx="352.8" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Sarah Silverman · Original ranks 1–20<br>global rank <b>84</b> · 12,588,884 followers"/>
+<circle class="dot s1" cx="390.2" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Ricky Gervais · Original ranks 1–20<br>global rank <b>177</b> · 14,290,867 followers"/>
+<circle class="dot s1" cx="432.0" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Trevor Noah · Original ranks 1–20<br>global rank <b>406</b> · 10,509,254 followers"/>
+<circle class="dot s1" cx="403.8" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Jim Gaffigan · Original ranks 1–20<br>global rank <b>232</b> · 2,974,293 followers"/>
+<circle class="dot s1" cx="406.0" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Chris Rock · Original ranks 1–20<br>global rank <b>242</b> · 5,266,305 followers"/>
+<circle class="dot s1" cx="312.9" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="daniel tosh · Original ranks 1–20<br>global rank <b>38</b> · 25,621,986 followers"/>
+<circle class="dot s1" cx="394.1" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Seth Meyers · Original ranks 1–20<br>global rank <b>191</b> · 5,070,030 followers"/>
+<circle class="dot s1" cx="398.3" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Jerry Seinfeld · Original ranks 1–20<br>global rank <b>208</b> · 4,262,983 followers"/>
+<circle class="dot s1" cx="410.1" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Russell Brand · Original ranks 1–20<br>global rank <b>263</b> · 11,521,295 followers"/>
+<circle class="dot s1" cx="384.8" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Amy Schumer · Original ranks 1–20<br>global rank <b>159</b> · 4,670,853 followers"/>
+<circle class="dot s1" cx="452.3" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="billy eichner · Original ranks 1–20<br>global rank <b>608</b> · 2,299,373 followers"/>
+<circle class="dot s1" cx="459.2" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="David Spade · Original ranks 1–20<br>global rank <b>698</b> · 2,772,560 followers"/>
+<circle class="dot s1" cx="405.5" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="Brian Brushwood · Original ranks 1–20<br>global rank <b>240</b> · 1,727,645 followers"/>
+<circle class="dot s1" cx="513.1" cy="116.5" r="3.2" fill-opacity="0.55" data-tip="David Chappelle · Original ranks 1–20<br>global rank <b>2,040</b> · 641,435 followers"/>
+<line class="line s1" x1="396.2" x2="396.2" y1="110.5" y2="122.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="617.6" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="(((DeanObeidallah))) · Original ranks 81–100<br>global rank <b>16,294</b> · 106,339 followers"/>
+<circle class="dot s2" cx="613.4" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Hal Sparks · Original ranks 81–100<br>global rank <b>14,981</b> · 101,871 followers"/>
+<circle class="dot s2" cx="616.9" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Nate Bargatze · Original ranks 81–100<br>global rank <b>16,070</b> · 97,419 followers"/>
+<circle class="dot s2" cx="632.0" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Melissa Villaseñor · Original ranks 81–100<br>global rank <b>21,701</b> · 89,306 followers"/>
+<circle class="dot s2" cx="619.8" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Sara “Bo” Schaefer · Original ranks 81–100<br>global rank <b>17,039</b> · 88,826 followers"/>
+<circle class="dot s2" cx="603.3" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Daniel Kibblesmith · Original ranks 81–100<br>global rank <b>12,269</b> · 87,812 followers"/>
+<circle class="dot s2" cx="613.4" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="You’re Not Alone. · Original ranks 81–100<br>global rank <b>14,998</b> · 85,686 followers"/>
+<circle class="dot s2" cx="616.2" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="James Adomian · Original ranks 81–100<br>global rank <b>15,849</b> · 85,109 followers"/>
+<circle class="dot s2" cx="608.8" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Phoebe Robinson · Original ranks 81–100<br>global rank <b>13,672</b> · 84,030 followers"/>
+<circle class="dot s2" cx="650.5" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Steve Hofstetter · Original ranks 81–100<br>global rank <b>31,336</b> · 83,223 followers"/>
+<circle class="dot s2" cx="629.3" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Tomlin and Wagner · Original ranks 81–100<br>global rank <b>20,569</b> · 81,712 followers"/>
+<circle class="dot s2" cx="634.1" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="blaine capatch · Original ranks 81–100<br>global rank <b>22,622</b> · 72,620 followers"/>
+<circle class="dot s2" cx="617.9" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Laurie Kilmartin · Original ranks 81–100<br>global rank <b>16,388</b> · 67,049 followers"/>
+<circle class="dot s2" cx="655.2" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Tom Shillue · Original ranks 81–100<br>global rank <b>34,419</b> · 64,632 followers"/>
+<circle class="dot s2" cx="666.2" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Aamer Rahman · Original ranks 81–100<br>global rank <b>42,850</b> · 54,271 followers"/>
+<circle class="dot s2" cx="671.3" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Sam Morril · Original ranks 81–100<br>global rank <b>47,450</b> · 52,830 followers"/>
+<circle class="dot s2" cx="649.4" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Jena Friedman · Original ranks 81–100<br>global rank <b>30,685</b> · 49,890 followers"/>
+<circle class="dot s2" cx="680.3" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Karen Chee · Original ranks 81–100<br>global rank <b>56,719</b> · 36,562 followers"/>
+<circle class="dot s2" cx="662.0" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="Jackie Kashian · Original ranks 81–100<br>global rank <b>39,380</b> · 31,993 followers"/>
+<circle class="dot s2" cx="725.7" cy="129.5" r="3.2" fill-opacity="0.55" data-tip="yannispappas · Original ranks 81–100<br>global rank <b>139,819</b> · 21,651 followers"/>
+<line class="line s2" x1="630.7" x2="630.7" y1="123.5" y2="135.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="573.2" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Paula Poundstone · Extended ranks 181–200<br>global rank <b>6,736</b> · 144,094 followers"/>
+<circle class="dot s3" cx="573.6" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Jean Creamery · Extended ranks 181–200<br>global rank <b>6,786</b> · 181,822 followers"/>
+<circle class="dot s3" cx="571.8" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Theo Von · Extended ranks 181–200<br>global rank <b>6,558</b> · 275,862 followers"/>
+<circle class="dot s3" cx="566.8" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Desi Banks · Extended ranks 181–200<br>global rank <b>5,929</b> · 396,972 followers"/>
+<circle class="dot s3" cx="576.6" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Dana Carvey · Extended ranks 181–200<br>global rank <b>7,212</b> · 225,883 followers"/>
+<circle class="dot s3" cx="575.4" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Furia Morgendorffer · Extended ranks 181–200<br>global rank <b>7,045</b> · 205,686 followers"/>
+<circle class="dot s3" cx="575.4" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Cameron Magruder · Extended ranks 181–200<br>global rank <b>7,037</b> · 177,531 followers"/>
+<circle class="dot s3" cx="579.6" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Ned Fulmer · Extended ranks 181–200<br>global rank <b>7,652</b> · 373,322 followers"/>
+<circle class="dot s3" cx="577.0" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Moshe Kasher · Extended ranks 181–200<br>global rank <b>7,264</b> · 187,445 followers"/>
+<circle class="dot s3" cx="572.5" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Karlous Miller · Extended ranks 181–200<br>global rank <b>6,646</b> · 338,352 followers"/>
+<circle class="dot s3" cx="579.7" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Jo Koy · Extended ranks 181–200<br>global rank <b>7,662</b> · 244,314 followers"/>
+<circle class="dot s3" cx="580.7" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Doug Stanhope · Extended ranks 181–200<br>global rank <b>7,829</b> · 334,980 followers"/>
+<circle class="dot s3" cx="583.1" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="GRiZ · Extended ranks 181–200<br>global rank <b>8,209</b> · 196,776 followers"/>
+<circle class="dot s3" cx="581.4" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Gary Owen · Extended ranks 181–200<br>global rank <b>7,925</b> · 233,508 followers"/>
+<circle class="dot s3" cx="583.0" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Julie Klausner · Extended ranks 181–200<br>global rank <b>8,189</b> · 129,696 followers"/>
+<circle class="dot s3" cx="582.4" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Brian Regan · Extended ranks 181–200<br>global rank <b>8,098</b> · 205,543 followers"/>
+<circle class="dot s3" cx="582.0" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Brendan Schaub · Extended ranks 181–200<br>global rank <b>8,028</b> · 779,655 followers"/>
+<circle class="dot s3" cx="586.9" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Richard Belzer · Extended ranks 181–200<br>global rank <b>8,851</b> · 200,607 followers"/>
+<circle class="dot s3" cx="585.4" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="david cross✍ · Extended ranks 181–200<br>global rank <b>8,592</b> · 166,375 followers"/>
+<circle class="dot s3" cx="585.5" cy="142.5" r="3.2" fill-opacity="0.55" data-tip="Richard Lewis · Extended ranks 181–200<br>global rank <b>8,609</b> · 179,115 followers"/>
+<line class="line s3" x1="579.6" x2="579.6" y1="136.5" y2="148.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="184.5" text-anchor="end">Politicians</text>
+<circle class="dot s1" cx="130.0" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Barack Obama · Original ranks 1–20<br>global rank <b>1</b> · 115,819,215 followers"/>
+<circle class="dot s1" cx="392.2" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Joe Biden · Original ranks 1–20<br>global rank <b>184</b> · 4,936,410 followers"/>
+<circle class="dot s1" cx="321.4" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Alexandria Ocasio-Cortez · Original ranks 1–20<br>global rank <b>45</b> · 6,767,292 followers"/>
+<circle class="dot s1" cx="388.2" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Kamala Harris · Original ranks 1–20<br>global rank <b>170</b> · 3,564,389 followers"/>
+<circle class="dot s1" cx="315.5" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Michelle Obama · Original ranks 1–20<br>global rank <b>40</b> · 14,880,932 followers"/>
+<circle class="dot s1" cx="278.0" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Hillary Clinton · Original ranks 1–20<br>global rank <b>19</b> · 27,458,427 followers"/>
+<circle class="dot s1" cx="328.6" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Bernie Sanders · Original ranks 1–20<br>global rank <b>52</b> · 11,798,141 followers"/>
+<circle class="dot s1" cx="410.9" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Nancy Pelosi · Original ranks 1–20<br>global rank <b>267</b> · 4,446,490 followers"/>
+<circle class="dot s1" cx="259.0" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="President Trump · Original ranks 1–20<br>global rank <b>13</b> · 29,466,570 followers"/>
+<circle class="dot s1" cx="367.2" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Elizabeth Warren · Original ranks 1–20<br>global rank <b>112</b> · 5,837,417 followers"/>
+<circle class="dot s1" cx="498.7" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Stacey Abrams · Original ranks 1–20<br>global rank <b>1,532</b> · 676,555 followers"/>
+<circle class="dot s1" cx="422.2" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Pete Buttigieg · Original ranks 1–20<br>global rank <b>334</b> · 1,847,672 followers"/>
+<circle class="dot s1" cx="413.3" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Beto O&#x27;Rourke · Original ranks 1–20<br>global rank <b>280</b> · 1,653,922 followers"/>
+<circle class="dot s1" cx="459.9" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Ted Lieu · Original ranks 1–20<br>global rank <b>708</b> · 1,285,922 followers"/>
+<circle class="dot s1" cx="457.3" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Chuck Schumer · Original ranks 1–20<br>global rank <b>672</b> · 2,237,122 followers"/>
+<circle class="dot s1" cx="463.6" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Preet Bharara · Original ranks 1–20<br>global rank <b>762</b> · 1,297,541 followers"/>
+<circle class="dot s1" cx="341.4" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Bill Clinton · Original ranks 1–20<br>global rank <b>67</b> · 11,759,330 followers"/>
+<circle class="dot s1" cx="527.1" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Rep. Eric Swalwell · Original ranks 1–20<br>global rank <b>2,694</b> · 764,925 followers"/>
+<circle class="dot s1" cx="590.4" cy="167.5" r="3.2" fill-opacity="0.55" data-tip="Ron DeSantis · Original ranks 1–20<br>global rank <b>9,485</b> · 463,348 followers"/>
+<line class="line s1" x1="392.2" x2="392.2" y1="161.5" y2="173.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="543.3" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Captain Mark Kelly · Original ranks 81–100<br>global rank <b>3,717</b> · 328,275 followers"/>
+<circle class="dot s2" cx="554.2" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Brian Schatz · Original ranks 81–100<br>global rank <b>4,613</b> · 295,989 followers"/>
+<circle class="dot s2" cx="573.5" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Jaime Harrison · Original ranks 81–100<br>global rank <b>6,778</b> · 290,605 followers"/>
+<circle class="dot s2" cx="576.5" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Rep. Pramila Jayapal · Original ranks 81–100<br>global rank <b>7,194</b> · 262,429 followers"/>
+<circle class="dot s2" cx="566.6" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="John Dean · Original ranks 81–100<br>global rank <b>5,907</b> · 256,267 followers"/>
+<circle class="dot s2" cx="588.9" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Hakeem Jeffries · Original ranks 81–100<br>global rank <b>9,215</b> · 248,984 followers"/>
+<circle class="dot s2" cx="581.0" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Karine Jean-Pierre · Original ranks 81–100<br>global rank <b>7,869</b> · 229,842 followers"/>
+<circle class="dot s2" cx="579.1" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Sherrilyn Ifill · Original ranks 81–100<br>global rank <b>7,583</b> · 185,329 followers"/>
+<circle class="dot s2" cx="648.6" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Josh Hawley · Original ranks 81–100<br>global rank <b>30,209</b> · 181,780 followers"/>
+<circle class="dot s2" cx="629.6" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Sen. Marsha Blackburn · Original ranks 81–100<br>global rank <b>20,694</b> · 174,055 followers"/>
+<circle class="dot s2" cx="610.4" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Ronald Klain · Original ranks 81–100<br>global rank <b>14,126</b> · 143,913 followers"/>
+<circle class="dot s2" cx="636.0" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Thomas Massie · Original ranks 81–100<br>global rank <b>23,490</b> · 129,947 followers"/>
+<circle class="dot s2" cx="598.4" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Jon Ossoff · Original ranks 81–100<br>global rank <b>11,113</b> · 115,827 followers"/>
+<circle class="dot s2" cx="641.7" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Rep. Jamie Raskin · Original ranks 81–100<br>global rank <b>26,319</b> · 76,649 followers"/>
+<circle class="dot s2" cx="705.3" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Raja Krishnamoorthi · Original ranks 81–100<br>global rank <b>93,333</b> · 60,328 followers"/>
+<circle class="dot s2" cx="642.7" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="John Fetterman · Original ranks 81–100<br>global rank <b>26,829</b> · 56,095 followers"/>
+<circle class="dot s2" cx="659.2" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Jen Psaki · Original ranks 81–100<br>global rank <b>37,284</b> · 50,593 followers"/>
+<circle class="dot s2" cx="678.1" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Cori Bush · Original ranks 81–100<br>global rank <b>54,265</b> · 45,401 followers"/>
+<circle class="dot s2" cx="685.8" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Josh Shapiro · Original ranks 81–100<br>global rank <b>63,235</b> · 29,218 followers"/>
+<circle class="dot s2" cx="707.2" cy="180.5" r="3.2" fill-opacity="0.55" data-tip="Nikki Fried · Original ranks 81–100<br>global rank <b>96,889</b> · 20,002 followers"/>
+<line class="line s2" x1="620.9" x2="620.9" y1="174.5" y2="186.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="565.3" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Ron Wyden · Extended ranks 181–200<br>global rank <b>5,755</b> · 474,234 followers"/>
+<circle class="dot s3" cx="566.2" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Mark Warner · Extended ranks 181–200<br>global rank <b>5,862</b> · 465,062 followers"/>
+<circle class="dot s3" cx="566.6" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="John Dean · Extended ranks 181–200<br>global rank <b>5,907</b> · 253,862 followers"/>
+<circle class="dot s3" cx="566.1" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Joe Walsh · Extended ranks 181–200<br>global rank <b>5,854</b> · 234,624 followers"/>
+<circle class="dot s3" cx="566.2" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Tammy Bruce · Extended ranks 181–200<br>global rank <b>5,861</b> · 326,598 followers"/>
+<circle class="dot s3" cx="567.4" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Jeff Flake · Extended ranks 181–200<br>global rank <b>6,000</b> · 673,081 followers"/>
+<circle class="dot s3" cx="567.9" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Eric Cantor · Extended ranks 181–200<br>global rank <b>6,066</b> · 271,781 followers"/>
+<circle class="dot s3" cx="567.7" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="James Fallows · Extended ranks 181–200<br>global rank <b>6,037</b> · 172,801 followers"/>
+<circle class="dot s3" cx="568.2" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Michele Bachmann · Extended ranks 181–200<br>global rank <b>6,100</b> · 245,640 followers"/>
+<circle class="dot s3" cx="568.5" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Erick Erickson · Extended ranks 181–200<br>global rank <b>6,133</b> · 208,675 followers"/>
+<circle class="dot s3" cx="569.5" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Valerie Jarrett · Extended ranks 181–200<br>global rank <b>6,259</b> · 192,921 followers"/>
+<circle class="dot s3" cx="568.1" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Rick Santorum · Extended ranks 181–200<br>global rank <b>6,093</b> · 286,057 followers"/>
+<circle class="dot s3" cx="569.0" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Martin O&#x27;Malley · Extended ranks 181–200<br>global rank <b>6,197</b> · 218,146 followers"/>
+<circle class="dot s3" cx="569.4" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Russell Moore · Extended ranks 181–200<br>global rank <b>6,242</b> · 158,432 followers"/>
+<circle class="dot s3" cx="570.7" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Mayor Marty Walsh · Extended ranks 181–200<br>global rank <b>6,406</b> · 295,077 followers"/>
+<circle class="dot s3" cx="569.4" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Paula White-Cain · Extended ranks 181–200<br>global rank <b>6,246</b> · 736,858 followers"/>
+<circle class="dot s3" cx="568.9" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Corey R. Lewandowski · Extended ranks 181–200<br>global rank <b>6,181</b> · 504,839 followers"/>
+<circle class="dot s3" cx="566.6" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Rudy W. Giuliani · Extended ranks 181–200<br>global rank <b>5,908</b> · 654,982 followers"/>
+<circle class="dot s3" cx="571.5" cy="193.5" r="3.2" fill-opacity="0.55" data-tip="Jill Wine-Banks · Extended ranks 181–200<br>global rank <b>6,511</b> · 376,270 followers"/>
+<line class="line s3" x1="568.1" x2="568.1" y1="187.5" y2="199.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="235.5" text-anchor="end">TV stations</text>
+<circle class="dot s1" cx="280.6" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="CNN · Original ranks 1–20<br>global rank <b>20</b> · 47,152,017 followers"/>
+<circle class="dot s1" cx="365.9" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="BBC News (World) · Original ranks 1–20<br>global rank <b>109</b> · 27,715,984 followers"/>
+<circle class="dot s1" cx="269.4" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="ESPN · Original ranks 1–20<br>global rank <b>16</b> · 35,278,307 followers"/>
+<circle class="dot s1" cx="436.8" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="MSNBC · Original ranks 1–20<br>global rank <b>447</b> · 3,218,106 followers"/>
+<circle class="dot s1" cx="365.4" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="Fox News · Original ranks 1–20<br>global rank <b>108</b> · 18,910,253 followers"/>
+<circle class="dot s1" cx="553.9" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="One America News · Original ranks 1–20<br>global rank <b>4,587</b> · 724,542 followers"/>
+<circle class="dot s1" cx="491.4" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="CSPAN · Original ranks 1–20<br>global rank <b>1,324</b> · 2,011,351 followers"/>
+<circle class="dot s1" cx="417.1" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="NFL Network · Original ranks 1–20<br>global rank <b>302</b> · 3,897,614 followers"/>
+<circle class="dot s1" cx="436.9" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="The Weather Channel · Original ranks 1–20<br>global rank <b>448</b> · 3,694,410 followers"/>
+<circle class="dot s1" cx="465.5" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="CNBC · Original ranks 1–20<br>global rank <b>791</b> · 3,557,369 followers"/>
+<circle class="dot s1" cx="388.8" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="MTV · Original ranks 1–20<br>global rank <b>172</b> · 15,837,259 followers"/>
+<circle class="dot s1" cx="389.7" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="E! News · Original ranks 1–20<br>global rank <b>175</b> · 11,776,951 followers"/>
+<circle class="dot s1" cx="454.8" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="Discovery · Original ranks 1–20<br>global rank <b>639</b> · 8,623,086 followers"/>
+<circle class="dot s1" cx="420.2" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="Food Network · Original ranks 1–20<br>global rank <b>321</b> · 4,728,320 followers"/>
+<circle class="dot s1" cx="464.7" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="YouTube Creators #StayHome · Original ranks 1–20<br>global rank <b>779</b> · 6,305,920 followers"/>
+<circle class="dot s1" cx="486.5" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="NBA TV · Original ranks 1–20<br>global rank <b>1,202</b> · 4,593,322 followers"/>
+<circle class="dot s1" cx="473.0" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="NBC Entertainment · Original ranks 1–20<br>global rank <b>918</b> · 2,027,316 followers"/>
+<circle class="dot s1" cx="465.2" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="Comedy Central · Original ranks 1–20<br>global rank <b>786</b> · 1,622,679 followers"/>
+<circle class="dot s1" cx="619.0" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="BlazeTV · Original ranks 1–20<br>global rank <b>16,757</b> · 223,892 followers"/>
+<circle class="dot s1" cx="435.6" cy="218.5" r="3.2" fill-opacity="0.55" data-tip="E! Entertainment · Original ranks 1–20<br>global rank <b>436</b> · 3,740,031 followers"/>
+<line class="line s1" x1="436.9" x2="436.9" y1="212.5" y2="224.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="622.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="12 News · Original ranks 81–100<br>global rank <b>17,848</b> · 214,197 followers"/>
+<circle class="dot s2" cx="629.6" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="WESH 2 News · Original ranks 81–100<br>global rank <b>20,703</b> · 214,059 followers"/>
+<circle class="dot s2" cx="571.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="Logo 🏳️‍🌈 · Original ranks 81–100<br>global rank <b>6,479</b> · 213,065 followers"/>
+<circle class="dot s2" cx="593.3" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="STARZ · Original ranks 81–100<br>global rank <b>10,044</b> · 197,106 followers"/>
+<circle class="dot s2" cx="573.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="TCM · Original ranks 81–100<br>global rank <b>6,738</b> · 194,384 followers"/>
+<circle class="dot s2" cx="608.3" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="KXAN News · Original ranks 81–100<br>global rank <b>13,530</b> · 194,277 followers"/>
+<circle class="dot s2" cx="612.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="WeatherNation · Original ranks 81–100<br>global rank <b>14,650</b> · 173,568 followers"/>
+<circle class="dot s2" cx="624.7" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="Hawaii News Now · Original ranks 81–100<br>global rank <b>18,769</b> · 173,066 followers"/>
+<circle class="dot s2" cx="604.3" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="ABC 7 News - WJLA · Original ranks 81–100<br>global rank <b>12,512</b> · 163,000 followers"/>
+<circle class="dot s2" cx="599.1" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="HBO Documentaries · Original ranks 81–100<br>global rank <b>11,278</b> · 151,968 followers"/>
+<circle class="dot s2" cx="613.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="CNN Communications · Original ranks 81–100<br>global rank <b>14,938</b> · 139,414 followers"/>
+<circle class="dot s2" cx="610.0" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="SNY · Original ranks 81–100<br>global rank <b>14,007</b> · 110,865 followers"/>
+<circle class="dot s2" cx="641.8" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="SportsNet LA · Original ranks 81–100<br>global rank <b>26,349</b> · 77,702 followers"/>
+<circle class="dot s2" cx="664.2" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="Celtics on NBC Sports Boston · Original ranks 81–100<br>global rank <b>41,206</b> · 72,389 followers"/>
+<circle class="dot s2" cx="602.6" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="Florida Democrats · Original ranks 81–100<br>global rank <b>12,083</b> · 69,195 followers"/>
+<circle class="dot s2" cx="632.5" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="MSG Networks · Original ranks 81–100<br>global rank <b>21,910</b> · 67,078 followers"/>
+<circle class="dot s2" cx="647.3" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="NBCSports Washington · Original ranks 81–100<br>global rank <b>29,395</b> · 60,805 followers"/>
+<circle class="dot s2" cx="648.0" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="SYFY WIRE · Original ranks 81–100<br>global rank <b>29,801</b> · 54,165 followers"/>
+<circle class="dot s2" cx="683.1" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="NC Democratic Party · Original ranks 81–100<br>global rank <b>59,940</b> · 28,291 followers"/>
+<circle class="dot s2" cx="722.3" cy="231.5" r="3.2" fill-opacity="0.55" data-tip="New York GOP · Original ranks 81–100<br>global rank <b>130,668</b> · 18,335 followers"/>
+<line class="line s2" x1="617.9" x2="617.9" y1="225.5" y2="237.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="612.7" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="Denver7 News · Extended ranks 181–200<br>global rank <b>14,769</b> · 271,563 followers"/>
+<circle class="dot s3" cx="613.1" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="CBSDFW · Extended ranks 181–200<br>global rank <b>14,905</b> · 141,024 followers"/>
+<circle class="dot s3" cx="615.3" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="TBS Network · Extended ranks 181–200<br>global rank <b>15,560</b> · 110,434 followers"/>
+<circle class="dot s3" cx="614.7" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="Fox5NY · Extended ranks 181–200<br>global rank <b>15,390</b> · 116,512 followers"/>
+<circle class="dot s3" cx="616.9" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="FOX59 News · Extended ranks 181–200<br>global rank <b>16,063</b> · 259,848 followers"/>
+<circle class="dot s3" cx="618.1" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="QVC · Extended ranks 181–200<br>global rank <b>16,442</b> · 145,805 followers"/>
+<circle class="dot s3" cx="616.7" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="TUDN USA · Extended ranks 181–200<br>global rank <b>16,020</b> · 630,263 followers"/>
+<circle class="dot s3" cx="617.5" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="NECN · Extended ranks 181–200<br>global rank <b>16,262</b> · 95,292 followers"/>
+<circle class="dot s3" cx="619.1" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="ABC11 EyewitnessNews · Extended ranks 181–200<br>global rank <b>16,805</b> · 276,106 followers"/>
+<circle class="dot s3" cx="619.4" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="FOX26Houston · Extended ranks 181–200<br>global rank <b>16,900</b> · 316,387 followers"/>
+<circle class="dot s3" cx="618.5" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="Sportsnet · Extended ranks 181–200<br>global rank <b>16,581</b> · 731,870 followers"/>
+<circle class="dot s3" cx="620.4" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="FOX 13 Tampa Bay · Extended ranks 181–200<br>global rank <b>17,213</b> · 316,242 followers"/>
+<circle class="dot s3" cx="620.7" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="WGRZ · Extended ranks 181–200<br>global rank <b>17,324</b> · 186,591 followers"/>
+<circle class="dot s3" cx="620.4" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="FOX 2 Detroit · Extended ranks 181–200<br>global rank <b>17,226</b> · 359,297 followers"/>
+<circle class="dot s3" cx="619.0" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="BlazeTV · Extended ranks 181–200<br>global rank <b>16,757</b> · 214,324 followers"/>
+<circle class="dot s3" cx="621.9" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="NewsChannel 5 · Extended ranks 181–200<br>global rank <b>17,751</b> · 245,639 followers"/>
+<circle class="dot s3" cx="623.4" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="WKRN · Extended ranks 181–200<br>global rank <b>18,279</b> · 192,689 followers"/>
+<circle class="dot s3" cx="624.7" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="Hawaii News Now · Extended ranks 181–200<br>global rank <b>18,769</b> · 168,362 followers"/>
+<circle class="dot s3" cx="622.2" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="12 News · Extended ranks 181–200<br>global rank <b>17,848</b> · 211,942 followers"/>
+<circle class="dot s3" cx="621.0" cy="244.5" r="3.2" fill-opacity="0.55" data-tip="CBSDenver · Extended ranks 181–200<br>global rank <b>17,428</b> · 209,268 followers"/>
+<line class="line s3" x1="619.1" x2="619.1" y1="238.5" y2="250.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="286.5" text-anchor="end">Actors</text>
+<circle class="dot s1" cx="352.2" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Robert Downey Jr · Original ranks 1–20<br>global rank <b>83</b> · 14,920,855 followers"/>
+<circle class="dot s1" cx="335.0" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Tom Hanks · Original ranks 1–20<br>global rank <b>59</b> · 16,716,394 followers"/>
+<circle class="dot s1" cx="369.0" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Chris Evans · Original ranks 1–20<br>global rank <b>116</b> · 13,707,054 followers"/>
+<circle class="dot s1" cx="345.7" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Jim Carrey · Original ranks 1–20<br>global rank <b>73</b> · 18,656,698 followers"/>
+<circle class="dot s1" cx="349.7" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Seth Rogen · Original ranks 1–20<br>global rank <b>79</b> · 8,383,374 followers"/>
+<circle class="dot s1" cx="399.8" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Mark Ruffalo · Original ranks 1–20<br>global rank <b>214</b> · 6,563,395 followers"/>
+<circle class="dot s1" cx="451.9" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="James Woods · Original ranks 1–20<br>global rank <b>604</b> · 2,338,782 followers"/>
+<circle class="dot s1" cx="357.3" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="chris pratt · Original ranks 1–20<br>global rank <b>92</b> · 7,680,235 followers"/>
+<circle class="dot s1" cx="405.7" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Patrick Stewart · Original ranks 1–20<br>global rank <b>241</b> · 3,471,379 followers"/>
+<circle class="dot s1" cx="503.3" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Ron Perlman · Original ranks 1–20<br>global rank <b>1,676</b> · 819,146 followers"/>
+<circle class="dot s1" cx="507.7" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Steven Crowder · Original ranks 1–20<br>global rank <b>1,831</b> · 1,014,555 followers"/>
+<circle class="dot s1" cx="533.3" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Terrence K. Williams · Original ranks 1–20<br>global rank <b>3,049</b> · 836,964 followers"/>
+<circle class="dot s1" cx="337.5" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Anna Kendrick · Original ranks 1–20<br>global rank <b>62</b> · 7,369,421 followers"/>
+<circle class="dot s1" cx="428.1" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Chris Hemsworth · Original ranks 1–20<br>global rank <b>376</b> · 6,736,712 followers"/>
+<circle class="dot s1" cx="462.7" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="LeVar Burton · Original ranks 1–20<br>global rank <b>748</b> · 1,925,718 followers"/>
+<circle class="dot s1" cx="430.6" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Jordan Peele · Original ranks 1–20<br>global rank <b>395</b> · 1,663,072 followers"/>
+<circle class="dot s1" cx="468.5" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Tom Holland · Original ranks 1–20<br>global rank <b>839</b> · 4,908,695 followers"/>
+<circle class="dot s1" cx="362.5" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Steve Carell · Original ranks 1–20<br>global rank <b>102</b> · 5,765,378 followers"/>
+<circle class="dot s1" cx="419.2" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="Kumail Nanjiani · Original ranks 1–20<br>global rank <b>315</b> · 2,981,038 followers"/>
+<circle class="dot s1" cx="434.0" cy="269.5" r="3.2" fill-opacity="0.55" data-tip="John Cleese · Original ranks 1–20<br>global rank <b>423</b> · 5,726,534 followers"/>
+<line class="line s1" x1="412.9" x2="412.9" y1="263.5" y2="275.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="525.0" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="MichaelRapaport · Original ranks 81–100<br>global rank <b>2,583</b> · 464,279 followers"/>
+<circle class="dot s2" cx="596.1" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Pedro Pascal · Original ranks 81–100<br>global rank <b>10,622</b> · 440,489 followers"/>
+<circle class="dot s2" cx="540.0" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="yvette nicole brown · Original ranks 81–100<br>global rank <b>3,484</b> · 425,148 followers"/>
+<circle class="dot s2" cx="551.4" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Patricia Arquette · Original ranks 81–100<br>global rank <b>4,365</b> · 423,601 followers"/>
+<circle class="dot s2" cx="567.0" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Dean Cain · Original ranks 81–100<br>global rank <b>5,954</b> · 417,829 followers"/>
+<circle class="dot s2" cx="550.1" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="tara strong · Original ranks 81–100<br>global rank <b>4,255</b> · 409,390 followers"/>
+<circle class="dot s2" cx="585.1" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Sacha Baron Cohen · Original ranks 81–100<br>global rank <b>8,541</b> · 363,611 followers"/>
+<circle class="dot s2" cx="538.9" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="carl reiner · Original ranks 81–100<br>global rank <b>3,409</b> · 348,529 followers"/>
+<circle class="dot s2" cx="538.8" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Chris Meloni · Original ranks 81–100<br>global rank <b>3,397</b> · 344,934 followers"/>
+<circle class="dot s2" cx="562.1" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Adam Baldwin · Original ranks 81–100<br>global rank <b>5,408</b> · 341,903 followers"/>
+<circle class="dot s2" cx="548.6" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Bradley Whitford · Original ranks 81–100<br>global rank <b>4,129</b> · 309,944 followers"/>
+<circle class="dot s2" cx="607.6" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Jon Voight · Original ranks 81–100<br>global rank <b>13,348</b> · 269,957 followers"/>
+<circle class="dot s2" cx="592.6" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Halle Berry · Original ranks 81–100<br>global rank <b>9,911</b> · 266,165 followers"/>
+<circle class="dot s2" cx="569.0" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Tom Arnold · Original ranks 81–100<br>global rank <b>6,194</b> · 262,125 followers"/>
+<circle class="dot s2" cx="593.8" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Kristy Swanson · Original ranks 81–100<br>global rank <b>10,159</b> · 245,987 followers"/>
+<circle class="dot s2" cx="577.6" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Ellen Barkin · Original ranks 81–100<br>global rank <b>7,359</b> · 205,667 followers"/>
+<circle class="dot s2" cx="600.4" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Ken Olin · Original ranks 81–100<br>global rank <b>11,585</b> · 173,477 followers"/>
+<circle class="dot s2" cx="619.0" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="kristen johnston · Original ranks 81–100<br>global rank <b>16,752</b> · 131,635 followers"/>
+<circle class="dot s2" cx="663.5" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Rosanna Arquette🌎✌🏼 · Original ranks 81–100<br>global rank <b>40,631</b> · 116,262 followers"/>
+<circle class="dot s2" cx="614.1" cy="282.5" r="3.2" fill-opacity="0.55" data-tip="Morgan Fairchild · Original ranks 81–100<br>global rank <b>15,199</b> · 101,486 followers"/>
+<line class="line s2" x1="573.5" x2="573.5" y1="276.5" y2="288.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="487.9" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Patrick Dempsey · Extended ranks 181–200<br>global rank <b>1,235</b> · 1,445,273 followers"/>
+<circle class="dot s3" cx="486.1" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Chloë Grace Moretz · Extended ranks 181–200<br>global rank <b>1,192</b> · 3,020,078 followers"/>
+<circle class="dot s3" cx="487.1" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Ayesha Curry · Extended ranks 181–200<br>global rank <b>1,215</b> · 960,747 followers"/>
+<circle class="dot s3" cx="488.7" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Troian · Extended ranks 181–200<br>global rank <b>1,255</b> · 2,573,614 followers"/>
+<circle class="dot s3" cx="485.6" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Edward Norton · Extended ranks 181–200<br>global rank <b>1,179</b> · 1,953,917 followers"/>
+<circle class="dot s3" cx="485.8" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Sanaa Lathan · Extended ranks 181–200<br>global rank <b>1,184</b> · 1,676,270 followers"/>
+<circle class="dot s3" cx="489.3" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Darren Criss · Extended ranks 181–200<br>global rank <b>1,269</b> · 1,914,770 followers"/>
+<circle class="dot s3" cx="486.8" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Brie Larson · Extended ranks 181–200<br>global rank <b>1,209</b> · 1,983,251 followers"/>
+<circle class="dot s3" cx="486.6" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Tracee Ellis Ross · Extended ranks 181–200<br>global rank <b>1,204</b> · 1,207,324 followers"/>
+<circle class="dot s3" cx="487.2" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Stephen Amell · Extended ranks 181–200<br>global rank <b>1,219</b> · 2,432,980 followers"/>
+<circle class="dot s3" cx="487.9" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="christina applegate · Extended ranks 181–200<br>global rank <b>1,236</b> · 1,457,723 followers"/>
+<circle class="dot s3" cx="491.5" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Paul Wesley · Extended ranks 181–200<br>global rank <b>1,327</b> · 4,079,478 followers"/>
+<circle class="dot s3" cx="489.5" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Johnny Knoxville · Extended ranks 181–200<br>global rank <b>1,274</b> · 1,794,145 followers"/>
+<circle class="dot s3" cx="491.6" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Mariska Hargitay · Extended ranks 181–200<br>global rank <b>1,329</b> · 904,917 followers"/>
+<circle class="dot s3" cx="492.7" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Emily Osment · Extended ranks 181–200<br>global rank <b>1,358</b> · 3,338,305 followers"/>
+<circle class="dot s3" cx="491.6" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Sharon Osbourne · Extended ranks 181–200<br>global rank <b>1,330</b> · 2,423,340 followers"/>
+<circle class="dot s3" cx="493.0" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Jesse Tyler Ferguson · Extended ranks 181–200<br>global rank <b>1,366</b> · 1,209,631 followers"/>
+<circle class="dot s3" cx="494.2" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Brody Jenner · Extended ranks 181–200<br>global rank <b>1,399</b> · 2,207,622 followers"/>
+<circle class="dot s3" cx="491.1" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Michael J. Fox · Extended ranks 181–200<br>global rank <b>1,315</b> · 1,479,779 followers"/>
+<circle class="dot s3" cx="494.2" cy="295.5" r="3.2" fill-opacity="0.55" data-tip="Blake Lively · Extended ranks 181–200<br>global rank <b>1,400</b> · 1,278,548 followers"/>
+<line class="line s3" x1="489.0" x2="489.0" y1="289.5" y2="301.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="337.5" text-anchor="end">TV shows</text>
+<circle class="dot s1" cx="364.9" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="The Daily Show · Original ranks 1–20<br>global rank <b>107</b> · 8,567,254 followers"/>
+<circle class="dot s1" cx="210.9" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="SportsCenter · Original ranks 1–20<br>global rank <b>5</b> · 36,481,309 followers"/>
+<circle class="dot s1" cx="479.1" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Maddow Blog · Original ranks 1–20<br>global rank <b>1,036</b> · 1,073,140 followers"/>
+<circle class="dot s1" cx="486.2" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Mark R. Levin · Original ranks 1–20<br>global rank <b>1,194</b> · 2,117,138 followers"/>
+<circle class="dot s1" cx="410.5" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Saturday Night Live - SNL · Original ranks 1–20<br>global rank <b>265</b> · 2,779,051 followers"/>
+<circle class="dot s1" cx="458.6" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Stranger Things · Original ranks 1–20<br>global rank <b>690</b> · 2,886,859 followers"/>
+<circle class="dot s1" cx="517.7" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Morning Joe · Original ranks 1–20<br>global rank <b>2,234</b> · 654,402 followers"/>
+<circle class="dot s1" cx="394.3" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="The Tonight Show · Original ranks 1–20<br>global rank <b>192</b> · 4,205,253 followers"/>
+<circle class="dot s1" cx="490.6" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="PBS NewsHour · Original ranks 1–20<br>global rank <b>1,304</b> · 1,066,525 followers"/>
+<circle class="dot s1" cx="594.1" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Tom Nook · Original ranks 1–20<br>global rank <b>10,202</b> · 813,950 followers"/>
+<circle class="dot s1" cx="431.8" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Good Morning America · Original ranks 1–20<br>global rank <b>405</b> · 3,720,157 followers"/>
+<circle class="dot s1" cx="496.9" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="60 Minutes · Original ranks 1–20<br>global rank <b>1,478</b> · 1,063,901 followers"/>
+<circle class="dot s1" cx="493.8" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="NBC Nightly News with Lester Holt · Original ranks 1–20<br>global rank <b>1,390</b> · 1,007,627 followers"/>
+<circle class="dot s1" cx="487.8" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="South Park · Original ranks 1–20<br>global rank <b>1,233</b> · 3,003,119 followers"/>
+<circle class="dot s1" cx="499.3" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="FOX &amp; friends · Original ranks 1–20<br>global rank <b>1,548</b> · 1,358,517 followers"/>
+<circle class="dot s1" cx="501.6" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="NBA 2K20 · Original ranks 1–20<br>global rank <b>1,621</b> · 2,816,339 followers"/>
+<circle class="dot s1" cx="576.0" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Game Grumps · Original ranks 1–20<br>global rank <b>7,118</b> · 2,291,314 followers"/>
+<circle class="dot s1" cx="528.7" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="SpongeBob · Original ranks 1–20<br>global rank <b>2,779</b> · 2,286,496 followers"/>
+<circle class="dot s1" cx="509.2" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="World News Tonight · Original ranks 1–20<br>global rank <b>1,888</b> · 1,424,610 followers"/>
+<circle class="dot s1" cx="467.5" cy="320.5" r="3.2" fill-opacity="0.55" data-tip="Entertainment Tonight · Original ranks 1–20<br>global rank <b>823</b> · 1,588,581 followers"/>
+<line class="line s1" x1="489.2" x2="489.2" y1="314.5" y2="326.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="558.9" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Jeopardy! · Original ranks 81–100<br>global rank <b>5,073</b> · 254,257 followers"/>
+<circle class="dot s2" cx="562.9" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="CBS Sunday Morning 🌞 · Original ranks 81–100<br>global rank <b>5,487</b> · 232,090 followers"/>
+<circle class="dot s2" cx="631.6" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Dragon Age · Original ranks 81–100<br>global rank <b>21,540</b> · 227,334 followers"/>
+<circle class="dot s2" cx="592.0" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Trailer Park Boys · Original ranks 81–100<br>global rank <b>9,790</b> · 225,727 followers"/>
+<circle class="dot s2" cx="569.7" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Bravo Top Chef All Stars LA · Original ranks 81–100<br>global rank <b>6,280</b> · 220,134 followers"/>
+<circle class="dot s2" cx="606.9" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Squawk Box · Original ranks 81–100<br>global rank <b>13,180</b> · 218,507 followers"/>
+<circle class="dot s2" cx="622.1" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Ancient Aliens · Original ranks 81–100<br>global rank <b>17,835</b> · 199,940 followers"/>
+<circle class="dot s2" cx="587.9" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Seinfeld · Original ranks 81–100<br>global rank <b>9,023</b> · 195,490 followers"/>
+<circle class="dot s2" cx="579.2" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Drunk History · Original ranks 81–100<br>global rank <b>7,586</b> · 143,792 followers"/>
+<circle class="dot s2" cx="648.7" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="grown-ish · Original ranks 81–100<br>global rank <b>30,266</b> · 118,999 followers"/>
+<circle class="dot s2" cx="626.2" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Queen Sugar · Original ranks 81–100<br>global rank <b>19,329</b> · 86,248 followers"/>
+<circle class="dot s2" cx="635.5" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="The Orville · Original ranks 81–100<br>global rank <b>23,278</b> · 84,073 followers"/>
+<circle class="dot s2" cx="697.0" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="SUDA51/須田剛一 · Original ranks 81–100<br>global rank <b>79,085</b> · 78,902 followers"/>
+<circle class="dot s2" cx="612.4" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Mystery Science Tweeter 3000 · Original ranks 81–100<br>global rank <b>14,705</b> · 68,264 followers"/>
+<circle class="dot s2" cx="641.8" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Washington Journal · Original ranks 81–100<br>global rank <b>26,345</b> · 66,189 followers"/>
+<circle class="dot s2" cx="659.8" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Cobra Kai · Original ranks 81–100<br>global rank <b>37,702</b> · 64,161 followers"/>
+<circle class="dot s2" cx="629.6" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="2020 Democratic National Convention · Original ranks 81–100<br>global rank <b>20,705</b> · 59,218 followers"/>
+<circle class="dot s2" cx="645.0" cy="333.5" r="3.2" fill-opacity="0.55" data-tip="Svengoolie · Original ranks 81–100<br>global rank <b>28,107</b> · 46,456 followers"/>
+<line class="line s2" x1="624.2" x2="624.2" y1="327.5" y2="339.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="579.7" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="13 Reasons Why · Extended ranks 181–200<br>global rank <b>7,671</b> · 677,531 followers"/>
+<circle class="dot s3" cx="576.0" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Game Grumps · Extended ranks 181–200<br>global rank <b>7,118</b> · 2,293,424 followers"/>
+<circle class="dot s3" cx="579.2" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Drunk History · Extended ranks 181–200<br>global rank <b>7,586</b> · 143,275 followers"/>
+<circle class="dot s3" cx="578.6" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="FearTWD · Extended ranks 181–200<br>global rank <b>7,506</b> · 309,813 followers"/>
+<circle class="dot s3" cx="579.4" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Community · Extended ranks 181–200<br>global rank <b>7,619</b> · 282,426 followers"/>
+<circle class="dot s3" cx="580.1" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="The Real · Extended ranks 181–200<br>global rank <b>7,733</b> · 340,217 followers"/>
+<circle class="dot s3" cx="583.7" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Gilmore Girls · Extended ranks 181–200<br>global rank <b>8,305</b> · 215,119 followers"/>
+<circle class="dot s3" cx="583.6" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Lip Sync Battle · Extended ranks 181–200<br>global rank <b>8,291</b> · 181,427 followers"/>
+<circle class="dot s3" cx="583.9" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Castle · Extended ranks 181–200<br>global rank <b>8,328</b> · 709,902 followers"/>
+<circle class="dot s3" cx="585.9" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Jane The Virgin · Extended ranks 181–200<br>global rank <b>8,673</b> · 277,162 followers"/>
+<circle class="dot s3" cx="584.4" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Making A Murderer · Extended ranks 181–200<br>global rank <b>8,423</b> · 264,518 followers"/>
+<circle class="dot s3" cx="583.8" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Victorious · Extended ranks 181–200<br>global rank <b>8,319</b> · 2,434,534 followers"/>
+<circle class="dot s3" cx="584.7" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="The Good Place is taking it sleazy · Extended ranks 181–200<br>global rank <b>8,470</b> · 256,005 followers"/>
+<circle class="dot s3" cx="587.2" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Scream Queens · Extended ranks 181–200<br>global rank <b>8,904</b> · 295,986 followers"/>
+<circle class="dot s3" cx="585.3" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Archer · Extended ranks 181–200<br>global rank <b>8,578</b> · 222,342 followers"/>
+<circle class="dot s3" cx="586.5" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Supergirl · Extended ranks 181–200<br>global rank <b>8,773</b> · 719,698 followers"/>
+<circle class="dot s3" cx="588.4" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Suits · Extended ranks 181–200<br>global rank <b>9,108</b> · 655,578 followers"/>
+<circle class="dot s3" cx="588.5" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="The Amazing Race · Extended ranks 181–200<br>global rank <b>9,139</b> · 387,995 followers"/>
+<circle class="dot s3" cx="587.9" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="Seinfeld · Extended ranks 181–200<br>global rank <b>9,023</b> · 181,549 followers"/>
+<circle class="dot s3" cx="588.7" cy="346.5" r="3.2" fill-opacity="0.55" data-tip="America&#x27;s Test Kitchen · Extended ranks 181–200<br>global rank <b>9,173</b> · 119,571 followers"/>
+<line class="line s3" x1="584.1" x2="584.1" y1="340.5" y2="352.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="388.5" text-anchor="end">Sports teams</text>
+<circle class="dot s1" cx="453.8" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="New York Yankees · Original ranks 1–20<br>global rank <b>627</b> · 3,469,371 followers"/>
+<circle class="dot s1" cx="457.8" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Golden State Warriors · Original ranks 1–20<br>global rank <b>678</b> · 6,479,945 followers"/>
+<circle class="dot s1" cx="465.4" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Red Sox · Original ranks 1–20<br>global rank <b>789</b> · 2,138,902 followers"/>
+<circle class="dot s1" cx="488.8" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Boston Celtics · Original ranks 1–20<br>global rank <b>1,258</b> · 3,557,548 followers"/>
+<circle class="dot s1" cx="576.6" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="FaZe Clan · Original ranks 1–20<br>global rank <b>7,202</b> · 4,347,394 followers"/>
+<circle class="dot s1" cx="485.2" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Green Bay Packers · Original ranks 1–20<br>global rank <b>1,170</b> · 2,305,058 followers"/>
+<circle class="dot s1" cx="512.6" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="New York Mets · Original ranks 1–20<br>global rank <b>2,017</b> · 1,088,247 followers"/>
+<circle class="dot s1" cx="523.4" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Kansas City Chiefs · Original ranks 1–20<br>global rank <b>2,502</b> · 1,546,004 followers"/>
+<circle class="dot s1" cx="459.1" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Chicago Cubs · Original ranks 1–20<br>global rank <b>696</b> · 2,576,771 followers"/>
+<circle class="dot s1" cx="478.2" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Los Angeles Dodgers · Original ranks 1–20<br>global rank <b>1,018</b> · 2,189,869 followers"/>
+<circle class="dot s1" cx="508.6" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="NEW YORK KNICKS · Original ranks 1–20<br>global rank <b>1,863</b> · 2,174,968 followers"/>
+<circle class="dot s1" cx="493.9" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Atlanta Braves · Original ranks 1–20<br>global rank <b>1,391</b> · 1,317,382 followers"/>
+<circle class="dot s1" cx="478.1" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Chicago Bulls · Original ranks 1–20<br>global rank <b>1,016</b> · 4,141,374 followers"/>
+<circle class="dot s1" cx="481.8" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Miami HEAT · Original ranks 1–20<br>global rank <b>1,093</b> · 4,725,453 followers"/>
+<circle class="dot s1" cx="501.3" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Denver Broncos · Original ranks 1–20<br>global rank <b>1,611</b> · 2,655,723 followers"/>
+<circle class="dot s1" cx="498.4" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="San Francisco 49ers · Original ranks 1–20<br>global rank <b>1,523</b> · 2,192,316 followers"/>
+<circle class="dot s1" cx="521.0" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Las Vegas Raiders · Original ranks 1–20<br>global rank <b>2,385</b> · 1,675,486 followers"/>
+<circle class="dot s1" cx="491.4" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Cleveland Cavaliers · Original ranks 1–20<br>global rank <b>1,325</b> · 3,271,096 followers"/>
+<circle class="dot s1" cx="499.9" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="Chicago Bears · Original ranks 1–20<br>global rank <b>1,568</b> · 1,812,824 followers"/>
+<circle class="dot s1" cx="529.0" cy="371.5" r="3.2" fill-opacity="0.55" data-tip="New York Jets · Original ranks 1–20<br>global rank <b>2,797</b> · 1,247,802 followers"/>
+<line class="line s1" x1="492.7" x2="492.7" y1="365.5" y2="377.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="658.5" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Team Liquid · Original ranks 81–100<br>global rank <b>36,726</b> · 588,068 followers"/>
+<circle class="dot s2" cx="569.0" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Tampa Bay Rays · Original ranks 81–100<br>global rank <b>6,200</b> · 580,023 followers"/>
+<circle class="dot s2" cx="560.3" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Oakland A&#x27;s · Original ranks 81–100<br>global rank <b>5,211</b> · 568,627 followers"/>
+<circle class="dot s2" cx="547.6" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Seattle Mariners · Original ranks 81–100<br>global rank <b>4,049</b> · 568,222 followers"/>
+<circle class="dot s2" cx="657.6" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Evil Geniuses · Original ranks 81–100<br>global rank <b>36,133</b> · 543,964 followers"/>
+<circle class="dot s2" cx="590.2" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="New York Islanders · Original ranks 81–100<br>global rank <b>9,453</b> · 541,106 followers"/>
+<circle class="dot s2" cx="573.4" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Columbus Blue Jackets · Original ranks 81–100<br>global rank <b>6,760</b> · 488,369 followers"/>
+<circle class="dot s2" cx="532.5" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Vegas Golden Knights · Original ranks 81–100<br>global rank <b>3,000</b> · 469,335 followers"/>
+<circle class="dot s2" cx="549.7" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Star Trek · Original ranks 81–100<br>global rank <b>4,223</b> · 451,952 followers"/>
+<circle class="dot s2" cx="658.6" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="CLG · Original ranks 81–100<br>global rank <b>36,816</b> · 403,203 followers"/>
+<circle class="dot s2" cx="598.0" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="New York City FC · Original ranks 81–100<br>global rank <b>11,038</b> · 393,750 followers"/>
+<circle class="dot s2" cx="685.7" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Luminosity Gaming · Original ranks 81–100<br>global rank <b>63,148</b> · 385,267 followers"/>
+<circle class="dot s2" cx="608.4" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Florida Panthers · Original ranks 81–100<br>global rank <b>13,581</b> · 380,813 followers"/>
+<circle class="dot s2" cx="580.8" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Miami Marlins · Original ranks 81–100<br>global rank <b>7,842</b> · 347,367 followers"/>
+<circle class="dot s2" cx="547.2" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="USA Hockey · Original ranks 81–100<br>global rank <b>4,017</b> · 341,577 followers"/>
+<circle class="dot s2" cx="580.5" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Florida Gators · Original ranks 81–100<br>global rank <b>7,798</b> · 318,929 followers"/>
+<circle class="dot s2" cx="590.4" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="UNC Tar Heels · Original ranks 81–100<br>global rank <b>9,487</b> · 282,323 followers"/>
+<circle class="dot s2" cx="579.9" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Yankees PR Dept. · Original ranks 81–100<br>global rank <b>7,701</b> · 260,158 followers"/>
+<circle class="dot s2" cx="681.9" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="Complexity Gaming · Original ranks 81–100<br>global rank <b>58,492</b> · 245,414 followers"/>
+<circle class="dot s2" cx="649.1" cy="384.5" r="3.2" fill-opacity="0.55" data-tip="TRENT? · Original ranks 81–100<br>global rank <b>30,473</b> · 221,196 followers"/>
+<line class="line s2" x1="585.7" x2="585.7" y1="378.5" y2="390.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="628.1" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Texas A&amp;M Athletics · Extended ranks 181–200<br>global rank <b>20,062</b> · 123,242 followers"/>
+<circle class="dot s3" cx="627.7" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Clemson Athletics · Extended ranks 181–200<br>global rank <b>19,912</b> · 196,663 followers"/>
+<circle class="dot s3" cx="628.0" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Warriors PR · Extended ranks 181–200<br>global rank <b>20,040</b> · 217,705 followers"/>
+<circle class="dot s3" cx="628.8" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Maryland Terrapins · Extended ranks 181–200<br>global rank <b>20,358</b> · 150,320 followers"/>
+<circle class="dot s3" cx="628.8" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Ohio State Hoops · Extended ranks 181–200<br>global rank <b>20,350</b> · 115,206 followers"/>
+<circle class="dot s3" cx="630.3" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Minnesota Gophers · Extended ranks 181–200<br>global rank <b>20,982</b> · 146,123 followers"/>
+<circle class="dot s3" cx="630.3" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Vanderbilt Baseball · Extended ranks 181–200<br>global rank <b>20,986</b> · 146,030 followers"/>
+<circle class="dot s3" cx="631.0" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Baylor Football · Extended ranks 181–200<br>global rank <b>21,271</b> · 148,816 followers"/>
+<circle class="dot s3" cx="631.9" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Syracuse Athletics · Extended ranks 181–200<br>global rank <b>21,643</b> · 141,937 followers"/>
+<circle class="dot s3" cx="632.5" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Wood Brothers Racing · Extended ranks 181–200<br>global rank <b>21,925</b> · 97,212 followers"/>
+<circle class="dot s3" cx="631.4" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Louisville Athletics · Extended ranks 181–200<br>global rank <b>21,421</b> · 547,980 followers"/>
+<circle class="dot s3" cx="634.2" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="UCF Knights · Extended ranks 181–200<br>global rank <b>22,673</b> · 166,478 followers"/>
+<circle class="dot s3" cx="630.9" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Cloud9 · Extended ranks 181–200<br>global rank <b>21,244</b> · 904,331 followers"/>
+<circle class="dot s3" cx="633.9" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Indianapolis Indians · Extended ranks 181–200<br>global rank <b>22,522</b> · 85,329 followers"/>
+<circle class="dot s3" cx="635.2" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Virginia Tech Football · Extended ranks 181–200<br>global rank <b>23,146</b> · 180,026 followers"/>
+<circle class="dot s3" cx="635.1" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Durham Bulls · Extended ranks 181–200<br>global rank <b>23,095</b> · 75,211 followers"/>
+<circle class="dot s3" cx="634.6" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Calgary Flames · Extended ranks 181–200<br>global rank <b>22,842</b> · 628,614 followers"/>
+<circle class="dot s3" cx="635.4" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Iowa Cubs · Extended ranks 181–200<br>global rank <b>23,206</b> · 71,357 followers"/>
+<circle class="dot s3" cx="636.5" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Ottawa Senators · Extended ranks 181–200<br>global rank <b>23,732</b> · 584,671 followers"/>
+<circle class="dot s3" cx="637.9" cy="397.5" r="3.2" fill-opacity="0.55" data-tip="Cincinnati Bearcats · Extended ranks 181–200<br>global rank <b>24,408</b> · 170,862 followers"/>
+<line class="line s3" x1="631.6" x2="631.6" y1="391.5" y2="403.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="439.5" text-anchor="end">Journalists</text>
+<circle class="dot s1" cx="452.7" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Jim Acosta · Original ranks 1–20<br>global rank <b>613</b> · 1,441,324 followers"/>
+<circle class="dot s1" cx="436.4" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Joy Reid · Original ranks 1–20<br>global rank <b>443</b> · 1,575,638 followers"/>
+<circle class="dot s1" cx="421.1" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Chris Hayes · Original ranks 1–20<br>global rank <b>327</b> · 2,081,116 followers"/>
+<circle class="dot s1" cx="504.8" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Daniel Dale · Original ranks 1–20<br>global rank <b>1,727</b> · 710,363 followers"/>
+<circle class="dot s1" cx="582.8" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Aaron Rupar · Original ranks 1–20<br>global rank <b>8,158</b> · 268,891 followers"/>
+<circle class="dot s1" cx="486.0" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="David Corn · Original ranks 1–20<br>global rank <b>1,190</b> · 812,891 followers"/>
+<circle class="dot s1" cx="569.6" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Kaitlan Collins · Original ranks 1–20<br>global rank <b>6,277</b> · 291,992 followers"/>
+<circle class="dot s1" cx="452.5" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Maggie Haberman · Original ranks 1–20<br>global rank <b>611</b> · 1,267,583 followers"/>
+<circle class="dot s1" cx="511.9" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Ari Melber · Original ranks 1–20<br>global rank <b>1,990</b> · 654,669 followers"/>
+<circle class="dot s1" cx="476.8" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="David Fahrenthold · Original ranks 1–20<br>global rank <b>990</b> · 714,788 followers"/>
+<circle class="dot s1" cx="539.6" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Stephanie Ruhle · Original ranks 1–20<br>global rank <b>3,453</b> · 495,156 followers"/>
+<circle class="dot s1" cx="487.7" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Katy Tur · Original ranks 1–20<br>global rank <b>1,229</b> · 709,785 followers"/>
+<circle class="dot s1" cx="439.4" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Ezra Klein · Original ranks 1–20<br>global rank <b>471</b> · 2,585,971 followers"/>
+<circle class="dot s1" cx="621.5" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Elie Mystal · Original ranks 1–20<br>global rank <b>17,607</b> · 121,543 followers"/>
+<circle class="dot s1" cx="578.2" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Jonathan Swan · Original ranks 1–20<br>global rank <b>7,441</b> · 236,659 followers"/>
+<circle class="dot s1" cx="504.5" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Robert Costa · Original ranks 1–20<br>global rank <b>1,717</b> · 549,343 followers"/>
+<circle class="dot s1" cx="508.4" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Christopher C. Cuomo · Original ranks 1–20<br>global rank <b>1,857</b> · 1,480,999 followers"/>
+<circle class="dot s1" cx="497.2" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="AprilDRyan · Original ranks 1–20<br>global rank <b>1,486</b> · 601,746 followers"/>
+<circle class="dot s1" cx="534.5" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Philip Rucker · Original ranks 1–20<br>global rank <b>3,122</b> · 456,555 followers"/>
+<circle class="dot s1" cx="597.2" cy="422.5" r="3.2" fill-opacity="0.55" data-tip="Benny · Original ranks 1–20<br>global rank <b>10,868</b> · 248,385 followers"/>
+<line class="line s1" x1="504.6" x2="504.6" y1="416.5" y2="428.5" style="stroke-width:3"/>
+<circle class="dot s2" cx="597.0" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Carl Bernstein · Original ranks 81–100<br>global rank <b>10,817</b> · 147,491 followers"/>
+<circle class="dot s2" cx="611.3" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Peter Doocy · Original ranks 81–100<br>global rank <b>14,378</b> · 141,303 followers"/>
+<circle class="dot s2" cx="618.5" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Michael Tracey · Original ranks 81–100<br>global rank <b>16,596</b> · 135,847 followers"/>
+<circle class="dot s2" cx="616.5" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Susan Glasser · Original ranks 81–100<br>global rank <b>15,953</b> · 134,112 followers"/>
+<circle class="dot s2" cx="577.1" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Ari Berman · Original ranks 81–100<br>global rank <b>7,277</b> · 131,730 followers"/>
+<circle class="dot s2" cx="583.2" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Taylor Lorenz · Original ranks 81–100<br>global rank <b>8,219</b> · 130,569 followers"/>
+<circle class="dot s2" cx="615.1" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Jonathan Lemire · Original ranks 81–100<br>global rank <b>15,496</b> · 124,521 followers"/>
+<circle class="dot s2" cx="621.5" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Elie Mystal · Original ranks 81–100<br>global rank <b>17,607</b> · 121,543 followers"/>
+<circle class="dot s2" cx="614.5" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Jennifer Griffin · Original ranks 81–100<br>global rank <b>15,334</b> · 115,671 followers"/>
+<circle class="dot s2" cx="601.0" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Jason Leopold · Original ranks 81–100<br>global rank <b>11,717</b> · 114,196 followers"/>
+<circle class="dot s2" cx="631.3" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Carol Leonnig · Original ranks 81–100<br>global rank <b>21,385</b> · 111,905 followers"/>
+<circle class="dot s2" cx="622.3" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Adam Housley · Original ranks 81–100<br>global rank <b>17,898</b> · 109,549 followers"/>
+<circle class="dot s2" cx="631.5" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Kyle Cheney · Original ranks 81–100<br>global rank <b>21,505</b> · 100,626 followers"/>
+<circle class="dot s2" cx="613.7" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Will Sommer · Original ranks 81–100<br>global rank <b>15,080</b> · 93,470 followers"/>
+<circle class="dot s2" cx="633.0" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Jeremy Diamond · Original ranks 81–100<br>global rank <b>22,150</b> · 78,322 followers"/>
+<circle class="dot s2" cx="661.8" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Clarissa Ward · Original ranks 81–100<br>global rank <b>39,245</b> · 65,012 followers"/>
+<circle class="dot s2" cx="656.2" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Paula Reid · Original ranks 81–100<br>global rank <b>35,106</b> · 63,638 followers"/>
+<circle class="dot s2" cx="659.0" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="Andrew Feinberg · Original ranks 81–100<br>global rank <b>37,100</b> · 62,056 followers"/>
+<circle class="dot s2" cx="674.8" cy="435.5" r="3.2" fill-opacity="0.55" data-tip="E. Jean Carroll · Original ranks 81–100<br>global rank <b>50,828</b> · 50,931 followers"/>
+<line class="line s2" x1="618.5" x2="618.5" y1="429.5" y2="441.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="554.6" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Mary Katharine Ham · Extended ranks 181–200<br>global rank <b>4,653</b> · 248,597 followers"/>
+<circle class="dot s3" cx="555.2" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Reza Aslan · Extended ranks 181–200<br>global rank <b>4,712</b> · 291,802 followers"/>
+<circle class="dot s3" cx="554.2" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Matthew Miller · Extended ranks 181–200<br>global rank <b>4,620</b> · 371,426 followers"/>
+<circle class="dot s3" cx="554.4" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Mehdi Hasan · Extended ranks 181–200<br>global rank <b>4,636</b> · 816,454 followers"/>
+<circle class="dot s3" cx="554.2" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Jack Posobiec 🇺🇸 · Extended ranks 181–200<br>global rank <b>4,617</b> · 643,052 followers"/>
+<circle class="dot s3" cx="554.6" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Jennifer Rubin · Extended ranks 181–200<br>global rank <b>4,651</b> · 369,681 followers"/>
+<circle class="dot s3" cx="555.1" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Peter Baker · Extended ranks 181–200<br>global rank <b>4,698</b> · 358,032 followers"/>
+<circle class="dot s3" cx="554.7" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="John Heilemann · Extended ranks 181–200<br>global rank <b>4,663</b> · 309,261 followers"/>
+<circle class="dot s3" cx="555.1" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Jedediah Bila · Extended ranks 181–200<br>global rank <b>4,705</b> · 303,391 followers"/>
+<circle class="dot s3" cx="555.8" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Jim Sciutto · Extended ranks 181–200<br>global rank <b>4,762</b> · 349,173 followers"/>
+<circle class="dot s3" cx="553.5" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Ariel Helwani · Extended ranks 181–200<br>global rank <b>4,552</b> · 816,854 followers"/>
+<circle class="dot s3" cx="556.9" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Erin effing golden Ryan · Extended ranks 181–200<br>global rank <b>4,872</b> · 193,004 followers"/>
+<circle class="dot s3" cx="557.0" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Jane Mayer · Extended ranks 181–200<br>global rank <b>4,886</b> · 224,154 followers"/>
+<circle class="dot s3" cx="557.8" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Josh Barro · Extended ranks 181–200<br>global rank <b>4,959</b> · 250,994 followers"/>
+<circle class="dot s3" cx="557.8" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Imani Gandy · Extended ranks 181–200<br>global rank <b>4,960</b> · 188,281 followers"/>
+<circle class="dot s3" cx="557.3" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Sharyl Attkisson🕵️‍♂️ · Extended ranks 181–200<br>global rank <b>4,914</b> · 275,725 followers"/>
+<circle class="dot s3" cx="559.0" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Dave Itzkoff · Extended ranks 181–200<br>global rank <b>5,075</b> · 230,830 followers"/>
+<circle class="dot s3" cx="557.4" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Katrina vandenHeuvel · Extended ranks 181–200<br>global rank <b>4,921</b> · 183,498 followers"/>
+<circle class="dot s3" cx="557.0" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Kristine Leahy · Extended ranks 181–200<br>global rank <b>4,882</b> · 220,576 followers"/>
+<circle class="dot s3" cx="559.0" cy="448.5" r="3.2" fill-opacity="0.55" data-tip="Tom Brokaw · Extended ranks 181–200<br>global rank <b>5,082</b> · 309,290 followers"/>
+<line class="line s3" x1="555.5" x2="555.5" y1="442.5" y2="454.5" style="stroke-width:3"/>
+<text class="cat" x="120" y="490.5" text-anchor="end">TV hosts</text>
+<circle class="dot s1" cx="461.3" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Laura Ingraham · Original ranks 1–20<br>global rank <b>728</b> · 3,304,497 followers"/>
+<circle class="dot s1" cx="526.3" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Lou Dobbs · Original ranks 1–20<br>global rank <b>2,649</b> · 2,132,650 followers"/>
+<circle class="dot s1" cx="525.3" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Steve Inskeep · Original ranks 1–20<br>global rank <b>2,601</b> · 298,612 followers"/>
+<circle class="dot s1" cx="583.8" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Jeff Zeleny · Original ranks 1–20<br>global rank <b>8,318</b> · 279,181 followers"/>
+<circle class="dot s1" cx="551.9" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Cari Champion · Original ranks 1–20<br>global rank <b>4,409</b> · 247,486 followers"/>
+<circle class="dot s1" cx="593.9" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Abby Huntsman · Original ranks 1–20<br>global rank <b>10,174</b> · 168,462 followers"/>
+<circle class="dot s1" cx="649.3" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Guy Adami · Original ranks 1–20<br>global rank <b>30,631</b> · 297,806 followers"/>
+<circle class="dot s1" cx="541.3" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Adam Richman · Original ranks 1–20<br>global rank <b>3,574</b> · 618,758 followers"/>
+<circle class="dot s1" cx="616.0" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Clayton Morris · Original ranks 1–20<br>global rank <b>15,771</b> · 101,820 followers"/>
+<circle class="dot s1" cx="629.1" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Mel Robbins · Original ranks 1–20<br>global rank <b>20,481</b> · 122,513 followers"/>
+<circle class="dot s1" cx="627.4" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Pat Kiernan · Original ranks 1–20<br>global rank <b>19,793</b> · 52,731 followers"/>
+<circle class="dot s1" cx="634.5" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Gio Benitez · Original ranks 1–20<br>global rank <b>22,797</b> · 65,510 followers"/>
+<circle class="dot s1" cx="579.0" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Buddy Valastro · Original ranks 1–20<br>global rank <b>7,555</b> · 581,553 followers"/>
+<circle class="dot s1" cx="606.4" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Jenna Compono · Original ranks 1–20<br>global rank <b>13,032</b> · 177,645 followers"/>
+<circle class="dot s1" cx="655.8" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Matt Gutman · Original ranks 1–20<br>global rank <b>34,821</b> · 51,958 followers"/>
+<circle class="dot s1" cx="597.4" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Nicole Curtis · Original ranks 1–20<br>global rank <b>10,902</b> · 129,835 followers"/>
+<circle class="dot s1" cx="670.8" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Lulu Miller · Original ranks 1–20<br>global rank <b>46,955</b> · 28,452 followers"/>
+<circle class="dot s1" cx="621.9" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Kacie McDonnell · Original ranks 1–20<br>global rank <b>17,748</b> · 83,625 followers"/>
+<circle class="dot s1" cx="697.2" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="𝕨𝕒𝕤𝕙 𝕪𝕠𝕦𝕣 𝕙𝕒𝕟𝕕𝕤 🧼 · Original ranks 1–20<br>global rank <b>79,379</b> · 38,328 followers"/>
+<circle class="dot s1" cx="643.7" cy="473.5" r="3.2" fill-opacity="0.55" data-tip="Ty Pennington · Original ranks 1–20<br>global rank <b>27,373</b> · 99,471 followers"/>
+<line class="line s1" x1="611.4" x2="611.4" y1="467.5" y2="479.5" style="stroke-width:3"/>
+<circle class="dot s3" cx="621.1" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="TotalBiscuit · Extended ranks 181–200<br>global rank <b>17,458</b> · 647,757 followers"/>
+<circle class="dot s3" cx="621.3" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Ryan Wyatt · Extended ranks 181–200<br>global rank <b>17,547</b> · 362,935 followers"/>
+<circle class="dot s3" cx="623.2" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Dylan Ratigan · Extended ranks 181–200<br>global rank <b>18,204</b> · 75,179 followers"/>
+<circle class="dot s3" cx="624.6" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Jason Weeman Acuna · Extended ranks 181–200<br>global rank <b>18,745</b> · 279,399 followers"/>
+<circle class="dot s3" cx="626.1" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="John Berman · Extended ranks 181–200<br>global rank <b>19,286</b> · 113,512 followers"/>
+<circle class="dot s3" cx="627.2" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Chris Moyles · Extended ranks 181–200<br>global rank <b>19,706</b> · 3,682,566 followers"/>
+<circle class="dot s3" cx="630.5" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Bianca de la Garza · Extended ranks 181–200<br>global rank <b>21,044</b> · 70,027 followers"/>
+<circle class="dot s3" cx="629.1" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Mel Robbins · Extended ranks 181–200<br>global rank <b>20,481</b> · 119,236 followers"/>
+<circle class="dot s3" cx="629.4" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Jaymee Sire · Extended ranks 181–200<br>global rank <b>20,604</b> · 53,128 followers"/>
+<circle class="dot s3" cx="630.6" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Jon Snow · Extended ranks 181–200<br>global rank <b>21,099</b> · 1,388,195 followers"/>
+<circle class="dot s3" cx="630.8" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Greg James · Extended ranks 181–200<br>global rank <b>21,170</b> · 1,622,951 followers"/>
+<circle class="dot s3" cx="632.2" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="MARK SIMONE · Extended ranks 181–200<br>global rank <b>21,767</b> · 187,286 followers"/>
+<circle class="dot s3" cx="631.2" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Maya Harris · Extended ranks 181–200<br>global rank <b>21,336</b> · 81,265 followers"/>
+<circle class="dot s3" cx="631.0" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="James Duthie · Extended ranks 181–200<br>global rank <b>21,268</b> · 889,809 followers"/>
+<circle class="dot s3" cx="633.0" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Emily Graslie 🌸🐝 · Extended ranks 181–200<br>global rank <b>22,118</b> · 94,114 followers"/>
+<circle class="dot s3" cx="634.1" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Anne Curtis-Smith · Extended ranks 181–200<br>global rank <b>22,627</b> · 12,582,039 followers"/>
+<circle class="dot s3" cx="631.6" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Gus Johnson · Extended ranks 181–200<br>global rank <b>21,512</b> · 58,202 followers"/>
+<circle class="dot s3" cx="635.0" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Mike Rinder · Extended ranks 181–200<br>global rank <b>23,056</b> · 88,678 followers"/>
+<circle class="dot s3" cx="635.9" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="George Shelley · Extended ranks 181–200<br>global rank <b>23,432</b> · 663,256 followers"/>
+<circle class="dot s3" cx="629.1" cy="499.5" r="3.2" fill-opacity="0.55" data-tip="Tiffany Cross · Extended ranks 181–200<br>global rank <b>20,476</b> · 107,758 followers"/>
+<line class="line s3" x1="630.5" x2="630.5" y1="493.5" y2="505.5" style="stroke-width:3"/>
+</svg>
+    <p class="caption">Global SocialVec popularity rank of every candidate (log scale; left is more popular), by category. Each dot is
+    one account; the bar marks the band's median. TV hosts have no ranks 81–100 band. 4
+    candidates without a SocialVec embedding are not shown.</p>
+  </div>
+  <div class="card">
+    <h4>Share of candidates within the global top N</h4>
+    <div style="max-width:620px"><svg viewBox="0 0 520 250" class="chart" role="img" aria-label="Cumulative share of candidates by global popularity rank">
+<line class="grid" x1="46" x2="504" y1="210.0" y2="210.0"/><text class="tick" x="40" y="214.0" text-anchor="end">0%</text>
+<line class="grid" x1="46" x2="504" y1="160.0" y2="160.0"/><text class="tick" x="40" y="164.0" text-anchor="end">25%</text>
+<line class="grid" x1="46" x2="504" y1="110.0" y2="110.0"/><text class="tick" x="40" y="114.0" text-anchor="end">50%</text>
+<line class="grid" x1="46" x2="504" y1="60.0" y2="60.0"/><text class="tick" x="40" y="64.0" text-anchor="end">75%</text>
+<line class="grid" x1="46" x2="504" y1="10.0" y2="10.0"/><text class="tick" x="40" y="14.0" text-anchor="end">100%</text>
+<text class="tick" x="46.0" y="228" text-anchor="middle">1</text>
+<text class="tick" x="132.4" y="228" text-anchor="middle">10</text>
+<text class="tick" x="218.7" y="228" text-anchor="middle">100</text>
+<text class="tick" x="305.1" y="228" text-anchor="middle">1,000</text>
+<text class="tick" x="391.4" y="228" text-anchor="middle">10,000</text>
+<text class="tick" x="477.8" y="228" text-anchor="middle">100,000</text>
+<text class="tick" x="275.0" y="246" text-anchor="middle">global popularity rank (log scale)</text>
+<path class="line s1" d="M46.0,210.0 L46.0,209.0 L72.0,208.0 L98.0,207.0 L106.4,206.0 L106.4,205.0 L119.0,204.0 L128.4,203.0 L132.4,202.0 L135.9,201.0 L142.2,199.9 L145.0,198.9 L150.0,197.9 L152.3,196.9 L156.4,195.9 L158.3,194.9 L160.2,193.9 L161.9,192.9 L166.7,191.9 L168.2,190.9 L169.6,189.9 L176.0,188.9 L182.4,187.9 L184.3,186.9 L185.3,185.9 L187.1,184.9 L188.8,183.9 L194.2,182.9 L198.3,181.9 L198.9,180.9 L200.2,179.8 L200.8,178.8 L203.7,177.8 L204.2,176.8 L206.9,175.8 L207.4,174.8 L208.4,173.8 L209.4,172.8 L209.9,171.8 L211.3,170.8 L211.7,169.8 L212.2,168.8 L213.5,167.8 L214.8,166.8 L215.6,165.8 L219.4,164.8 L221.2,163.8 L221.6,162.8 L221.6,161.8 L221.9,160.8 L221.9,159.7 L222.3,158.7 L223.0,157.7 L224.3,156.7 L224.9,155.7 L229.7,154.7 L231.1,153.7 L231.9,152.7 L233.1,151.7 L234.2,150.7 L236.1,149.7 L238.6,148.7 L239.0,147.7 L239.7,146.7 L240.1,145.7 L241.0,144.7 L241.6,143.7 L243.0,142.7 L243.2,141.7 L246.2,140.7 L246.7,139.6 L247.2,138.6 L250.3,137.6 L251.5,136.6 L251.7,135.6 L251.8,134.6 L252.5,133.6 L255.0,132.6 L255.2,131.6 L255.5,130.6 L257.3,129.6 L260.2,128.6 L261.7,127.6 L262.4,126.6 L263.1,125.6 L263.5,124.6 L263.9,123.6 L268.1,122.6 L268.4,121.6 L270.2,120.6 L271.2,119.5 L271.2,118.5 L272.8,117.5 L273.9,116.5 L274.5,115.5 L274.9,114.5 L274.9,113.5 L274.9,112.5 L276.8,111.5 L283.0,110.5 L283.2,109.5 L286.1,108.5 L286.4,107.5 L286.6,106.5 L286.7,105.5 L287.5,104.5 L288.3,103.5 L290.1,102.5 L290.5,101.5 L291.1,100.5 L291.5,99.4 L291.6,98.4 L292.1,97.4 L293.1,96.4 L294.2,95.4 L294.9,94.4 L295.7,93.4 L296.0,92.4 L296.2,91.4 L296.3,90.4 L297.7,89.4 L297.9,88.4 L298.5,87.4 L301.8,86.4 L304.7,85.4 L305.6,84.4 L305.7,83.4 L306.4,82.4 L306.4,81.4 L308.4,80.4 L310.9,79.3 L311.6,78.3 L311.7,77.3 L312.0,76.3 L312.8,75.3 L312.9,74.3 L313.7,73.3 L315.0,72.3 L315.6,71.3 L315.6,70.3 L317.4,69.3 L317.4,68.3 L319.7,67.3 L319.9,66.3 L320.8,65.3 L321.0,64.3 L321.4,63.3 L321.9,62.3 L322.9,61.3 L323.2,60.3 L324.4,59.2 L325.3,58.2 L325.5,57.2 L327.7,56.2 L328.3,55.2 L328.4,54.2 L328.9,53.2 L330.9,52.2 L331.4,51.2 L331.8,50.2 L335.2,49.2 L337.6,48.2 L339.4,47.2 L340.9,46.2 L341.6,45.2 L342.2,44.2 L343.4,43.2 L343.6,42.2 L346.9,41.2 L347.7,40.2 L351.5,39.1 L352.8,38.1 L360.7,37.1 L362.2,36.1 L362.2,35.1 L373.9,34.1 L378.7,33.1 L379.1,32.1 L380.3,31.1 L380.9,30.1 L383.8,29.1 L384.5,28.1 L389.4,27.1 L392.1,26.1 L392.2,25.1 L394.5,24.1 L394.6,23.1 L401.3,22.1 L408.5,21.1 L410.8,20.1 L412.6,19.0 L412.9,18.0 L417.0,17.0 L418.3,16.0 L422.3,15.0 L429.2,14.0 L433.4,13.0 L438.2,12.0 L449.4,11.0 L469.1,10.0"/>
+<path class="line s2" d="M46.0,210.0 L300.0,208.9 L306.7,207.8 L316.1,206.7 L331.5,205.6 L338.7,204.4 L340.6,203.3 L346.3,202.2 L346.9,201.1 L350.4,200.0 L350.9,198.9 L351.0,197.8 L351.2,196.7 L351.9,195.6 L354.3,194.4 L357.2,193.3 L357.5,192.2 L357.7,191.1 L358.2,190.0 L359.1,188.9 L359.4,187.8 L360.3,186.7 L362.0,185.6 L362.4,184.4 L363.1,183.3 L363.2,182.2 L363.5,181.1 L366.0,180.0 L367.0,178.9 L368.4,177.8 L368.9,176.7 L369.2,175.6 L371.7,174.4 L372.0,173.3 L373.1,172.2 L373.4,171.1 L373.5,170.0 L374.0,168.9 L374.0,167.8 L374.1,166.7 L375.1,165.6 L376.6,164.4 L376.7,163.3 L376.8,162.2 L377.1,161.1 L379.1,160.0 L379.5,158.9 L379.7,157.8 L379.9,156.7 L381.0,155.6 L381.0,154.4 L381.6,153.3 L381.8,152.2 L382.1,151.1 L382.3,150.0 L382.4,148.9 L382.9,147.8 L384.0,146.7 L384.9,145.6 L385.5,144.4 L387.5,143.3 L388.3,142.2 L388.7,141.1 L388.7,140.0 L389.3,138.9 L389.4,137.8 L390.6,136.7 L391.1,135.6 L391.6,134.4 L392.0,133.3 L392.3,132.2 L393.7,131.1 L393.9,130.0 L394.3,128.9 L395.1,127.8 L395.4,126.7 L395.9,125.6 L396.9,124.4 L397.3,123.3 L398.5,122.2 L398.8,121.1 L399.1,120.0 L399.8,118.9 L400.0,117.8 L401.8,116.7 L402.2,115.6 L402.6,114.4 L402.7,113.3 L402.9,112.2 L403.1,111.1 L403.8,110.0 L404.0,108.9 L404.4,107.8 L405.0,106.7 L405.5,105.6 L405.7,104.4 L405.9,103.3 L406.5,102.2 L406.6,101.1 L406.6,100.0 L406.8,98.9 L407.1,97.8 L407.4,96.7 L407.8,95.6 L408.7,94.4 L408.9,93.3 L409.2,92.2 L409.7,91.1 L409.9,90.0 L410.4,88.9 L410.6,87.8 L410.8,86.7 L410.8,85.6 L411.4,84.4 L412.6,83.3 L413.1,82.2 L413.1,81.1 L413.2,80.0 L415.0,78.9 L416.0,77.8 L416.1,76.7 L417.2,75.6 L418.4,74.4 L418.7,73.3 L418.7,72.2 L418.7,71.1 L419.9,70.0 L420.1,68.9 L420.2,67.8 L420.5,66.7 L420.8,65.6 L421.2,64.4 L422.0,63.3 L423.1,62.2 L423.4,61.1 L427.7,60.0 L427.7,58.9 L427.7,57.8 L428.4,56.7 L430.2,55.6 L431.6,54.4 L431.8,53.3 L432.4,52.2 L432.9,51.1 L432.9,50.0 L433.2,48.9 L433.4,47.8 L434.2,46.7 L435.1,45.6 L436.4,44.4 L437.8,43.3 L438.5,42.2 L439.6,41.1 L440.2,40.0 L440.3,38.9 L440.6,37.8 L440.8,36.7 L441.2,35.6 L442.7,34.4 L442.8,33.3 L444.0,32.2 L444.5,31.1 L446.0,30.0 L449.8,28.9 L452.4,27.8 L454.8,26.7 L456.5,25.6 L457.6,24.4 L458.6,23.3 L460.5,22.2 L460.6,21.1 L469.0,20.0 L475.2,18.9 L476.6,17.8 L487.4,16.7 L487.8,15.6 L490.3,14.4 L497.8,13.3 L504.0,12.2 L504.0,11.1 L504.0,10.0"/>
+<path class="line s3" d="M46.0,210.0 L303.9,209.0 L305.4,208.0 L305.4,207.0 L306.1,206.0 L306.7,205.0 L307.4,204.0 L307.4,203.0 L307.4,202.0 L307.7,201.0 L308.7,200.0 L308.8,199.0 L308.8,198.0 L309.3,197.0 L309.4,196.0 L309.6,195.0 L309.8,194.0 L310.0,193.0 L311.2,192.0 L311.4,191.0 L311.4,190.0 L311.6,189.0 L312.0,188.0 L312.2,187.0 L312.4,186.0 L312.4,185.0 L312.5,184.0 L312.8,183.0 L313.0,182.0 L313.0,181.0 L313.6,180.0 L314.0,179.0 L314.1,178.0 L315.3,177.0 L315.7,176.0 L315.7,175.0 L315.7,174.0 L316.5,173.0 L316.7,172.0 L317.6,171.0 L317.7,170.0 L361.9,169.0 L362.4,168.0 L362.4,167.0 L362.6,166.0 L362.7,165.0 L362.7,164.0 L362.8,163.0 L363.1,162.0 L363.1,161.0 L363.2,160.0 L363.6,159.0 L364.4,158.0 L364.5,157.0 L364.5,156.0 L364.8,155.0 L364.8,154.0 L365.1,153.0 L365.1,152.0 L366.0,151.0 L366.0,150.0 L370.7,149.0 L371.3,148.0 L371.4,147.0 L371.4,146.0 L371.7,145.0 L371.7,144.0 L371.8,143.0 L372.2,142.0 L372.5,141.0 L372.7,140.0 L372.8,139.0 L372.9,138.0 L373.1,137.0 L373.4,136.0 L373.5,135.0 L373.7,134.0 L373.8,133.0 L373.8,132.0 L374.7,131.0 L375.3,130.0 L375.6,129.0 L376.1,128.0 L376.6,127.0 L376.9,126.0 L378.2,125.0 L378.3,124.0 L378.7,123.0 L379.1,122.0 L379.4,121.0 L380.6,120.0 L381.0,119.0 L381.2,118.0 L381.4,117.0 L381.4,116.0 L381.5,115.0 L381.8,114.0 L382.2,113.0 L382.7,112.0 L383.2,111.0 L383.5,110.0 L383.9,109.0 L384.0,108.0 L384.4,107.0 L384.4,106.0 L384.5,105.0 L384.5,104.0 L385.0,103.0 L385.2,102.0 L385.7,101.0 L385.7,100.0 L385.8,99.0 L385.9,98.0 L386.1,97.0 L386.5,96.0 L386.7,95.0 L386.8,94.0 L386.8,93.0 L387.1,92.0 L387.5,91.0 L387.9,90.0 L388.0,89.0 L388.2,88.0 L388.3,87.0 L388.7,86.0 L388.8,85.0 L389.5,84.0 L390.1,83.0 L390.7,82.0 L391.2,81.0 L391.4,80.0 L391.5,79.0 L392.5,78.0 L393.1,77.0 L393.4,76.0 L393.4,75.0 L393.9,74.0 L394.4,73.0 L394.4,72.0 L395.0,71.0 L406.0,70.0 L406.4,69.0 L407.6,68.0 L408.0,67.0 L409.1,66.0 L409.2,65.0 L409.6,64.0 L410.1,63.0 L410.4,62.0 L410.8,61.0 L410.9,60.0 L411.1,59.0 L411.8,58.0 L411.8,57.0 L412.0,56.0 L412.2,55.0 L412.3,54.0 L412.5,53.0 L412.9,52.0 L413.1,51.0 L413.9,50.0 L414.0,49.0 L415.0,48.0 L415.0,47.0 L416.0,46.0 L416.8,45.0 L417.2,44.0 L417.5,43.0 L417.5,42.0 L418.0,41.0 L418.1,40.0 L418.3,39.0 L418.3,38.0 L418.5,37.0 L419.2,36.0 L419.2,35.0 L419.3,34.0 L419.4,33.0 L419.5,32.0 L419.7,31.0 L419.7,30.0 L419.7,29.0 L419.8,28.0 L420.0,27.0 L420.1,26.0 L420.4,25.0 L420.6,24.0 L420.8,23.0 L421.2,22.0 L421.9,21.0 L422.0,20.0 L422.1,19.0 L422.4,18.0 L422.7,17.0 L422.8,16.0 L422.9,15.0 L423.0,14.0 L423.3,13.0 L423.8,12.0 L424.9,11.0 L504.0,10.0"/>
+</svg></div>
+    <p class="caption">Cumulative share of each band's candidates (all categories) at or above each global rank; candidates without a
+    SocialVec embedding count as least popular.</p>
+  </div>
+  <div class="card"><h4 style="margin:0 0 6px">Summary by category</h4><div class='scroll'><table class='data compact'><thead><tr class='super'><th></th><th colspan='3'>Median global rank</th><th colspan='2' class='grp'>In the global top 10,000</th><th colspan='2' class='grp'>Median followers</th></tr><tr><th>Category</th><th>1–20</th><th>81–100</th><th>181–200</th><th class='grp'>81–100</th><th>181–200</th><th class='grp'>81–100</th><th>181–200</th></tr></thead><tbody><tr><th>Musical artists</th><td>60</td><td>5,502</td><td>1,104</td><td class=grp>75%</td><td>100%</td><td class=grp>552,766</td><td>2,084,388</td></tr><tr><th>News outlets</th><td>126</td><td>11,438</td><td>9,980</td><td class=grp>45%</td><td>50%</td><td class=grp>162,872</td><td>236,482</td></tr><tr><th>Comedians</th><td>200</td><td>21,135</td><td>7,657</td><td class=grp>0%</td><td>100%</td><td class=grp>82,468</td><td>205,614</td></tr><tr><th>Politicians</th><td>184</td><td>17,410</td><td>6,093</td><td class=grp>40%</td><td>100%</td><td class=grp>158,984</td><td>280,252</td></tr><tr><th>TV stations</th><td>448</td><td>16,393</td><td>16,781</td><td class=grp>10%</td><td>0%</td><td class=grp>145,691</td><td>213,133</td></tr><tr><th>Actors</th><td>278</td><td>6,776</td><td>1,262</td><td class=grp>65%</td><td>100%</td><td class=grp>325,924</td><td>1,854,458</td></tr><tr><th>TV shows</th><td>1,268</td><td>18,582</td><td>8,376</td><td class=grp>33%</td><td>100%</td><td class=grp>102,624</td><td>289,206</td></tr><tr><th>Sports teams</th><td>1,358</td><td>8,648</td><td>21,532</td><td class=grp>60%</td><td>0%</td><td class=grp>398,476</td><td>149,568</td></tr><tr><th>Journalists</th><td>1,722</td><td>16,596</td><td>4,737</td><td class=grp>11%</td><td>100%</td><td class=grp>114,934</td><td>297,596</td></tr><tr><th>TV hosts</th><td>14,402</td><td>–</td><td>21,072</td><td class=grp>–</td><td>0%</td><td class=grp>–</td><td>153,261</td></tr><tr class='total'><th>Overall</th><td>559</td><td>13,672</td><td>8,098</td><td class=grp>38%</td><td>65%</td><td class=grp>165,190</td><td>287,582</td></tr></tbody></table></div>
+  <p class="caption">Medians and shares per category; Overall pools all candidates of the band.</p></div>
 
   <div class="card"><h4 style="margin:0 0 6px">Overall MAP by popularity band</h4><div class='scroll'><table class='data compact'><thead><tr><th>Candidates</th><th>Users</th><th>Random</th><th>Popularity</th><th>Social</th><th>Δ</th></tr></thead><tbody><tr><th>Ranks 1–20, users of the 81–100 table</th><td>3,798</td><td>0.506</td><td>0.566</td><td>0.689</td><td>+22%</td></tr><tr><th><b>Ranks 81–100</b></th><td>3,798</td><td>0.259</td><td>0.298</td><td>0.413</td><td>+39%</td></tr><tr><th>Ranks 1–20, users of the 181–200 table</th><td>3,665</td><td>0.484</td><td>0.550</td><td>0.672</td><td>+22%</td></tr><tr><th><b>Ranks 181–200</b></th><td>3,665</td><td>0.226</td><td class=below>0.214</td><td>0.470</td><td>+120%</td></tr></tbody></table></div>
   <p class="caption">Each lower band is compared with the original top 20 on the same users (its Table A population), so
@@ -711,7 +1386,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
     on average, but overall MAP is stable.</li>
   </ul>
   <div class="card"><div class='panels'><div class='panel'><h4>Personalized, k = 25 (700 users)</h4><div class='scroll'><table class='data compact'><thead><tr><th>Measure</th><th>Original order</th><th>Repeated</th><th>Shuffled</th></tr></thead><tbody><tr><th>MAP</th><td>0.554</td><td>0.553</td><td>0.541</td></tr><tr><th>p vs. original run</th><td></td><td>0.974</td><td>&lt; 0.001</td></tr><tr><th>Mean per-user |ΔAP| vs. original run</th><td></td><td>0.058</td><td>0.085</td></tr><tr><th>Kendall τ: output vs. presented order</th><td>0.315</td><td>0.315</td><td>0.091</td></tr><tr><th>Kendall τ: output vs. popularity order</th><td>0.315</td><td>0.315</td><td>0.200</td></tr><tr><th>Kendall τ: output vs. original-run output</th><td>1</td><td>0.776</td><td>0.667</td></tr></tbody></table></div></div><div class='panel'><h4>Non-personalized baseline (14 categories × 10 calls)</h4><div class='scroll'><table class='data compact'><thead><tr><th>Measure</th><th>Original order</th><th>Shuffled</th></tr></thead><tbody><tr><th>Overall MAP, mean of 10 calls</th><td>0.475</td><td>0.452</td></tr><tr><th>SD across calls</th><td>0.004</td><td>0.005</td></tr><tr><th>Kendall τ: output vs. presented order</th><td>0.513</td><td>0.133</td></tr><tr><th>Kendall τ: output vs. popularity order</th><td>0.426</td><td>0.324</td></tr><tr><th>Distinct rankings among 10 calls</th><td>9.9</td><td>10.0</td></tr></tbody></table></div></div></div></div>
-  <p class="caption">9,157 model calls in total across all LLM experiments, costing $2.05.</p>
+  <p class="caption">10,006 model calls in total across all LLM experiments, costing $4.64.</p>
 </section>
 
 <section id="demographics">
@@ -757,15 +1432,15 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
 <line class="grid" x1="390.0" x2="390.0" y1="6" y2="264"/><text class="tick" x="390.0" y="280" text-anchor="middle">0.4</text>
 <line class="grid" x1="430.0" x2="430.0" y1="6" y2="264"/><text class="tick" x="430.0" y="280" text-anchor="middle">0.5</text>
 <line class="grid" x1="470.0" x2="470.0" y1="6" y2="264"/><text class="tick" x="470.0" y="280" text-anchor="middle">0.6</text>
-<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h100.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-100.7 z"/><text class="delta" x="342.7" y="22">0.262</text><rect class="hit" x="230" y="9" width="104.7" height="18" data-tip="Random ranking (expected), ranks 81-100<br>MAP <b>0.262</b>"/>
-<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h114.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-114.0 z"/><text class="delta" x="356.0" y="50">0.295</text><rect class="hit" x="230" y="37" width="118.0" height="18" data-tip="Popularity (follower count), ranks 81-100<br>MAP <b>0.295</b>"/>
-<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h106.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-106.5 z"/><text class="delta" x="348.5" y="78">0.276</text><rect class="hit" x="230" y="65" width="110.5" height="18" data-tip="LLM, no user information, ranks 81-100<br>MAP <b>0.276</b>"/>
-<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h114.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-114.7 z"/><text class="delta" x="356.7" y="106" font-weight="650">0.297</text><rect class="hit" x="230" y="93" width="118.7" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 81-100<br>MAP <b>0.297</b>"/>
-<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h138.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-138.0 z"/><text class="delta" x="380.0" y="134" font-weight="650">0.355</text><rect class="hit" x="230" y="121" width="142.0" height="18" data-tip="LLM, demographics by GPT-4o, ranks 81-100<br>MAP <b>0.355</b>"/>
-<text class="cat" x="220" y="162" text-anchor="end" font-weight="650">LLM, 12 followed account names</text><path class="bar s3" d="M230,151 h154.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-154.6 z"/><text class="delta" x="396.6" y="162" font-weight="650">0.397</text><rect class="hit" x="230" y="149" width="158.6" height="18" data-tip="LLM, 12 followed account names, ranks 81-100<br>MAP <b>0.397</b>"/>
-<text class="cat" x="220" y="190" text-anchor="end" font-weight="650">LLM, 25 followed account names</text><path class="bar s3" d="M230,179 h155.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-155.1 z"/><text class="delta" x="397.1" y="190" font-weight="650">0.398</text><rect class="hit" x="230" y="177" width="159.1" height="18" data-tip="LLM, 25 followed account names, ranks 81-100<br>MAP <b>0.398</b>"/>
-<text class="cat" x="220" y="218" text-anchor="end" font-weight="650">LLM, 50 followed account names</text><path class="bar s3" d="M230,207 h190.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-190.2 z"/><text class="delta" x="432.2" y="218" font-weight="650">0.486</text><rect class="hit" x="230" y="205" width="194.2" height="18" data-tip="LLM, 50 followed account names, ranks 81-100<br>MAP <b>0.486</b>"/>
-<text class="cat" x="220" y="246" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,235 h176.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-176.4 z"/><text class="delta" x="418.4" y="246">0.451</text><rect class="hit" x="230" y="233" width="180.4" height="18" data-tip="SocialVec, all followed entities, ranks 81-100<br>MAP <b>0.451</b>"/>
+<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h100.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-100.7 z"/><text class="delta" x="342.7" y="22">0.262</text><rect class="hit" x="230" y="9" width="104.7" height="18" data-tip="Random ranking (expected), ranks 81-100, shuffled candidates<br>MAP <b>0.262</b>"/>
+<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h114.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-114.0 z"/><text class="delta" x="356.0" y="50">0.295</text><rect class="hit" x="230" y="37" width="118.0" height="18" data-tip="Popularity (follower count), ranks 81-100, shuffled candidates<br>MAP <b>0.295</b>"/>
+<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h106.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-106.5 z"/><text class="delta" x="348.5" y="78">0.276</text><rect class="hit" x="230" y="65" width="110.5" height="18" data-tip="LLM, no user information, ranks 81-100, shuffled candidates<br>MAP <b>0.276</b>"/>
+<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h114.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-114.7 z"/><text class="delta" x="356.7" y="106" font-weight="650">0.297</text><rect class="hit" x="230" y="93" width="118.7" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 81-100, shuffled candidates<br>MAP <b>0.297</b>"/>
+<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h138.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-138.0 z"/><text class="delta" x="380.0" y="134" font-weight="650">0.355</text><rect class="hit" x="230" y="121" width="142.0" height="18" data-tip="LLM, demographics by GPT-4o, ranks 81-100, shuffled candidates<br>MAP <b>0.355</b>"/>
+<text class="cat" x="220" y="162" text-anchor="end" font-weight="650">LLM, 12 followed account names</text><path class="bar s3" d="M230,151 h154.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-154.6 z"/><text class="delta" x="396.6" y="162" font-weight="650">0.397</text><rect class="hit" x="230" y="149" width="158.6" height="18" data-tip="LLM, 12 followed account names, ranks 81-100, shuffled candidates<br>MAP <b>0.397</b>"/>
+<text class="cat" x="220" y="190" text-anchor="end" font-weight="650">LLM, 25 followed account names</text><path class="bar s3" d="M230,179 h155.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-155.1 z"/><text class="delta" x="397.1" y="190" font-weight="650">0.398</text><rect class="hit" x="230" y="177" width="159.1" height="18" data-tip="LLM, 25 followed account names, ranks 81-100, shuffled candidates<br>MAP <b>0.398</b>"/>
+<text class="cat" x="220" y="218" text-anchor="end" font-weight="650">LLM, 50 followed account names</text><path class="bar s3" d="M230,207 h190.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-190.2 z"/><text class="delta" x="432.2" y="218" font-weight="650">0.486</text><rect class="hit" x="230" y="205" width="194.2" height="18" data-tip="LLM, 50 followed account names, ranks 81-100, shuffled candidates<br>MAP <b>0.486</b>"/>
+<text class="cat" x="220" y="246" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,235 h176.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-176.4 z"/><text class="delta" x="418.4" y="246">0.451</text><rect class="hit" x="230" y="233" width="180.4" height="18" data-tip="SocialVec, all followed entities, ranks 81-100, shuffled candidates<br>MAP <b>0.451</b>"/>
 </svg></div>
       <div class="panel"><h4>Ranks 181–200 · 155 users</h4><svg viewBox="0 0 520 286" class="chart" role="img" aria-label="Overall MAP by method, ranks 181-200, shuffled candidates">
 <line class="grid" x1="230.0" x2="230.0" y1="6" y2="264"/><text class="tick" x="230.0" y="280" text-anchor="middle">0.0</text>
@@ -775,15 +1450,15 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
 <line class="grid" x1="390.0" x2="390.0" y1="6" y2="264"/><text class="tick" x="390.0" y="280" text-anchor="middle">0.4</text>
 <line class="grid" x1="430.0" x2="430.0" y1="6" y2="264"/><text class="tick" x="430.0" y="280" text-anchor="middle">0.5</text>
 <line class="grid" x1="470.0" x2="470.0" y1="6" y2="264"/><text class="tick" x="470.0" y="280" text-anchor="middle">0.6</text>
-<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h89.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-89.8 z"/><text class="delta" x="331.8" y="22">0.234</text><rect class="hit" x="230" y="9" width="93.8" height="18" data-tip="Random ranking (expected), ranks 181-200<br>MAP <b>0.234</b>"/>
-<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h82.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-82.5 z"/><text class="delta" x="324.5" y="50">0.216</text><rect class="hit" x="230" y="37" width="86.5" height="18" data-tip="Popularity (follower count), ranks 181-200<br>MAP <b>0.216</b>"/>
-<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h121.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-121.0 z"/><text class="delta" x="363.0" y="78">0.313</text><rect class="hit" x="230" y="65" width="125.0" height="18" data-tip="LLM, no user information, ranks 181-200<br>MAP <b>0.313</b>"/>
-<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h134.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-134.2 z"/><text class="delta" x="376.2" y="106" font-weight="650">0.345</text><rect class="hit" x="230" y="93" width="138.2" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 181-200<br>MAP <b>0.345</b>"/>
-<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h166.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-166.5 z"/><text class="delta" x="408.5" y="134" font-weight="650">0.426</text><rect class="hit" x="230" y="121" width="170.5" height="18" data-tip="LLM, demographics by GPT-4o, ranks 181-200<br>MAP <b>0.426</b>"/>
-<text class="cat" x="220" y="162" text-anchor="end" font-weight="650">LLM, 12 followed account names</text><path class="bar s3" d="M230,151 h174.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-174.5 z"/><text class="delta" x="416.5" y="162" font-weight="650">0.446</text><rect class="hit" x="230" y="149" width="178.5" height="18" data-tip="LLM, 12 followed account names, ranks 181-200<br>MAP <b>0.446</b>"/>
-<text class="cat" x="220" y="190" text-anchor="end" font-weight="650">LLM, 25 followed account names</text><path class="bar s3" d="M230,179 h176.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-176.2 z"/><text class="delta" x="418.2" y="190" font-weight="650">0.450</text><rect class="hit" x="230" y="177" width="180.2" height="18" data-tip="LLM, 25 followed account names, ranks 181-200<br>MAP <b>0.450</b>"/>
-<text class="cat" x="220" y="218" text-anchor="end" font-weight="650">LLM, 50 followed account names</text><path class="bar s3" d="M230,207 h210.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-210.0 z"/><text class="delta" x="452.0" y="218" font-weight="650">0.535</text><rect class="hit" x="230" y="205" width="214.0" height="18" data-tip="LLM, 50 followed account names, ranks 181-200<br>MAP <b>0.535</b>"/>
-<text class="cat" x="220" y="246" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,235 h178.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-178.4 z"/><text class="delta" x="420.4" y="246">0.456</text><rect class="hit" x="230" y="233" width="182.4" height="18" data-tip="SocialVec, all followed entities, ranks 181-200<br>MAP <b>0.456</b>"/>
+<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h89.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-89.8 z"/><text class="delta" x="331.8" y="22">0.234</text><rect class="hit" x="230" y="9" width="93.8" height="18" data-tip="Random ranking (expected), ranks 181-200, shuffled candidates<br>MAP <b>0.234</b>"/>
+<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h82.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-82.5 z"/><text class="delta" x="324.5" y="50">0.216</text><rect class="hit" x="230" y="37" width="86.5" height="18" data-tip="Popularity (follower count), ranks 181-200, shuffled candidates<br>MAP <b>0.216</b>"/>
+<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h121.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-121.0 z"/><text class="delta" x="363.0" y="78">0.313</text><rect class="hit" x="230" y="65" width="125.0" height="18" data-tip="LLM, no user information, ranks 181-200, shuffled candidates<br>MAP <b>0.313</b>"/>
+<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, demographics by GPT-6 Luna</text><path class="bar s1" d="M230,95 h134.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-134.2 z"/><text class="delta" x="376.2" y="106" font-weight="650">0.345</text><rect class="hit" x="230" y="93" width="138.2" height="18" data-tip="LLM, demographics by GPT-6 Luna, ranks 181-200, shuffled candidates<br>MAP <b>0.345</b>"/>
+<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M230,123 h166.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-166.5 z"/><text class="delta" x="408.5" y="134" font-weight="650">0.426</text><rect class="hit" x="230" y="121" width="170.5" height="18" data-tip="LLM, demographics by GPT-4o, ranks 181-200, shuffled candidates<br>MAP <b>0.426</b>"/>
+<text class="cat" x="220" y="162" text-anchor="end" font-weight="650">LLM, 12 followed account names</text><path class="bar s3" d="M230,151 h174.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-174.5 z"/><text class="delta" x="416.5" y="162" font-weight="650">0.446</text><rect class="hit" x="230" y="149" width="178.5" height="18" data-tip="LLM, 12 followed account names, ranks 181-200, shuffled candidates<br>MAP <b>0.446</b>"/>
+<text class="cat" x="220" y="190" text-anchor="end" font-weight="650">LLM, 25 followed account names</text><path class="bar s3" d="M230,179 h176.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-176.2 z"/><text class="delta" x="418.2" y="190" font-weight="650">0.450</text><rect class="hit" x="230" y="177" width="180.2" height="18" data-tip="LLM, 25 followed account names, ranks 181-200, shuffled candidates<br>MAP <b>0.450</b>"/>
+<text class="cat" x="220" y="218" text-anchor="end" font-weight="650">LLM, 50 followed account names</text><path class="bar s3" d="M230,207 h210.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-210.0 z"/><text class="delta" x="452.0" y="218" font-weight="650">0.535</text><rect class="hit" x="230" y="205" width="214.0" height="18" data-tip="LLM, 50 followed account names, ranks 181-200, shuffled candidates<br>MAP <b>0.535</b>"/>
+<text class="cat" x="220" y="246" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M230,235 h178.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-178.4 z"/><text class="delta" x="420.4" y="246">0.456</text><rect class="hit" x="230" y="233" width="182.4" height="18" data-tip="SocialVec, all followed entities, ranks 181-200, shuffled candidates<br>MAP <b>0.456</b>"/>
 </svg></div>
     </div>
     <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Ranks 181–200 use the
@@ -794,8 +1469,107 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   should not be read as findings about which groups like which entities.</p>
 </section>
 
+<section id="all200">
+  <h2><span class="num">7</span>Ranking all 200 candidates</h2>
+  <p class="intro">Does the LLM struggle with longer prompts? Here it must rank 200 candidates per category instead of 20.</p>
+  <ul>
+    <li><i>Candidates:</i> ranks 1–200 of the extended category lists (by SocialVec popularity), for the
+    9 categories that reach 200 accounts and have sampled users; 199.9 candidates per
+    category on average, as entities without a SocialVec embedding are dropped.</li>
+    <li><i>Users:</i> the 270 users of Table C, all of whom follow at least one candidate
+    (32.5 on average).</li>
+    <li><i>LLM:</i> GPT-6 Luna at reasoning effort <i>medium</i>, with the candidates in one random order per user shared by
+    both prompts. <i>No user information</i> uses the baseline prompt. <i>Account names</i> lists up to 200 accounts the user
+    follows (197 on average), sampled among accounts with a known name, with every account of
+    the category's extended list and original sheet removed.</li>
+    <li><i>A stronger prompt:</i> with the authors' prompts at effort <i>low</i>, a pilot returned only 20–50 of the 200 ids
+    when given 200 names, cutting the list off itself. Both prompts therefore add an explicit instruction to return every
+    candidate exactly once.</li>
+    <li><i>Scoring incomplete answers:</i> only the candidates the model actually ranked count. A relevant candidate it left out
+    is a miss: it adds nothing to AP but stays in the denominator. Ids that are not candidates are dropped.</li>
+    <li><i>SocialVec:</i> on the same accounts as the LLM's prompt, and on all followed entities (category accounts removed).
+    Popularity ranks by follower count.</li>
+  </ul>
+
+  <ul class="highlights">
+    <li><b>With 200 candidates, the LLM keeps a small lead.</b> Given account names it scores 0.470,
+    against 0.444 for SocialVec on the same accounts (p = 0.015) and
+    0.444 on all followed entities (p = 0.017). It is ahead in 6 of
+    9 categories. Placing the left-out candidates at the end in random order instead would give it
+    0.485, overstating the lead.</li>
+    <li><b>Without user information it is no better than popularity</b> (0.323 vs. 0.324,
+    p = 0.770), though far above chance (0.183).</li>
+    <li class="warn"><b>Long lists are harder to complete.</b>
+    <ul>
+      <li><i>Coverage:</i> even with the explicit instruction, only 10% of the name-based answers
+      list every candidate, and 55% list at least 95% of them
+      (19% and 71% without user information). Across
+      users, 8% of the relevant candidates are missing from the name-based answers.</li>
+      <li><i>Short answers fall behind:</i> for the 39 users whose answer stops before 60% of the candidates, the LLM
+      scores 0.382 against 0.397 for SocialVec on the same
+      accounts.</li>
+      <li><i>Complete answers:</i> on the 104 users whose two answers are both at least 95% complete, the lead is
+      0.489 vs. 0.461, not significant (p = 0.096).</li>
+    </ul></li>
+    <li><b>On the hardest candidates, the LLM does worse in the longer list.</b> Cutting each 200-candidate ranking down to the
+    ranks 181–200 candidates allows a comparison with the 20-candidate prompts of Section 6, on the
+    155 users who follow one of them; both are scored with the rule above.
+    <ul>
+      <li><i>With names:</i> the LLM drops from 0.535 to 0.472
+      (p = 0.004), although it now sees up to 200 names instead of 50.</li>
+      <li><i>Without user information:</i> it drops from 0.313 to
+      0.266 (p = 0.007).</li>
+      <li><i>SocialVec</i> does not depend on the list length (0.456 vs.
+      0.454). The LLM's lead over it on these candidates shrinks from
+      +0.079 (p = 0.002) to
+      +0.018 (p = 0.764).</li>
+    </ul></li>
+  </ul>
+
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s3)"></i>GPT-6 Luna, account names</span>
+    <span class="key"><i class="sq" style="background:var(--s1)"></i>SocialVec</span></div>
+    <h4>Ranks 1–200 · 270 users</h4>
+    <div style="max-width:620px"><svg viewBox="0 0 520 202" class="chart" role="img" aria-label="Overall MAP by method, 200 candidates">
+<line class="grid" x1="230.0" x2="230.0" y1="6" y2="180"/><text class="tick" x="230.0" y="196" text-anchor="middle">0.0</text>
+<line class="grid" x1="270.0" x2="270.0" y1="6" y2="180"/><text class="tick" x="270.0" y="196" text-anchor="middle">0.1</text>
+<line class="grid" x1="310.0" x2="310.0" y1="6" y2="180"/><text class="tick" x="310.0" y="196" text-anchor="middle">0.2</text>
+<line class="grid" x1="350.0" x2="350.0" y1="6" y2="180"/><text class="tick" x="350.0" y="196" text-anchor="middle">0.3</text>
+<line class="grid" x1="390.0" x2="390.0" y1="6" y2="180"/><text class="tick" x="390.0" y="196" text-anchor="middle">0.4</text>
+<line class="grid" x1="430.0" x2="430.0" y1="6" y2="180"/><text class="tick" x="430.0" y="196" text-anchor="middle">0.5</text>
+<line class="grid" x1="470.0" x2="470.0" y1="6" y2="180"/><text class="tick" x="470.0" y="196" text-anchor="middle">0.6</text>
+<text class="cat" x="220" y="22" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M230,11 h69.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-69.2 z"/><text class="delta" x="311.2" y="22">0.183</text><rect class="hit" x="230" y="9" width="73.2" height="18" data-tip="Random ranking (expected), 200 candidates<br>MAP <b>0.183</b>"/>
+<text class="cat" x="220" y="50" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M230,39 h125.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-125.7 z"/><text class="delta" x="367.7" y="50">0.324</text><rect class="hit" x="230" y="37" width="129.7" height="18" data-tip="Popularity (follower count), 200 candidates<br>MAP <b>0.324</b>"/>
+<text class="cat" x="220" y="78" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M230,67 h125.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-125.0 z"/><text class="delta" x="367.0" y="78">0.323</text><rect class="hit" x="230" y="65" width="129.0" height="18" data-tip="LLM, no user information, 200 candidates<br>MAP <b>0.323</b>"/>
+<text class="cat" x="220" y="106" text-anchor="end" font-weight="650">LLM, up to 200 account names</text><path class="bar s3" d="M230,95 h184.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-184.0 z"/><text class="delta" x="426.0" y="106" font-weight="650">0.470</text><rect class="hit" x="230" y="93" width="188.0" height="18" data-tip="LLM, up to 200 account names, 200 candidates<br>MAP <b>0.470</b>"/>
+<text class="cat" x="220" y="134" text-anchor="end" font-weight="650">SocialVec, the same accounts</text><path class="bar s1" d="M230,123 h173.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-173.6 z"/><text class="delta" x="415.6" y="134" font-weight="650">0.444</text><rect class="hit" x="230" y="121" width="177.6" height="18" data-tip="SocialVec, the same accounts, 200 candidates<br>MAP <b>0.444</b>"/>
+<text class="cat" x="220" y="162" text-anchor="end" font-weight="650">SocialVec, all followed entities</text><path class="bar s1" d="M230,151 h173.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-173.8 z"/><text class="delta" x="415.8" y="162" font-weight="650">0.444</text><rect class="hit" x="230" y="149" width="177.8" height="18" data-tip="SocialVec, all followed entities, 200 candidates<br>MAP <b>0.444</b>"/>
+</svg></div>
+    <p class="caption">Overall MAP (mean over categories) when ranking all 200 candidates.</p>
+  </div>
+
+  <h3>How many candidates did the LLM rank?</h3>
+  <p>Answers often contain about 200 ids, but some are repeats, so fewer distinct candidates are ranked. Only the first position of
+  a repeated id counts, and ids that are not candidates are dropped. The number ranked does not depend on the other prompt's answer
+  for the same user (correlation -0.06) or on the number of names listed
+  (0.04).</p>
+  <div class="card"><h4>Per answer (270 users, 200 candidates each)</h4><div class='scroll'><table class='data compact'><thead><tr><th>Statistic</th><th>No user information</th><th>Up to 200 account names</th></tr></thead><tbody><tr><th>Distinct candidates ranked: mean</th><td>180</td><td>172</td></tr><tr><th>… median</th><td>197</td><td>191</td></tr><tr><th>… 10th percentile</th><td>115</td><td>92</td></tr><tr><th>… minimum</th><td>24</td><td>21</td></tr><tr><th>Ids written per answer, repeats included: median</th><td>199</td><td>199</td></tr><tr><th>Answers ranking every candidate</th><td>19%</td><td>10%</td></tr><tr><th>Answers ranking at least 95%</th><td>71%</td><td>55%</td></tr><tr><th>Answers ranking less than half</th><td>9%</td><td>12%</td></tr><tr><th>Answers repeating an id</th><td>50%</td><td>61%</td></tr><tr><th>Repeated ids per answer: mean</th><td>10.8</td><td>19.4</td></tr><tr><th>Answers with an id that is not a candidate</th><td>20%</td><td>34%</td></tr><tr><th>Relevant candidates ranked (all users)</th><td>93.5%</td><td>92.0%</td></tr><tr><th>Users with a relevant candidate left out</th><td>44%</td><td>56%</td></tr></tbody></table></div><h4>Median distinct candidates ranked, by category</h4><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>No user information</th><th>Up to 200 account names</th></tr></thead><tbody><tr><th>Musical artists</th><td>196</td><td>194</td></tr><tr><th>News outlets</th><td>192</td><td>188</td></tr><tr><th>Comedians</th><td>197</td><td>196</td></tr><tr><th>Politicians</th><td>197</td><td>178</td></tr><tr><th>TV stations</th><td>191</td><td>192</td></tr><tr><th>Actors</th><td>199</td><td>198</td></tr><tr><th>TV shows</th><td>198</td><td>192</td></tr><tr><th>Sports teams</th><td>196</td><td>187</td></tr><tr><th>Journalists</th><td>194</td><td>188</td></tr></tbody></table></div>
+  <p class="caption">Counts are distinct candidate ids per answer. 95% means at least 190 of 200.</p></div>
+
+  <h3>20 vs. 200 candidates, on the ranks 181–200 candidates</h3>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Method</th><th>20-candidate prompt</th><th>200-candidate ranking, cut to the same 20</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead><tbody><tr><th>LLM, no user information</th><td>0.313<span class='paper'>no user information</span></td><td>0.266<span class='paper'>no user information</span></td><td>−0.047</td><td>0.007</td></tr><tr><th>LLM, account names</th><td>0.535<span class='paper'>50 names</span></td><td>0.472<span class='paper'>up to 200 names</span></td><td>−0.063</td><td>0.004</td></tr><tr><th>SocialVec</th><td>0.456<span class='paper'>all followed entities</span></td><td>0.454<span class='paper'>the LLM&#x27;s accounts</span></td><td>−0.002</td><td>0.898</td></tr></tbody></table></div>
+  <p class="caption">MAP on the same 20 candidates for the 155 users who follow one of them (mean over
+  categories). The 20-candidate prompts are those of Section 6 (authors' prompt, effort low). The two LLM runs also differ
+  in prompt wording, reasoning effort and number of names, so the comparison is not a pure test of list length.</p></div>
+
+  <h3>Per category</h3>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, up to 200 account names</th><th>SocialVec, the same accounts</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td>30</td><td>0.164</td><td>0.303</td><td>0.300</td><td><b>0.433</b></td><td>0.396</td><td>0.397</td></tr><tr><th>News outlets</th><td>30</td><td>0.174</td><td>0.409</td><td>0.370</td><td><b>0.446</b></td><td>0.405</td><td>0.399</td></tr><tr><th>Comedians</th><td>30</td><td>0.197</td><td>0.425</td><td>0.378</td><td>0.448</td><td>0.448</td><td><b>0.458</b></td></tr><tr><th>Politicians</th><td>30</td><td>0.243</td><td>0.382</td><td>0.395</td><td><b>0.523</b></td><td>0.446</td><td>0.448</td></tr><tr><th>TV stations</th><td>30</td><td>0.145</td><td>0.373</td><td>0.361</td><td><b>0.511</b></td><td>0.455</td><td>0.458</td></tr><tr><th>Actors</th><td>30</td><td>0.167</td><td>0.239</td><td>0.213</td><td>0.355</td><td><b>0.373</b></td><td>0.371</td></tr><tr><th>TV shows</th><td>30</td><td>0.125</td><td>0.180</td><td>0.139</td><td>0.468</td><td><b>0.507</b></td><td>0.507</td></tr><tr><th>Sports teams</th><td>30</td><td>0.198</td><td>0.344</td><td>0.356</td><td><b>0.531</b></td><td>0.451</td><td>0.455</td></tr><tr><th>Journalists</th><td>30</td><td>0.232</td><td>0.264</td><td>0.392</td><td><b>0.516</b></td><td>0.513</td><td>0.509</td></tr><tr class='total'><th>Overall</th><td>270</td><td>0.183</td><td>0.324</td><td>0.323</td><td>0.470</td><td>0.444</td><td>0.444</td></tr></tbody></table></div>
+  <p class="caption">MAP per category over 200 candidates; bold marks the best method in each row. These GPT-6 Luna runs,
+  including the pilots and a first run that listed fewer names, cost $2.59.</p></div>
+</section>
+
 <section id="open">
-  <h2><span class="num">7</span>Open items</h2>
+  <h2><span class="num">8</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
     <p>The LLM results use samples of 50 users per category (30 for ranks 81–100 and 181–200), which keeps overall MAP within
@@ -803,9 +1577,9 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
     responses are reused.</p></div>
     <div class="callout"><span class="tag">Next</span><h4>Description-based tail candidates</h4>
     <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i>, below the top 10K/20K
-    SocialVec entities. The ranks 81–100 band used the original typed lists: only 110 of 177 candidates fall
-    below the top 10K. The ranks 181–200 band, from the extended lists, gets closer: 30% of its candidates do.
-    It still uses 20 candidates typed by Wikidata and DBpedia rather than by description.</p></div>
+    SocialVec entities. Neither band meets that criterion fully: 110 of the 177 ranks 81–100 candidates
+    (62%) fall below the top 10K, but only 30% of the ranks 181–200 candidates do, since the
+    extended lists contain many popular accounts (Section 4). Both bands use typed lists rather than descriptions.</p></div>
   </div>
 </section>
 
@@ -816,7 +1590,8 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
   <code>python run_popularity_band.py --start 181 --end 200 --source extended</code> and
   <code>python run_llm_experiments.py --parts band --band-start 181 --band-end 200 --band-source extended</code>.
   For Section 6, run <code>python run_llm_demographics.py</code> (with <code>--describe-model gpt-4o</code> for the repeat),
-  <code>python run_llm_demographics_bands.py</code> and <code>python make_demographics_report.py</code>.
+  <code>python run_llm_demographics_bands.py</code> and <code>python make_demographics_report.py</code>. For Section 7, run
+  <code>python run_popularity_band.py --start 1 --end 200 --source extended</code> and <code>python run_llm_200.py</code>.
   Then rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
   <code>results/POPULARITY_BAND_REPORT.md</code>, <code>results/LLM_REPORT.md</code> and
   <code>results/EXTENDED_CATEGORIES_REPORT.md</code>.</p>

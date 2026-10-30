@@ -225,13 +225,14 @@ def coverage(ranked, candidate_ids: List[int]) -> float:
     return len(set(ranked_ids(ranked)) & set(candidate_ids)) / len(candidate_ids)
 
 
-def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, **lm_kwargs):
+def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, extra_instructions: str = "", **lm_kwargs):
     """
     LLM rankers built with the authors' dspy signatures.
 
     `model` is any litellm model name (e.g. "openai/gpt-6-luna"); extra keyword
     arguments (api_key, reasoning_effort, ...) go to `dspy.LM`. A ready-made dspy
-    LM can be passed as `lm` instead.
+    LM can be passed as `lm` instead. `extra_instructions` is appended to both
+    signatures' instructions.
     """
     import dspy
 
@@ -258,6 +259,11 @@ def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, **lm_kwargs):
         ranked_ids = dspy.OutputField(desc="list with the account twitter_user_id sorted by priority as a ranked key")
 
     lm = lm or dspy.LM(model, **lm_kwargs)
+    if extra_instructions:
+        TwitterRecommendation = TwitterRecommendation.with_instructions(
+            TwitterRecommendation.instructions + "\n" + extra_instructions)
+        TwitterDefaultRecommendation = TwitterDefaultRecommendation.with_instructions(
+            TwitterDefaultRecommendation.instructions + "\n" + extra_instructions)
     personal = dspy.Predict(TwitterRecommendation)
     default = dspy.Predict(TwitterDefaultRecommendation)
 

@@ -104,5 +104,65 @@
     "calls": 1275,
     "cost_usd": 0.2592,
     "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 10,
+    "cost_usd": 0.0235,
+    "budget_usd": 0.2
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 8,
+    "cost_usd": 0.0193,
+    "budget_usd": 0.3
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 547,
+    "cost_usd": 1.6061,
+    "budget_usd": 3.0
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0046,
+    "budget_usd": 0.1
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 280,
+    "cost_usd": 0.9364,
+    "budget_usd": 1.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0028,
+    "budget_usd": 0.1
   }
 ]

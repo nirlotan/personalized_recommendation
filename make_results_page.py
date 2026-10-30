@@ -11,13 +11,15 @@ import gzip
 import html
 import json
 import pickle
+import re
 
 import numpy as np
 import pandas as pd
-from scipy.stats import wilcoxon
+from scipy.stats import mannwhitneyu, wilcoxon
 
 from reproduction import paper_results as paper
 from reproduction.config import CATEGORY_LABELS, MODELS_DIR, PAPER_CATEGORY_ORDER, ROOT
+from reproduction.data import load_categories
 from reproduction.page_style import CSS, JS
 
 R = ROOT / "results"
@@ -408,6 +410,110 @@ _extended = pd.read_excel(ROOT / "data" / "popular_accounts_extended.xlsx", shee
 _band2_sv = pd.concat([s.loc[(s["rank_in_category"] > 180) & (s["rank_in_category"] <= 200), "socialvec_popularity_rank"]
                        for name, s in _extended.items() if name != "summary" and len(s) >= 200])
 band2_sv_median, band2_below_10k = int(_band2_sv.median()), float((_band2_sv > 10_000).mean())
+
+# global popularity of the candidate bands: rank among all SocialVec accounts (vocabulary sorted by follow frequency)
+POP_BANDS = [("Original ranks 1–20", "s1"), ("Original ranks 81–100", "s2"), ("Extended ranks 181–200", "s3")]
+_head = pd.concat([c.assign(category=t) for t, c in load_categories().items()])
+pop = pd.concat([
+    _head.assign(band=POP_BANDS[0][0]),
+    band_entities.assign(band=POP_BANDS[1][0]),
+    band2_entities.assign(band=POP_BANDS[2][0]),
+])[["category", "band", "twitter_name", "twitter_user_id", "followers_count"]]
+pop["global_rank"] = [key_to_index.get(str(i), np.nan) + 1 for i in pop["twitter_user_id"]]
+pop_cats = [c for c in PAPER_CATEGORY_ORDER if c in set(band_entities["category"]) | set(band2_entities["category"])]
+pop = pop[pop["category"].isin(pop_cats)]
+pop_ranked = pop.dropna(subset=["global_rank"])
+pop_n_vocab = len(key_to_index)
+
+
+def pop_stats(g):
+    r = g["global_rank"].dropna()
+    return {"n": len(g), "in_sv": len(r), "median": r.median(), "q1": r.quantile(0.25), "q3": r.quantile(0.75),
+            "top1k": (r <= 1_000).mean(), "top10k": (r <= 10_000).mean(), "followers": g["followers_count"].median()}
+
+
+pop_overall = {b: pop_stats(pop[pop["band"] == b]) for b, _ in POP_BANDS}
+pop_by_cat = {(c, b): pop_stats(g) for (c, b), g in pop.groupby(["category", "band"])}
+_p81, _p181 = (pop_ranked.loc[pop_ranked["band"] == POP_BANDS[i][0], "global_rank"] for i in (1, 2))
+pop_mw_p = mannwhitneyu(_p81, _p181).pvalue
+pop_more_popular_cats = sum(pop_by_cat[(c, POP_BANDS[2][0])]["median"] < pop_by_cat[(c, POP_BANDS[1][0])]["median"]
+                            for c in pop_cats if (c, POP_BANDS[1][0]) in pop_by_cat)
+pop_both_cats = sum((c, POP_BANDS[1][0]) in pop_by_cat for c in pop_cats)
+
+
+def _log_x(L, W, Rm):
+    span = np.log10(pop_n_vocab)
+    return lambda v: L + np.log10(v) / span * (W - L - Rm)
+
+
+POP_TICKS = [1, 10, 100, 1_000, 10_000, 100_000]
+
+
+def pop_strip_chart():
+    """Global SocialVec rank of every candidate, one row per category and band (log scale)."""
+    W, L, Rm, T, sub, gap = 760, 130, 16, 8, 13, 12
+    rowh = sub * len(POP_BANDS) + gap
+    H = T + rowh * len(pop_cats) + 26
+    px = _log_x(L, W, Rm)
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Global popularity rank of the candidates by category">']
+    for v in POP_TICKS:
+        parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-22}"/>'
+                     f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:,}</text>')
+    for i, cat in enumerate(pop_cats):
+        y0 = T + i * rowh
+        parts.append(f'<text class="cat" x="{L-10}" y="{y0 + sub * len(POP_BANDS) / 2 + 4:.1f}" text-anchor="end">{esc(CATEGORY_LABELS[cat])}</text>')
+        for j, (band, cls) in enumerate(POP_BANDS):
+            g = pop_ranked[(pop_ranked["category"] == cat) & (pop_ranked["band"] == band)]
+            y = y0 + j * sub + sub / 2
+            for _, e in g.iterrows():
+                parts.append(f'<circle class="dot {cls}" cx="{px(e["global_rank"]):.1f}" cy="{y:.1f}" r="3.2" fill-opacity="0.55" '
+                             f'data-tip="{esc(e["twitter_name"])} · {esc(band)}<br>global rank <b>{int(e["global_rank"]):,}</b> · '
+                             f'{e["followers_count"]:,.0f} followers"/>')
+            if len(g):
+                m = px(g["global_rank"].median())
+                parts.append(f'<line class="line {cls}" x1="{m:.1f}" x2="{m:.1f}" y1="{y-6:.1f}" y2="{y+6:.1f}" style="stroke-width:3"/>')
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def pop_cdf_chart():
+    """Share of each band's candidates within the global top N (log scale)."""
+    W, H, L, Rm, T, B = 520, 250, 46, 16, 10, 40
+    px = _log_x(L, W, Rm)
+    py = lambda v: T + (1 - v) * (H - T - B)
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Cumulative share of candidates by global popularity rank">']
+    for v in (0, 0.25, 0.5, 0.75, 1):
+        parts.append(f'<line class="grid" x1="{L}" x2="{W-Rm}" y1="{py(v):.1f}" y2="{py(v):.1f}"/>'
+                     f'<text class="tick" x="{L-6}" y="{py(v)+4:.1f}" text-anchor="end">{v:.0%}</text>')
+    for v in POP_TICKS:
+        parts.append(f'<text class="tick" x="{px(v):.1f}" y="{H-B+18}" text-anchor="middle">{v:,}</text>')
+    parts.append(f'<text class="tick" x="{(L + W - Rm) / 2:.1f}" y="{H-4}" text-anchor="middle">global popularity rank (log scale)</text>')
+    for band, cls in POP_BANDS:
+        r = np.sort(pop.loc[pop["band"] == band, "global_rank"].fillna(pop_n_vocab).values)  # not in SocialVec: at the end
+        pts = [(px(1), py(0))] + [(px(v), py((k + 1) / len(r))) for k, v in enumerate(r)]
+        path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+        parts.append(f'<path class="line {cls}" d="{path}"/>')
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def pop_table():
+    b1, b2, b3 = (b for b, _ in POP_BANDS)
+    rows = []
+    for cat in pop_cats + ["Overall"]:
+        get = (lambda b: pop_overall[b]) if cat == "Overall" else (lambda b: pop_by_cat.get((cat, b)))
+        def cell(b, key, fmt):
+            s = get(b)
+            return f"<td>{fmt.format(s[key])}</td>" if s else "<td>–</td>"
+        label = "Overall" if cat == "Overall" else CATEGORY_LABELS[cat]
+        cls = " class='total'" if cat == "Overall" else ""
+        rows.append(f"<tr{cls}><th>{esc(label)}</th>" + cell(b1, "median", "{:,.0f}") + cell(b2, "median", "{:,.0f}") + cell(b3, "median", "{:,.0f}")
+                    + cell(b2, "top10k", "{:.0%}").replace("<td>", "<td class=grp>", 1) + cell(b3, "top10k", "{:.0%}")
+                    + cell(b2, "followers", "{:,.0f}").replace("<td>", "<td class=grp>", 1) + cell(b3, "followers", "{:,.0f}") + "</tr>")
+    return ("<div class='scroll'><table class='data compact'><thead><tr class='super'><th></th><th colspan='3'>Median global rank</th>"
+            "<th colspan='2' class='grp'>In the global top 10,000</th><th colspan='2' class='grp'>Median followers</th></tr>"
+            "<tr><th>Category</th><th>1–20</th><th>81–100</th><th>181–200</th><th class='grp'>81–100</th><th>181–200</th>"
+            f"<th class='grp'>81–100</th><th>181–200</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
 band2_cost = sum(r["cost_usd"] for r in json.loads((LLM / "run_info.json").read_text()) if r.get("band") == [181, 200, "extended"])
 _b2 = pd.read_csv(LLM / "band_per_user_181_200_extended.csv.gz", usecols=["llm_k50", "socialvec"])
 k50_vs_full = wilcoxon(_b2["llm_k50"] - _b2["socialvec"]).pvalue
@@ -451,27 +557,136 @@ DEMO_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popular
 DEMO_COLORS = {"ap_luna": "s1", "ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k50": "s3"}
 
 
-def demographics_chart(band):
-    """Overall MAP per method with shuffled candidates (as in Section 6 of LLM_DEMOGRAPHICS_REPORT.html)."""
+def method_chart(o, methods, colors, context):
+    """Horizontal bars of overall MAP per method; methods in `colors` are highlighted."""
     W, L, Rm, T, rowh = 520, 230, 50, 6, 28
-    H = T + rowh * len(DEMO_METHODS) + 28
+    H = T + rowh * len(methods) + 28
     x1 = 0.6
     px = lambda v: L + v / x1 * (W - L - Rm)
-    o = dsh[band]["map"]
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, ranks {band}, shuffled candidates">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, {context}">']
     for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
         parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-22}"/>'
                      f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:.1f}</text>')
-    for i, (c, label) in enumerate(DEMO_METHODS):
+    for i, (c, label) in enumerate(methods):
         y, v = T + i * rowh, o[c]
         w = px(v) - L
-        weight = ' font-weight="650"' if c in DEMO_COLORS else ""
+        weight = ' font-weight="650"' if c in colors else ""
         parts.append(f'<text class="cat" x="{L-10}" y="{y+16}" text-anchor="end"{weight}>{esc(label)}</text>'
-                     f'<path class="bar {DEMO_COLORS.get(c, "muted-bar")}" d="M{L},{y+5} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
+                     f'<path class="bar {colors.get(c, "muted-bar")}" d="M{L},{y+5} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
                      f'<text class="delta" x="{px(v)+8:.1f}" y="{y+16}"{weight}>{v:.3f}</text>'
-                     f'<rect class="hit" x="{L}" y="{y+3}" width="{w:.1f}" height="18" data-tip="{esc(label)}, ranks {band}<br>MAP <b>{v:.3f}</b>"/>')
+                     f'<rect class="hit" x="{L}" y="{y+3}" width="{w:.1f}" height="18" data-tip="{esc(label)}, {context}<br>MAP <b>{v:.3f}</b>"/>')
     parts.append("</svg>")
     return "\n".join(parts)
+
+
+def demographics_chart(band):
+    """Overall MAP per method with shuffled candidates (as in Section 6 of LLM_DEMOGRAPHICS_REPORT.html)."""
+    return method_chart(dsh[band]["map"], DEMO_METHODS, DEMO_COLORS, f"ranks {band}, shuffled candidates")
+
+
+# ranking all 200 candidates (run_popularity_band.py --start 1 --end 200 --source extended; run_llm_200.py)
+c200 = pd.read_csv(LLM / "candidates_200_per_user.csv.gz")
+C200_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
+                ("llm_baseline", "LLM, no user information"), ("llm_k200", "LLM, up to 200 account names"),
+                ("socialvec_k200", "SocialVec, the same accounts"), ("socialvec", "SocialVec, all followed entities")]
+C200_COLORS = {"llm_k200": "s3", "socialvec_k200": "s1", "socialvec": "s1"}
+c200_cat = c200.groupby("topic")[[c for c, _ in C200_METHODS]].mean()
+c200_cat = c200_cat.reindex([c for c in PAPER_CATEGORY_ORDER if c in c200_cat.index])
+c200_o = c200_cat.mean()  # unweighted mean over categories
+c200_p = {name: wilcoxon(c200[a] - c200[b]).pvalue for name, a, b in [
+    ("k200_vs_baseline", "llm_k200", "llm_baseline"), ("k200_vs_sv200", "llm_k200", "socialvec_k200"),
+    ("k200_vs_sv", "llm_k200", "socialvec"), ("baseline_vs_popularity", "llm_baseline", "popularity"),
+    ("baseline_vs_random", "llm_baseline", "random"), ("sv200_vs_sv", "socialvec_k200", "socialvec")]}
+c200_frac = {k: c200[f"returned_{k}"] / c200["n_candidates"] for k in ("baseline", "k200")}
+c200_complete = c200[(c200_frac["baseline"] >= 0.95) & (c200_frac["k200"] >= 0.95)]
+c200_complete_o = c200_complete.groupby("topic")[["llm_k200", "socialvec_k200"]].mean().mean()
+c200_complete_p = wilcoxon(c200_complete["llm_k200"] - c200_complete["socialvec_k200"]).pvalue
+c200_wins = int((c200_cat["llm_k200"].round(3) > c200_cat["socialvec_k200"].round(3)).sum())
+c200_appended = {k: c200.groupby("topic")[f"llm_{k}_appended"].mean().mean() for k in ("baseline", "k200")}
+c200_rel_ranked = {k: c200[f"returned_relevant_{k}"].sum() / c200["n_relevant"].sum() for k in ("baseline", "k200")}
+c200_short_list = c200[c200_frac["k200"] < 0.6]  # answers that stop before 60% of the candidates
+# the 20-candidate shuffled prompts of Section 6 (ranks 181-200), scored with the same rule
+_short = pd.read_csv(LLM / "demographics_bands_per_user.csv.gz")
+_short = _short[_short["band"] == "181-200"][["user", "socialvec"]]
+c200_sub = c200.dropna(subset=["short_k50_181_200"]).merge(_short, on="user", suffixes=("", "_20"))
+C200_SUB_ROWS = [  # label, 200-candidate column, 20-candidate column, what each was given
+    ("LLM, no user information", "llm_baseline_181_200", "short_baseline_181_200", "no user information", "no user information"),
+    ("LLM, account names", "llm_k200_181_200", "short_k50_181_200", "up to 200 names", "50 names"),
+    ("SocialVec", "socialvec_k200_181_200", "socialvec_20", "the LLM's accounts", "all followed entities")]
+c200_sub_p = {long: wilcoxon(c200_sub[long] - c200_sub[short]).pvalue for _, long, short, _, _ in C200_SUB_ROWS}
+c200_sub_m = {c: c200_sub.groupby("topic")[c].mean().mean() for _, long, short, _, _ in C200_SUB_ROWS for c in (long, short)}
+c200_gap_p = {"short": wilcoxon(c200_sub["short_k50_181_200"] - c200_sub["socialvec_20"]).pvalue,
+              "long": wilcoxon(c200_sub["llm_k200_181_200"] - c200_sub["socialvec_k200_181_200"]).pvalue}
+c200_runs = [r for r in json.loads((LLM / "run_info.json").read_text()) if r.get("parts") == ["candidates-200"]]
+c200_cost = sum(r["cost_usd"] for r in c200_runs)
+
+
+def c200_category_table():
+    rows = []
+    for cat, r in c200_cat.iterrows():
+        best = r.max()
+        cells = "".join(f"<td>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>" for c, _ in C200_METHODS)
+        rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td>{(c200['topic'] == cat).sum()}</td>{cells}</tr>")
+    rows.append("<tr class='total'><th>Overall</th><td>" + f"{len(c200)}</td>" + "".join(f"<td>{c200_o[c]:.3f}</td>" for c, _ in C200_METHODS) + "</tr>")
+    head = "".join(f"<th>{esc(label)}</th>" for _, label in C200_METHODS)
+    return f"<div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
+
+
+def c200_subset_table():
+    body = "".join(
+        f"<tr><th>{esc(label)}</th><td>{c200_sub_m[short]:.3f}<span class='paper'>{esc(short_info)}</span></td>"
+        f"<td>{c200_sub_m[long]:.3f}<span class='paper'>{esc(long_info)}</span></td>"
+        f"<td>{signed_short(c200_sub_m[long] - c200_sub_m[short])}</td><td>{pval(c200_sub_p[long])}</td></tr>"
+        for label, long, short, long_info, short_info in C200_SUB_ROWS)
+    return ("<div class='scroll'><table class='data compact'><thead><tr><th>Method</th><th>20-candidate prompt</th>"
+            "<th>200-candidate ranking, cut to the same 20</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead>"
+            f"<tbody>{body}</tbody></table></div>")
+
+
+def c200_coverage():
+    """How many candidates each answer ranks: per-answer statistics for both prompts."""
+    stats = {}
+    for k in ("baseline", "k200"):
+        n, frac = c200[f"returned_{k}"], c200_frac[k]
+        listed = c200[f"resp_{k}"].map(lambda t: re.findall(r"\d+", str(t).split("[[ ##")[0]))  # every id written, repeats included
+        repeats = listed.map(len) - listed.map(lambda x: len(set(x)))
+        invalid = [len(set(map(int, x)) - set(json.loads(o))) for x, o in zip(listed, c200["order"])]
+        stats[k] = {
+            "mean": n.mean(), "median": n.median(), "p10": n.quantile(0.1), "min": n.min(),
+            "written": listed.map(len).median(), "all": (frac == 1).mean(), "95": (frac >= 0.95).mean(),
+            "half": (frac < 0.5).mean(), "repeats": (repeats > 0).mean(), "repeats_mean": repeats.mean(),
+            "invalid": (pd.Series(invalid) > 0).mean(), "relevant": c200_rel_ranked[k],
+            "missing_user": (c200[f"returned_relevant_{k}"] < c200["n_relevant"]).mean(),
+            "by_cat": c200.groupby("topic")[f"returned_{k}"].median(),
+        }
+    return stats
+
+
+c200_cov = c200_coverage()
+
+
+def c200_coverage_table():
+    rows = [
+        ("Distinct candidates ranked: mean", "mean", "{:.0f}"), ("… median", "median", "{:.0f}"),
+        ("… 10th percentile", "p10", "{:.0f}"), ("… minimum", "min", "{:.0f}"),
+        ("Ids written per answer, repeats included: median", "written", "{:.0f}"),
+        ("Answers ranking every candidate", "all", "{:.0%}"), ("Answers ranking at least 95%", "95", "{:.0%}"),
+        ("Answers ranking less than half", "half", "{:.0%}"),
+        ("Answers repeating an id", "repeats", "{:.0%}"), ("Repeated ids per answer: mean", "repeats_mean", "{:.1f}"),
+        ("Answers with an id that is not a candidate", "invalid", "{:.0%}"),
+        ("Relevant candidates ranked (all users)", "relevant", "{:.1%}"),
+        ("Users with a relevant candidate left out", "missing_user", "{:.0%}"),
+    ]
+    body = "".join(f"<tr><th>{esc(label)}</th>" + "".join(f"<td>{fmt.format(c200_cov[k][key])}</td>" for k in ("baseline", "k200")) + "</tr>"
+                   for label, key, fmt in rows)
+    cats = [c for c in PAPER_CATEGORY_ORDER if c in c200_cov["k200"]["by_cat"].index]
+    cat_body = "".join(f"<tr><th>{esc(CATEGORY_LABELS[c])}</th><td>{c200_cov['baseline']['by_cat'][c]:.0f}</td>"
+                       f"<td>{c200_cov['k200']['by_cat'][c]:.0f}</td></tr>" for c in cats)
+    head = "<thead><tr><th>{}</th><th>No user information</th><th>Up to 200 account names</th></tr></thead>"
+    return (f"<h4>Per answer ({len(c200)} users, {c200['n_candidates'].mean():.0f} candidates each)</h4><div class='scroll'>"
+            f"<table class='data compact'>{head.format('Statistic')}<tbody>{body}</tbody></table></div>"
+            "<h4>Median distinct candidates ranked, by category</h4><div class='scroll'>"
+            f"<table class='data compact'>{head.format('Category')}<tbody>{cat_body}</tbody></table></div>")
 
 
 
@@ -488,7 +703,7 @@ page = f"""<!doctype html>
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
   <a href="#tail">3 · Less popular entities</a><a href="#tail2">4 · Ranks 181–200</a><a href="#order">5 · LLM candidate order</a>
-  <a href="#demographics">6 · Demographics-only LLM</a><a href="#open">7 · Open items</a></nav>
+  <a href="#demographics">6 · Demographics-only LLM</a><a href="#all200">7 · Ranking 200 candidates</a><a href="#open">8 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Table 2 values matching the paper</div><div class="value">42 / 42</div><div class="sub">largest difference {max_t2:.4f}</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">{ov['se1_all_legacy']:.3f}</div><div class="sub">vs. {ov['popularity']:.3f} · {pct(ov['se1_all_legacy_gain'])}, as in the paper</div></div>
@@ -643,7 +858,7 @@ page = f"""<!doctype html>
 </section>
 
 <section id="tail2">
-  <h2><span class="num">4</span>Even less popular · Ranks 181–200</h2>
+  <h2><span class="num">4</span>Further down the category lists · Ranks 181–200</h2>
   <p class="intro">The original sheets stop at 100 entities per category. To go further, I built extended category lists from
   Wikidata and DBpedia (no LLM, no manual validation; see <code>results/EXTENDED_CATEGORIES_REPORT.md</code>) and repeated every
   experiment of Section 3 with the accounts ranked <b>181–200</b>.</p>
@@ -651,7 +866,8 @@ page = f"""<!doctype html>
     <li><i>Categories:</i> the {len(mA2['band']) - 1} categories whose extended list reaches 200 accounts.</li>
     <li><i>Ranking:</i> the extended lists rank accounts by SocialVec popularity, while ranks 81–100 were by Twitter follower count.
     The median candidate is the {band2_sv_median:,}th most popular SocialVec entity, and {band2_below_10k:.0%} of the candidates lie
-    beyond the top 10,000.</li>
+    beyond the top 10,000. Globally, these candidates are more popular than those of ranks 81–100 (see below): the lists
+    differ, so a lower rank within a category does not mean a less popular account.</li>
     <li><i>Profiles:</i> user profiles exclude every account of the category's extended list (up to 1,000) and of its original
     sheet.</li>
   </ul>
@@ -674,6 +890,43 @@ page = f"""<!doctype html>
       {band2_llm.loc['Overall','socialvec']:.3f}; p = {k50_vs_full:.2f}, not significant).</li>
     </ul></li>
   </ul>
+
+  <h3>How popular are the candidates overall?</h3>
+  <p>Each band's position is set within its own category list. To compare bands across lists, I placed every candidate in the
+  popularity ranking of all {pop_n_vocab:,} SocialVec accounts, which are sorted by how many users follow them (rank 1 is the most
+  followed). The original top 20 are shown for reference.</p>
+  <ul class="highlights">
+    <li class="warn"><b>Ranks 181–200 are not less popular than ranks 81–100.</b> Their median global rank is
+    {pop_overall[POP_BANDS[2][0]]['median']:,.0f}, against {pop_overall[POP_BANDS[1][0]]['median']:,.0f} for ranks 81–100 (Mann–Whitney
+    p {p_text(pop_mw_p)}), and their median follower count is {pop_overall[POP_BANDS[2][0]]['followers']:,.0f} against
+    {pop_overall[POP_BANDS[1][0]]['followers']:,.0f}. They are globally more popular in {pop_more_popular_cats} of the {pop_both_cats}
+    categories that have both bands.</li>
+    <li><b>Why:</b> the original sheets hold 100 manually validated accounts per category, while the extended lists hold up to 1,000
+    accounts typed by Wikidata and DBpedia. Many popular accounts are missing from the original sheets (only 44–85 of each sheet's 100
+    fall in the extended top 200), so position 181 in an extended list can be more popular than position 81 in an original sheet.
+    Actors and musical artists show the largest gap. Because the extended lists are sorted by this same global rank, each category's
+    181–200 band is a narrow slice of it, either entirely inside or entirely outside the top 10,000. The ranks 81–100 bands, chosen
+    by follower count, spread much more widely.</li>
+    <li><b>Both bands are far from the top.</b> The original top 20 have a median global rank of
+    {pop_overall[POP_BANDS[0][0]]['median']:,.0f}. Of the ranks 81–100 candidates, {pop_overall[POP_BANDS[1][0]]['top10k']:.0%} are in
+    the global top 10,000, and {pop_overall[POP_BANDS[2][0]]['top10k']:.0%} of the ranks 181–200 candidates are.</li>
+  </ul>
+  <div class="card">
+    <div class="legend">{''.join(f'<span class="key"><i class="sq" style="background:var(--{cls})"></i>{esc(b)}</span>' for b, cls in POP_BANDS)}
+    <span class="key"><i class="tick"></i>Median</span></div>
+    {pop_strip_chart()}
+    <p class="caption">Global SocialVec popularity rank of every candidate (log scale; left is more popular), by category. Each dot is
+    one account; the bar marks the band's median. TV hosts have no ranks 81–100 band. {int(sum(s['n'] - s['in_sv'] for s in pop_overall.values()))}
+    candidates without a SocialVec embedding are not shown.</p>
+  </div>
+  <div class="card">
+    <h4>Share of candidates within the global top N</h4>
+    <div style="max-width:620px">{pop_cdf_chart()}</div>
+    <p class="caption">Cumulative share of each band's candidates (all categories) at or above each global rank; candidates without a
+    SocialVec embedding count as least popular.</p>
+  </div>
+  <div class="card"><h4 style="margin:0 0 6px">Summary by category</h4>{pop_table()}
+  <p class="caption">Medians and shares per category; Overall pools all candidates of the band.</p></div>
 
   <div class="card"><h4 style="margin:0 0 6px">Overall MAP by popularity band</h4>{bands_overview()}
   <p class="caption">Each lower band is compared with the original top 20 on the same users (its Table A population), so
@@ -785,8 +1038,93 @@ page = f"""<!doctype html>
   should not be read as findings about which groups like which entities.</p>
 </section>
 
+<section id="all200">
+  <h2><span class="num">7</span>Ranking all 200 candidates</h2>
+  <p class="intro">Does the LLM struggle with longer prompts? Here it must rank 200 candidates per category instead of 20.</p>
+  <ul>
+    <li><i>Candidates:</i> ranks 1–200 of the extended category lists (by SocialVec popularity), for the
+    {len(c200_cat)} categories that reach 200 accounts and have sampled users; {c200['n_candidates'].mean():.1f} candidates per
+    category on average, as entities without a SocialVec embedding are dropped.</li>
+    <li><i>Users:</i> the {len(c200)} users of Table C, all of whom follow at least one candidate
+    ({c200['n_relevant'].mean():.1f} on average).</li>
+    <li><i>LLM:</i> {model_name} at reasoning effort <i>medium</i>, with the candidates in one random order per user shared by
+    both prompts. <i>No user information</i> uses the baseline prompt. <i>Account names</i> lists up to 200 accounts the user
+    follows ({c200['n_followed_listed'].mean():.0f} on average), sampled among accounts with a known name, with every account of
+    the category's extended list and original sheet removed.</li>
+    <li><i>A stronger prompt:</i> with the authors' prompts at effort <i>low</i>, a pilot returned only 20–50 of the 200 ids
+    when given 200 names, cutting the list off itself. Both prompts therefore add an explicit instruction to return every
+    candidate exactly once.</li>
+    <li><i>Scoring incomplete answers:</i> only the candidates the model actually ranked count. A relevant candidate it left out
+    is a miss: it adds nothing to AP but stays in the denominator. Ids that are not candidates are dropped.</li>
+    <li><i>SocialVec:</i> on the same accounts as the LLM's prompt, and on all followed entities (category accounts removed).
+    Popularity ranks by follower count.</li>
+  </ul>
+
+  <ul class="highlights">
+    <li><b>With 200 candidates, the LLM keeps a small lead.</b> Given account names it scores {c200_o['llm_k200']:.3f},
+    against {c200_o['socialvec_k200']:.3f} for SocialVec on the same accounts (p {p_text(c200_p['k200_vs_sv200'])}) and
+    {c200_o['socialvec']:.3f} on all followed entities (p {p_text(c200_p['k200_vs_sv'])}). It is ahead in {c200_wins} of
+    {len(c200_cat)} categories. Placing the left-out candidates at the end in random order instead would give it
+    {c200_appended['k200']:.3f}, overstating the lead.</li>
+    <li><b>Without user information it is no better than popularity</b> ({c200_o['llm_baseline']:.3f} vs. {c200_o['popularity']:.3f},
+    p {p_text(c200_p['baseline_vs_popularity'])}), though far above chance ({c200_o['random']:.3f}).</li>
+    <li class="warn"><b>Long lists are harder to complete.</b>
+    <ul>
+      <li><i>Coverage:</i> even with the explicit instruction, only {(c200_frac['k200'] == 1).mean():.0%} of the name-based answers
+      list every candidate, and {(c200_frac['k200'] >= 0.95).mean():.0%} list at least 95% of them
+      ({(c200_frac['baseline'] == 1).mean():.0%} and {(c200_frac['baseline'] >= 0.95).mean():.0%} without user information). Across
+      users, {1 - c200_rel_ranked['k200']:.0%} of the relevant candidates are missing from the name-based answers.</li>
+      <li><i>Short answers fall behind:</i> for the {len(c200_short_list)} users whose answer stops before 60% of the candidates, the LLM
+      scores {c200_short_list['llm_k200'].mean():.3f} against {c200_short_list['socialvec_k200'].mean():.3f} for SocialVec on the same
+      accounts.</li>
+      <li><i>Complete answers:</i> on the {len(c200_complete)} users whose two answers are both at least 95% complete, the lead is
+      {c200_complete_o['llm_k200']:.3f} vs. {c200_complete_o['socialvec_k200']:.3f}, not significant (p {p_text(c200_complete_p)}).</li>
+    </ul></li>
+    <li><b>On the hardest candidates, the LLM does worse in the longer list.</b> Cutting each 200-candidate ranking down to the
+    ranks 181–200 candidates allows a comparison with the 20-candidate prompts of Section 6, on the
+    {len(c200_sub)} users who follow one of them; both are scored with the rule above.
+    <ul>
+      <li><i>With names:</i> the LLM drops from {c200_sub_m['short_k50_181_200']:.3f} to {c200_sub_m['llm_k200_181_200']:.3f}
+      (p {p_text(c200_sub_p['llm_k200_181_200'])}), although it now sees up to 200 names instead of 50.</li>
+      <li><i>Without user information:</i> it drops from {c200_sub_m['short_baseline_181_200']:.3f} to
+      {c200_sub_m['llm_baseline_181_200']:.3f} (p {p_text(c200_sub_p['llm_baseline_181_200'])}).</li>
+      <li><i>SocialVec</i> does not depend on the list length ({c200_sub_m['socialvec_20']:.3f} vs.
+      {c200_sub_m['socialvec_k200_181_200']:.3f}). The LLM's lead over it on these candidates shrinks from
+      {signed_short(c200_sub_m['short_k50_181_200'] - c200_sub_m['socialvec_20'])} (p {p_text(c200_gap_p['short'])}) to
+      {signed_short(c200_sub_m['llm_k200_181_200'] - c200_sub_m['socialvec_k200_181_200'])} (p {p_text(c200_gap_p['long'])}).</li>
+    </ul></li>
+  </ul>
+
+  <div class="card">
+    <div class="legend"><span class="key"><i class="sq" style="background:var(--s3)"></i>{model_name}, account names</span>
+    <span class="key"><i class="sq" style="background:var(--s1)"></i>SocialVec</span></div>
+    <h4>Ranks 1–200 · {len(c200)} users</h4>
+    <div style="max-width:620px">{method_chart(c200_o, C200_METHODS, C200_COLORS, "200 candidates")}</div>
+    <p class="caption">Overall MAP (mean over categories) when ranking all 200 candidates.</p>
+  </div>
+
+  <h3>How many candidates did the LLM rank?</h3>
+  <p>Answers often contain about 200 ids, but some are repeats, so fewer distinct candidates are ranked. Only the first position of
+  a repeated id counts, and ids that are not candidates are dropped. The number ranked does not depend on the other prompt's answer
+  for the same user (correlation {c200['returned_baseline'].corr(c200['returned_k200']):.2f}) or on the number of names listed
+  ({c200['returned_k200'].corr(c200['n_followed_listed']):.2f}).</p>
+  <div class="card">{c200_coverage_table()}
+  <p class="caption">Counts are distinct candidate ids per answer. 95% means at least 190 of 200.</p></div>
+
+  <h3>20 vs. 200 candidates, on the ranks 181–200 candidates</h3>
+  <div class="card">{c200_subset_table()}
+  <p class="caption">MAP on the same 20 candidates for the {len(c200_sub)} users who follow one of them (mean over
+  categories). The 20-candidate prompts are those of Section 6 (authors' prompt, effort low). The two LLM runs also differ
+  in prompt wording, reasoning effort and number of names, so the comparison is not a pure test of list length.</p></div>
+
+  <h3>Per category</h3>
+  <div class="card">{c200_category_table()}
+  <p class="caption">MAP per category over 200 candidates; bold marks the best method in each row. These {model_name} runs,
+  including the pilots and a first run that listed fewer names, cost ${c200_cost:.2f}.</p></div>
+</section>
+
 <section id="open">
-  <h2><span class="num">7</span>Open items</h2>
+  <h2><span class="num">8</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
     <p>The LLM results use samples of 50 users per category (30 for ranks 81–100 and 181–200), which keeps overall MAP within
@@ -794,9 +1132,9 @@ page = f"""<!doctype html>
     responses are reused.</p></div>
     <div class="callout"><span class="tag">Next</span><h4>Description-based tail candidates</h4>
     <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i>, below the top 10K/20K
-    SocialVec entities. The ranks 81–100 band used the original typed lists: only {n_below_10k} of {n_band_in_sv} candidates fall
-    below the top 10K. The ranks 181–200 band, from the extended lists, gets closer: {band2_below_10k:.0%} of its candidates do.
-    It still uses 20 candidates typed by Wikidata and DBpedia rather than by description.</p></div>
+    SocialVec entities. Neither band meets that criterion fully: {n_below_10k} of the {n_band_in_sv} ranks 81–100 candidates
+    ({n_below_10k / n_band_in_sv:.0%}) fall below the top 10K, but only {band2_below_10k:.0%} of the ranks 181–200 candidates do, since the
+    extended lists contain many popular accounts (Section 4). Both bands use typed lists rather than descriptions.</p></div>
   </div>
 </section>
 
@@ -807,7 +1145,8 @@ page = f"""<!doctype html>
   <code>python run_popularity_band.py --start 181 --end 200 --source extended</code> and
   <code>python run_llm_experiments.py --parts band --band-start 181 --band-end 200 --band-source extended</code>.
   For Section 6, run <code>python run_llm_demographics.py</code> (with <code>--describe-model gpt-4o</code> for the repeat),
-  <code>python run_llm_demographics_bands.py</code> and <code>python make_demographics_report.py</code>.
+  <code>python run_llm_demographics_bands.py</code> and <code>python make_demographics_report.py</code>. For Section 7, run
+  <code>python run_popularity_band.py --start 1 --end 200 --source extended</code> and <code>python run_llm_200.py</code>.
   Then rebuild this page with <code>python make_results_page.py</code>. Details are in <code>results/REPORT.md</code>,
   <code>results/POPULARITY_BAND_REPORT.md</code>, <code>results/LLM_REPORT.md</code> and
   <code>results/EXTENDED_CATEGORIES_REPORT.md</code>.</p>
