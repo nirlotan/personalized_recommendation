@@ -164,5 +164,25 @@
     "calls": 2,
     "cost_usd": 0.0028,
     "budget_usd": 0.1
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200-explain"
+    ],
+    "calls": 6,
+    "cost_usd": 0.0174,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200-explain"
+    ],
+    "calls": 7,
+    "cost_usd": 0.0292,
+    "budget_usd": 0.5
   }
 ]
