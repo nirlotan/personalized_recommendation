@@ -225,5 +225,21 @@
     "calls": 1320,
     "cost_usd": 0.2284,
     "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-more-users"
+    ],
+    "band": [
+      1,
+      20,
+      "original"
+    ],
+    "users_per_category": 200,
+    "calls": 6753,
+    "cost_usd": 1.1956,
+    "budget_usd": 1.8
   }
 ]

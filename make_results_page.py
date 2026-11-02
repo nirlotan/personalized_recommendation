@@ -104,6 +104,8 @@ MAIN_TABLES = {
     "band_entities": "Candidate entities, ranks 81–100",
     "popularity": "Global popularity of the candidates",
     "band_llm": "LLM and SocialVec ranking of ranks 81–100",
+    "band_compare": "LLM and SocialVec ranking, ranks 1–20 vs. 81–100 (same users)",
+    "top_llm": "LLM and SocialVec ranking of ranks 1–20, per category",
     "order_personal": "Candidate order, personalized prompts (k = 25)",
     "order_baseline": "Candidate order, non-personalized baseline",
     "demo_bands": "Overall MAP of demographics-only and name-based ranking, ranks 1–20 and 81–100",
@@ -462,6 +464,34 @@ def word_list(items):
 band_llm_sv_better = [CATEGORY_LABELS[c].lower().replace("tv ", "TV ") for c in _band_cats.index if _band_cats.at[c, "socialvec"] > _band_cats.at[c, "llm_k12"]]
 band_llm_llm_better = [CATEGORY_LABELS[c].lower().replace("tv ", "TV ") for c in _band_cats.index if _band_cats.at[c, "socialvec"] <= _band_cats.at[c, "llm_k12"]]
 band_llm_wins = {k: int((band_llm.drop("Overall")[f"llm_k{k}"] > band_llm.drop("Overall")[f"socialvec_k{k}"]).sum()) for k in (12, 25)}
+
+# The same protocol on the top-20 candidates, for the users of Table 9 who follow at least one of them
+_top_users = pd.read_csv(LLM / "band_per_user_1_20_original_n200_users_81_100_original.csv.gz")
+_top_users["llm_baseline"] = _top_users["llm_baseline_shuffled"]
+top_llm = by_category(_top_users, ["random", "popularity", "socialvec", "socialvec_k12", "socialvec_k25"] + LLM_COLS)
+top_tests = {f"llm_k{k} vs socialvec_k{k}": wilcoxon(_top_users[f"llm_k{k}"] - _top_users[f"socialvec_k{k}"]).pvalue for k in (12, 25)}
+top_tests["llm_k50 vs socialvec"] = wilcoxon(_top_users["llm_k50"] - _top_users["socialvec"]).pvalue
+band_tests["llm_k50 vs socialvec"] = wilcoxon(_band_users["llm_k50"] - _band_users["socialvec"]).pvalue
+top_llm_wins = {k: int((top_llm.drop("Overall")[f"llm_k{k}"] > top_llm.drop("Overall")[f"socialvec_k{k}"]).sum()) for k in (12, 25)}
+BAND_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
+                ("socialvec", "SocialVec, all followed entities"), ("socialvec_k12", "SocialVec, the 12 accounts of the LLM prompt"),
+                ("socialvec_k25", "SocialVec, the 25 accounts of the LLM prompt"), ("llm_baseline", "LLM, no user information"),
+                ("llm_k12", "LLM, 12 followed accounts"), ("llm_k25", "LLM, 25 followed accounts"), ("llm_k50", "LLM, 50 followed accounts")]
+
+
+def band_compare_html():
+    """Overall MAP per method at ranks 1-20 and 81-100, same users and protocol."""
+    rows = [f"<tr><th>Users</th><td>{top_llm.loc['Overall', 'users']:,.0f}</td><td>{band_llm.loc['Overall', 'users']:,.0f}</td><td></td></tr>"]
+    for c, label in BAND_METHODS:
+        a, b = top_llm.loc["Overall", c], band_llm.loc["Overall", c]
+        rows.append(f"<tr><th>{esc(label)}</th><td>{a:.3f}</td><td>{b:.3f}</td><td>{b - a:+.3f}</td></tr>")
+    for name, label in [("llm_k12 vs socialvec_k12", "p, LLM vs. SocialVec, same 12 accounts"),
+                        ("llm_k25 vs socialvec_k25", "p, LLM vs. SocialVec, same 25 accounts"),
+                        ("llm_k50 vs socialvec", "p, LLM 50 accounts vs. SocialVec all entities")]:
+        rows.append(f"<tr class='muted'><th>{label}</th><td>{p_text(top_tests[name])}</td><td>{p_text(band_tests[name])}</td><td></td></tr>")
+    return ("<div class='scroll'><table class='data compact'><thead><tr><th>Method</th><th>Ranks 1–20</th><th>Ranks 81–100</th>"
+            f"<th>Difference</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
+
 
 # Ranks 181-200 of the extended lists (build_extended_categories.py, run_popularity_band.py --source extended)
 BAND2 = R / "popularity_band_181_200_extended"
@@ -1079,6 +1109,20 @@ page = f"""<!doctype html>
   <p class="caption">Bold marks the best method in each row. With 200 users per category, per-category MAP has a standard error of
   about 0.02. The first 30 users of each category are those of Section 5 and of the earlier 30-user version of this table. The baseline (no user information) gets the candidates in a random order per user, as in Section 5; the personalized prompts list
   them by follower count.</p></div>
+
+  <h3>{ttitle('band_compare')}</h3>
+  <p>The protocol of {tnum('band_llm')} repeated on the 20 most popular candidates of each category, for the
+  {top_llm.loc['Overall','users']:,.0f} users of {tnum('band_llm')} who follow at least one of them. Unlike {tnum('llm')}, every
+  listed entity of the target category is removed from the prompts here too, so the two bands differ only in their candidates.
+  Among the most popular candidates, popularity is a strong ranking ({top_llm.loc['Overall','popularity']:.3f}), and the LLM without user
+  information beats it ({top_llm.loc['Overall','llm_baseline']:.3f}). Given the same accounts, the LLM is ahead of SocialVec in both bands:
+  {top_llm.loc['Overall','llm_k12']:.3f} vs. {top_llm.loc['Overall','socialvec_k12']:.3f} with 12 accounts at ranks 1–20
+  (p {p_text(top_tests['llm_k12 vs socialvec_k12'])}; ahead in {top_llm_wins[12]} of 9 categories).</p>
+  <div class="card">{band_compare_html()}
+  <p class="caption">Overall MAP (mean over the 9 categories). The ranks 81–100 column is {tnum('band_llm')}; its other
+  {band_llm.loc['Overall','users'] - top_llm.loc['Overall','users']:,.0f} users follow none of the top-20 candidates. Both bands use one random candidate order per user for the baseline
+  and the follower-count order for the personalized prompts. p values are paired Wilcoxon tests over users.</p>
+  <details><summary>{ttitle('top_llm')}</summary>{band_llm_html(top_llm)}</details></div>
 
   <h3>Limitations</h3>
   <p>Only the original top-20 candidates were manually validated; the lower ranks include some mistyped entities (esports teams

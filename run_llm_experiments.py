@@ -147,9 +147,14 @@ def band_sample(users, categories, band=DEFAULT_BAND, n=BAND_USERS_PER_CATEGORY)
     return sample, candidates, exclude, sv
 
 
-def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND, n=BAND_USERS_PER_CATEGORY):
+def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND, n=BAND_USERS_PER_CATEGORY, users_from=None):
+    """users_from: take the users of another band's sample (those who follow at least one candidate of this band)."""
     suffix = band_suffix(band)
     sample, candidates, exclude, sv = band_sample(users, categories, band, n)
+    if users_from is not None:
+        sample = band_sample(users, categories, users_from, n)[0]
+        sample = sample[[t in candidates and not set(candidates[t]["twitter_user_id"]).isdisjoint(f)
+                         for t, f in zip(sample["topic"], sample["friends_ids"])]]
     prompts = user_prompts(sample, categories, names, exclude=exclude)
     res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / f"band{suffix}.jsonl", workers=workers)
 
@@ -172,6 +177,8 @@ def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND,
     band_ap = band_ap[(band_ap["population"] == "category") & (band_ap["candidates"] == "band")
                       & (band_ap["exclusion"] == "exclude_category")][["user", "random", "popularity", "socialvec"]]
     users_suffix = "" if n == BAND_USERS_PER_CATEGORY else f"_n{n}"
+    if users_from is not None:
+        users_suffix += f"_users{band_suffix(users_from) or '_81_100_original'}"
     res.merge(band_ap, on="user").to_csv(out / f"band_per_user{suffix}{users_suffix}.csv.gz", index=False)
 
 
