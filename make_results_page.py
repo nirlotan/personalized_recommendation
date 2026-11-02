@@ -32,7 +32,8 @@ pooled = pd.read_csv(R / "table4_pooled.csv", index_col=0)
 mA = {c: pd.read_csv(BAND / f"matched_category_{c}.csv", index_col=0) for c in ("head", "band")}
 mB = {c: pd.read_csv(BAND / f"matched_all_{c}.csv", index_col=0) for c in ("head", "band")}
 band_entities = pd.read_csv(BAND / "band_entities.csv")
-per_user = pd.read_csv(R / "per_user_ap.csv.gz", usecols=["n_followed", "n_followed_entities", "n_closed_world", "n_relevant"])
+per_user = pd.read_csv(R / "per_user_ap.csv.gz", usecols=["topic", "n_followed", "n_followed_entities", "n_closed_world", "n_relevant"])
+users_per_category = per_user.groupby("topic").size()
 
 # Figure 2 agreement with the notebook values
 profiles = pd.read_csv(R / "entity_follower_profiles.csv", index_col=0)
@@ -209,12 +210,13 @@ def table2_html():
         cls = ' class="total"' if cat == "Overall" else ""
         neg = lambda g: ' class="neg"' if g < 0 else ""
         rows.append(
-            f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{ent}</td>"
+            f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th>"
+            f"<td>{len(per_user) if cat == 'Overall' else users_per_category[cat]:,}</td><td>{ent}</td>"
             f"<td>{with_paper(o['popularity'], ref['popularity'])}</td>"
             f"<td>{with_paper(o['se1_all_legacy'], ref['all'])}</td><td{neg(o['se1_all_legacy_gain'])}>{pct(o['se1_all_legacy_gain'])}</td>"
             f"<td>{with_paper(o['se2_all'], ref['sampled'])}</td><td{neg(o['se2_all_gain'])}>{pct(o['se2_all_gain'])}</td>"
             f"<td><span class='num'>{o['se1_all']:.3f}</span></td><td{neg(o['se1_all_gain'])}>{pct(o['se1_all_gain'])}</td></tr>")
-    return ("<div class='scroll'><table class='data'><thead><tr><th>Category</th><th>Entities / user</th><th>Popularity</th>"
+    return ("<div class='scroll'><table class='data'><thead><tr><th>Category</th><th>Users</th><th>Entities / user</th><th>Popularity</th>"
             "<th>Social · All</th><th>Δ</th><th>Social · Sampled</th><th>Δ</th><th>All, target removed</th><th>Δ</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div>")
 
@@ -243,6 +245,7 @@ def matched_html(tables, band_label="Ranks 81–100"):
 
 LLM_COLS = ["llm_baseline", "llm_k12", "llm_k25", "llm_k50"]
 LLM_LABELS = ["Baseline", "k = 12", "k = 25", "k = 50"]
+SV_COLS = ["socialvec_k12", "socialvec_k25", "se1_legacy_k50"]
 
 
 def table3_html():
@@ -252,15 +255,16 @@ def table3_html():
         r = llm_t3.loc[cat]
         ref = paper.TABLE3.loc[cat] if cat != "Overall" else paper.TABLE3.mean()
         cls = " class='total'" if cat == "Overall" else ""
-        rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{r['popularity']:.3f}</td><td>{r['se1_legacy_k50']:.3f}</td>"
+        rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{r['popularity']:.3f}</td>"
+                    + "".join(f"<td>{r[c]:.3f}</td>" for c in SV_COLS)
                     + "".join(f"<td{' class=grp' if i == 0 else ''}>{r[c]:.3f}</td>" for i, c in enumerate(LLM_COLS))
                     + "".join(f"<td class='muted{' grp' if i == 0 else ''}'>{ref[c]:.3f}</td>" for i, c in enumerate(LLM_COLS)) + "</tr>")
     gains = "".join(f"<td>{pct(llm_stats.loc[c, 'gain vs LLM baseline'])}</td>" for c in LLM_COLS[1:])
     paper_gains = "".join(f"<td class='muted'>{pct(paper.TABLE3[c].mean() / paper.TABLE3['llm_baseline'].mean() - 1)}</td>" for c in LLM_COLS[1:])
-    rows.append(f"<tr><th>Δ vs. LLM baseline</th><td></td><td></td><td class='grp'></td>{gains}<td class='grp'></td>{paper_gains}</tr>")
-    return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th colspan='2'>Same 700 users</th>"
+    rows.append(f"<tr><th>Δ vs. LLM baseline</th><td></td><td></td><td></td><td></td><td class='grp'></td>{gains}<td class='grp'></td>{paper_gains}</tr>")
+    return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th colspan='4'>Same 700 users</th>"
             f"<th colspan='4' class='grp'>{esc(model_name)} (700 users)</th><th colspan='4' class='grp'>GPT-4o (paper, all users)</th></tr>"
-            "<tr><th>Category</th><th>Popularity</th><th>Social, k = 50</th>"
+            "<tr><th>Category</th><th>Popularity</th><th>Social, k = 12</th><th>Social, k = 25</th><th>Social, k = 50</th>"
             + "".join(f"<th{' class=grp' if i == 0 else ''}>{l}</th>" for i, l in enumerate(LLM_LABELS)) * 2
             + f"</tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
 
@@ -447,12 +451,13 @@ def _log_x(L, W, Rm):
 
 
 POP_TICKS = [1, 10, 100, 1_000, 10_000, 100_000]
+STRIP_BANDS = POP_BANDS[:2]  # the per-category figure omits ranks 181-200
 
 
 def pop_strip_chart():
     """Global SocialVec rank of every candidate, one row per category and band (log scale)."""
     W, L, Rm, T, sub, gap = 760, 130, 16, 8, 13, 12
-    rowh = sub * len(POP_BANDS) + gap
+    rowh = sub * len(STRIP_BANDS) + gap
     H = T + rowh * len(pop_cats) + 26
     px = _log_x(L, W, Rm)
     parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Global popularity rank of the candidates by category">']
@@ -461,8 +466,8 @@ def pop_strip_chart():
                      f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:,}</text>')
     for i, cat in enumerate(pop_cats):
         y0 = T + i * rowh
-        parts.append(f'<text class="cat" x="{L-10}" y="{y0 + sub * len(POP_BANDS) / 2 + 4:.1f}" text-anchor="end">{esc(CATEGORY_LABELS[cat])}</text>')
-        for j, (band, cls) in enumerate(POP_BANDS):
+        parts.append(f'<text class="cat" x="{L-10}" y="{y0 + sub * len(STRIP_BANDS) / 2 + 4:.1f}" text-anchor="end">{esc(CATEGORY_LABELS[cat])}</text>')
+        for j, (band, cls) in enumerate(STRIP_BANDS):
             g = pop_ranked[(pop_ranked["category"] == cat) & (pop_ranked["band"] == band)]
             y = y0 + j * sub + sub / 2
             for _, e in g.iterrows():
@@ -746,7 +751,9 @@ page = f"""<!doctype html>
   random sample of 50 users per category. The paper's finding replicates: listing 12 favored entities lifts MAP from
   {lo['llm_baseline']:.3f} to {lo['llm_k12']:.3f} ({pct(llm_stats.loc['llm_k12','gain vs LLM baseline'])}), and 50 accounts lift it to
   {lo['llm_k50']:.3f} ({pct(llm_stats.loc['llm_k50','gain vs LLM baseline'])}). The paper reported +13% and +23% for GPT-4o. The social-embedding column (SE1, k = 50) matches
-  the paper on all users: {fig1.loc[PAPER_CATEGORY_ORDER, 'se1_legacy_k50'].mean():.3f} vs. 0.562.</p>
+  the paper on all users: {fig1.loc[PAPER_CATEGORY_ORDER, 'se1_legacy_k50'].mean():.3f} vs. 0.562. On the same 700 users, SocialVec scores
+  {lo['socialvec_k12']:.3f} with the 12 accounts and {lo['socialvec_k25']:.3f} with the 25 accounts listed in the LLM prompts
+  (k = 50: {lo['se1_legacy_k50']:.3f}), so the LLM is ahead at 12 and 25 accounts, as it is on the other candidate sets below.</p>
   <div class="card">
     <div class="legend"><span class="key"><i class="sq" style="background:var(--s1)"></i>{model_name}, 700 sampled users</span>
     <span class="key"><i class="sq" style="background:var(--s2)"></i>GPT-4o, as reported in the paper</span></div>
@@ -912,11 +919,12 @@ page = f"""<!doctype html>
     the global top 10,000, and {pop_overall[POP_BANDS[2][0]]['top10k']:.0%} of the ranks 181–200 candidates are.</li>
   </ul>
   <div class="card">
-    <div class="legend">{''.join(f'<span class="key"><i class="sq" style="background:var(--{cls})"></i>{esc(b)}</span>' for b, cls in POP_BANDS)}
+    <h4 style="margin:0 0 6px">Figure 3 · Global popularity of the candidates, by category</h4>
+    <div class="legend">{''.join(f'<span class="key"><i class="sq" style="background:var(--{cls})"></i>{esc(b)}</span>' for b, cls in STRIP_BANDS)}
     <span class="key"><i class="tick"></i>Median</span></div>
     {pop_strip_chart()}
     <p class="caption">Global SocialVec popularity rank of every candidate (log scale; left is more popular), by category. Each dot is
-    one account; the bar marks the band's median. TV hosts have no ranks 81–100 band. {int(sum(s['n'] - s['in_sv'] for s in pop_overall.values()))}
+    one account; the bar marks the band's median. TV hosts have no ranks 81–100 band. Ranks 181–200 are shown in the next figure and table. {int(sum(s['n'] - s['in_sv'] for s in pop_overall.values() if s is not pop_overall[POP_BANDS[2][0]]))}
     candidates without a SocialVec embedding are not shown.</p>
   </div>
   <div class="card">

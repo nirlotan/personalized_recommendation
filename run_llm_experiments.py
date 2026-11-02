@@ -29,6 +29,7 @@ from reproduction import paper_results as paper
 from reproduction.config import CATEGORY_LABELS, PAPER_CATEGORY_ORDER, RESULTS_DIR, SEED
 from reproduction.data import load_categories, load_users
 from reproduction.embeddings import SocialVec, load_metadata
+from reproduction.experiments import build_candidates
 from reproduction.llm import (
     BudgetExceeded,
     SpendingCap,
@@ -62,6 +63,19 @@ def run_main(users, categories, names, rankers, out, workers):
     sample = main_sample(users)
     prompts = user_prompts(sample, categories, names)
     res = run_llm(sample, categories, prompts, *rankers, out / "cache" / "main.jsonl", workers=workers)
+
+    # SocialVec on the same accounts that the LLM's k=12 and k=25 prompts list
+    sv = SocialVec("2020")
+    candidates = build_candidates(categories, sv)
+    samples = user_samples(sample, categories, names)
+    for k in (12, 25):
+        ap_k = {}
+        for user_row, user in sample.iterrows():
+            cand = candidates[user["topic"]]
+            relevant = [cand.position[int(a)] for a in user["topic_accounts"]]
+            ap_k[user_row] = cand.average_precision(sv.average(sv.indices(samples.at[user_row, f"llm_k{k}"])), relevant)
+        res[f"socialvec_k{k}"] = res["user"].map(ap_k)
+
     ap = pd.read_csv(RESULTS_DIR / "per_user_ap.csv.gz", usecols=["user", "popularity", "se1_legacy_k50"])
     res.merge(ap, on="user").to_csv(out / "main_per_user.csv.gz", index=False)
 
@@ -186,7 +200,7 @@ def analyze(out, categories, main_users):
 
     # ---- main
     main = pd.read_csv(out / "main_per_user.csv.gz")
-    t3 = by_category(main, ["popularity", "se1_legacy_k50"] + LLM_COLUMNS)
+    t3 = by_category(main, ["popularity", "socialvec_k12", "socialvec_k25", "se1_legacy_k50"] + LLM_COLUMNS)
     t3.to_csv(out / "table3_main.csv")
     overall = t3.loc["Overall"]
     gains = {c: overall[c] / overall["llm_baseline"] - 1 for c in ["llm_k12", "llm_k25", "llm_k50"]}
