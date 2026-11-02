@@ -1,0 +1,201 @@
+category,popularity_rank,sheet_row,twitter_screen_name,twitter_user_id,twitter_name,followers_count,use,rank_in_category,in_socialvec
+MusicalArtist,181,180,partynextdoor,1346180581,PARTYNEXTDOOR,1492294,,181,True
+MusicalArtist,182,181,PUSHA_T,28035260,King Push,1657717,,182,True
+MusicalArtist,183,182,TheRealNimoy,128956175,Leonard Nimoy,971985,,183,True
+MusicalArtist,184,183,jason_mraz,19018401,Jason Mraz,5620343,,184,True
+MusicalArtist,185,184,SaraBareilles,6211972,Sara Bareilles,2999216,,185,True
+MusicalArtist,186,185,janemarielynch,44215023,Jane Lynch,1770314,,186,True
+MusicalArtist,187,186,JanelleMonae,12266442,"Janelle Monáe, Cindi",1216489,,187,True
+MusicalArtist,188,187,Tyrese,24621955,#VisionImplementor,3071451,,188,True
+MusicalArtist,189,188,KaceyMusgraves,30925378,K A C E Y,886794,,189,True
+MusicalArtist,190,189,kevinjonas,104288093,kevin jonas,5421251,,190,True
+MusicalArtist,191,190,falloutboy,16212952,Fall Out Boy,3226835,,191,True
+MusicalArtist,192,191,KChenoweth,31641658,Kristin Chenoweth,1187593,,192,True
+MusicalArtist,193,192,zacbrownband,18124756,Zac Brown Band,1693890,,193,True
+MusicalArtist,194,193,markhoppus,21955058,Ḿå℟₭,2831542,,194,True
+MusicalArtist,195,194,4everBrandy,27406401,b r a n d y ♠️,3090606,,195,True
+MusicalArtist,196,195,machinegunkelly,17861062,colson,1335528,,196,True
+MusicalArtist,197,196,PanicAtTheDisco,16213013,Panic! At The Disco,3158669,,197,True
+MusicalArtist,198,197,HoodieAllen,17216468,Hoodie Allen,1201811,,198,True
+MusicalArtist,199,198,THEREALSWIZZZ,25027806,SWIZZ BEATZ,2398462,,199,True
+MusicalArtist,200,199,JackJ,163730859,J,5942111,,200,True
+news,181,180,SFWeekly,18132494,SF Weekly,210522,,181,True
+news,182,181,ftfinancenews,11014272,Finance News,615201,,182,True
+news,183,182,coindesk,1333467482,CoinDesk,834873,,183,True
+news,184,183,AndroidAuth,95438524,Android Authority,1034753,,184,True
+news,185,184,townhallcom,28614262,Townhall.com,156628,,185,True
+news,186,185,CivilEats,185809250,Civil Eats,102840,,186,True
+news,187,186,FaceTheNation,205392468,Face The Nation,487979,,187,True
+news,188,187,NOLAnews,14192680,NOLA.com,246153,,188,True
+news,189,188,TelegraphNews,14138785,Telegraph Breaking News,767921,,189,True
+news,190,189,CR,2316003960,Conservative Review,194754,,190,True
+news,191,190,sbjsbd,26747046,Sports Business Journal,103324,,191,True
+news,192,191,starsandstripes,9130702,Stars and Stripes,226811,,192,True
+news,193,192,TheWeek,16439471,The Week,130015,,193,True
+news,194,193,azcentral,13115682,azcentral,383556,,194,True
+news,195,194,indystar,16550142,IndyStar,269914,,195,True
+news,196,195,RealClearNews,20094138,RealClearPolitics,159212,,196,True
+news,197,196,detroitnews,16543775,The Detroit News,289108,,197,True
+news,198,197,MadMoneyOnCNBC,16451932,Mad Money On CNBC,307836,,198,True
+news,199,198,nytimesmusic,16929559,New York Times Music,173872,,199,True
+news,200,199,MarshallProj,2216041938,The Marshall Project,86727,,200,True
+Comedian,181,180,paulapoundstone,18997933,Paula Poundstone,144094,,181,True
+Comedian,182,181,kylekinane,26535267,Jean Creamery,181822,,182,True
+Comedian,183,182,TheoVon,17955081,Theo Von,275862,,183,True
+Comedian,184,183,iamdesibanks,224468287,Desi Banks,396972,,184,True
+Comedian,185,184,danacarvey,26598593,Dana Carvey,225883,,185,True
+Comedian,186,185,KidFury,14175375,Furia Morgendorffer,205686,,186,True
+Comedian,187,186,ScooterMagruder,32740920,Cameron Magruder,177531,,187,True
+Comedian,188,187,nedfulmer,43812483,Ned Fulmer,373322,,188,True
+Comedian,189,188,moshekasher,14996376,Moshe Kasher,187445,,189,True
+Comedian,190,189,KarlousM,94844786,Karlous Miller,338352,,190,True
+Comedian,191,190,Jokoy,22757990,Jo Koy,244314,,191,True
+Comedian,192,191,DougStanhope,14867598,Doug Stanhope,334980,,192,True
+Comedian,193,192,Griz,290736635,GRiZ,196776,,193,True
+Comedian,194,193,garyowencomedy,22527671,Gary Owen,233508,,194,True
+Comedian,195,194,julieklausner,18169589,Julie Klausner,129696,,195,True
+Comedian,196,195,BrianReganComic,29265181,Brian Regan,205543,,196,True
+Comedian,197,196,BrendanSchaub,57690247,Brendan Schaub,779655,,197,True
+Comedian,198,197,MRbelzer,34792516,Richard Belzer,200607,,198,True
+Comedian,199,198,davidcrosss,4356430036,david cross✍,166375,,199,True
+Comedian,200,199,TheRichardLewis,202415747,Richard Lewis,179115,,200,True
+Politician,181,180,RonWyden,250188760,Ron Wyden,474234,,181,True
+Politician,182,181,MarkWarner,7429102,Mark Warner,465062,,182,True
+Politician,183,182,JohnWDean,160010755,John Dean,253862,,183,True
+Politician,184,183,WalshFreedom,236487888,Joe Walsh,234624,,184,True
+Politician,185,184,HeyTammyBruce,22956220,Tammy Bruce,326598,,185,True
+Politician,186,185,JeffFlake,16056306,Jeff Flake,673081,,186,True
+Politician,187,186,EricCantor,18891923,Eric Cantor,271781,,187,True
+Politician,188,187,JamesFallows,24789175,James Fallows,172801,,188,True
+Politician,189,188,MicheleBachmann,18217624,Michele Bachmann,245640,,189,True
+Politician,190,189,EWErickson,640893,Erick Erickson,208675,,190,True
+Politician,191,190,vj44,595515713,Valerie Jarrett,192921,,191,True
+Politician,192,191,RickSantorum,58379000,Rick Santorum,286057,,192,True
+Politician,193,192,MartinOMalley,15824288,Martin O'Malley,218146,,193,True
+Politician,194,193,drmoore,15297452,Russell Moore,158432,,194,True
+Politician,195,194,RepKatiePorter,1081222837459997056,Rep. Katie Porter,274446,,195,False
+Politician,196,195,marty_walsh,77764733,Mayor Marty Walsh,295077,,196,True
+Politician,197,196,Paula_White,27768807,Paula White-Cain,736858,,197,True
+Politician,198,197,CLewandowski_,4121225056,Corey R. Lewandowski,504839,,198,True
+Politician,199,198,RudyGiuliani,770781940341288960,Rudy W. Giuliani,654982,,199,True
+Politician,200,199,JillWineBanks,454071012,Jill Wine-Banks,376270,,200,True
+TelevisionStation,181,180,DenverChannel,8731312,Denver7 News,271563,,181,True
+TelevisionStation,182,181,CBSDFW,10878852,CBSDFW,141024,,182,True
+TelevisionStation,183,182,TBSNetwork,15981547,TBS Network,110434,,183,True
+TelevisionStation,184,183,fox5ny,9229672,Fox5NY,116512,,184,True
+TelevisionStation,185,184,FOX59,16440677,FOX59 News,259848,,185,True
+TelevisionStation,186,185,QVC,17621994,QVC,145805,,186,True
+TelevisionStation,187,186,TUDNUSA,89225092,TUDN USA,630263,,187,True
+TelevisionStation,188,187,NECN,9907172,NECN,95292,,188,True
+TelevisionStation,189,188,ABC11_WTVD,18342955,ABC11 EyewitnessNews,276106,,189,True
+TelevisionStation,190,189,FOX26Houston,17094323,FOX26Houston,316387,,190,True
+TelevisionStation,191,190,Sportsnet,21660529,Sportsnet,731870,,191,True
+TelevisionStation,192,191,FOX13News,15750898,FOX 13 Tampa Bay,316242,,192,True
+TelevisionStation,193,192,WGRZ,15308015,WGRZ,186591,,193,True
+TelevisionStation,194,193,FOX2News,31746745,FOX 2 Detroit,359297,,194,True
+TelevisionStation,195,194,BlazeTV,753385398718521344,BlazeTV,214324,1.0,195,True
+TelevisionStation,196,195,NC5,14838173,NewsChannel 5,245639,,196,True
+TelevisionStation,197,196,WKRN,16426346,WKRN,192689,,197,True
+TelevisionStation,198,197,HawaiiNewsNow,14671170,Hawaii News Now,168362,,198,True
+TelevisionStation,199,198,12News,17187236,12 News,211942,,199,True
+TelevisionStation,200,199,CBSDenver,16313592,CBSDenver,209268,,200,True
+Actor,181,180,PatrickDempsey,430744802,Patrick Dempsey,1445273,,181,True
+Actor,182,181,ChloeGMoretz,90021519,Chloë Grace Moretz,3020078,,182,True
+Actor,183,182,ayeshacurry,39633585,Ayesha Curry,960747,,183,True
+Actor,184,183,SleepintheGardn,130991061,Troian,2573614,,184,True
+Actor,185,184,EdwardNorton,62591681,Edward Norton,1953917,,185,True
+Actor,186,185,justsanaa,59283767,Sanaa Lathan,1676270,,186,True
+Actor,187,186,DarrenCriss,49110693,Darren Criss,1914770,,187,True
+Actor,188,187,brielarson,3327720838,Brie Larson,1983251,,188,True
+Actor,189,188,TraceeEllisRoss,104299103,Tracee Ellis Ross,1207324,,189,True
+Actor,190,189,StephenAmell,349300271,Stephen Amell,2432980,,190,True
+Actor,191,190,1capplegate,41259253,christina applegate,1457723,,191,True
+Actor,192,191,paulwesley,264498030,Paul Wesley,4079478,,192,True
+Actor,193,192,realjknoxville,237870401,Johnny Knoxville,1794145,,193,True
+Actor,194,193,Mariska,247560825,Mariska Hargitay,904917,,194,True
+Actor,195,194,EmilyOsment,21323673,Emily Osment,3338305,,195,True
+Actor,196,195,MrsSOsbourne,43283406,Sharon Osbourne,2423340,,196,True
+Actor,197,196,jessetyler,17350250,Jesse Tyler Ferguson,1209631,,197,True
+Actor,198,197,BrodyJenner,26892157,Brody Jenner,2207622,,198,True
+Actor,199,198,realmikefox,398092540,Michael J. Fox,1479779,,199,True
+Actor,200,199,blakelively,2678072634,Blake Lively,1278548,,200,True
+TelevisionShow,181,180,13ReasonsWhy,735153382558687232,13 Reasons Why,677531,,181,True
+TelevisionShow,182,181,GameGrumps,701983068,Game Grumps,2293424,1.0,182,True
+TelevisionShow,183,182,drunkhistory,1176796766,Drunk History,143275,,183,True
+TelevisionShow,184,183,FearTWD,3121950808,FearTWD,309813,,184,True
+TelevisionShow,185,184,CommunityTV,28205458,Community,282426,,185,True
+TelevisionShow,186,185,TheRealDaytime,1482663290,The Real,340217,,186,True
+TelevisionShow,187,186,GilmoreGirls,707982165368119296,Gilmore Girls,215119,,187,True
+TelevisionShow,188,187,lsb,2786311606,Lip Sync Battle,181427,,188,True
+TelevisionShow,189,188,Castle_ABC,44953111,Castle,709902,,189,True
+TelevisionShow,190,189,CWJaneTheVirgin,2400643741,Jane The Virgin,277162,,190,True
+TelevisionShow,191,190,MakingAMurderer,4273006932,Making A Murderer,264518,,191,True
+TelevisionShow,192,191,Victorious,81216996,Victorious,2434534,,192,True
+TelevisionShow,193,192,nbcthegoodplace,3314486832,The Good Place is taking it sleazy,256005,,193,True
+TelevisionShow,194,193,ScreamQueens,2986161066,Scream Queens,295986,,194,True
+TelevisionShow,195,194,archerfxx,403086984,Archer,222342,,195,True
+TelevisionShow,196,195,TheCWSupergirl,2820666877,Supergirl,719698,,196,True
+TelevisionShow,197,196,Suits_USA,273181052,Suits,655578,,197,True
+TelevisionShow,198,197,AmazingRaceCBS,68792362,The Amazing Race,387995,,198,True
+TelevisionShow,199,198,SeinfeldTV,239505770,Seinfeld,181549,,199,True
+TelevisionShow,200,199,TestKitchen,199299110,America's Test Kitchen,119571,,200,True
+SportsTeam,181,180,12thMan,29307707,Texas A&M Athletics,123242,,181,True
+SportsTeam,182,181,ClemsonTigers,131169196,Clemson Athletics,196663,,182,True
+SportsTeam,183,182,WarriorsPR,858957830,Warriors PR,217705,,183,True
+SportsTeam,184,183,umterps,54994166,Maryland Terrapins,150320,,184,True
+SportsTeam,185,184,OhioStateHoops,281669945,Ohio State Hoops,115206,,185,True
+SportsTeam,186,185,GopherSports,23865144,Minnesota Gophers,146123,,186,True
+SportsTeam,187,186,VandyBoys,18216108,Vanderbilt Baseball,146030,,187,True
+SportsTeam,188,187,BUFootball,36142710,Baylor Football,148816,,188,True
+SportsTeam,189,188,Cuse,17879492,Syracuse Athletics,141937,,189,True
+SportsTeam,190,189,woodbrothers21,33887040,Wood Brothers Racing,97212,,190,True
+SportsTeam,191,190,GoCards,52078622,Louisville Athletics,547980,,191,True
+SportsTeam,192,191,UCFKnights,21306514,UCF Knights,166478,,192,True
+SportsTeam,193,192,Cloud9,1452520626,Cloud9,904331,,193,True
+SportsTeam,194,193,indyindians,21328737,Indianapolis Indians,85329,,194,True
+SportsTeam,195,194,HokiesFB,227342532,Virginia Tech Football,180026,,195,True
+SportsTeam,196,195,DurhamBulls,20991021,Durham Bulls,75211,,196,True
+SportsTeam,197,196,NHLFlames,27487343,Calgary Flames,628614,,197,True
+SportsTeam,198,197,IowaCubs,23598711,Iowa Cubs,71357,,198,True
+SportsTeam,199,198,Senators,43885373,Ottawa Senators,584671,,199,True
+SportsTeam,200,199,GoBEARCATS,25099042,Cincinnati Bearcats,170862,,200,True
+Journalist,181,180,mkhammer,4923811,Mary Katharine Ham,248597,,181,True
+Journalist,182,181,rezaaslan,262856460,Reza Aslan,291802,,182,True
+Journalist,183,182,matthewamiller,55948054,Matthew Miller,371426,,183,True
+Journalist,184,183,mehdirhasan,130557513,Mehdi Hasan,816454,,184,True
+Journalist,185,184,JackPosobiec,592730371,Jack Posobiec 🇺🇸,643052,,185,True
+Journalist,186,185,JRubinBlogger,218975278,Jennifer Rubin,369681,,186,True
+Journalist,187,186,peterbakernyt,123327472,Peter Baker,358032,,187,True
+Journalist,188,187,jheil,14251225,John Heilemann,309261,,188,True
+Journalist,189,188,JedediahBila,60680268,Jedediah Bila,303391,,189,True
+Journalist,190,189,jimsciutto,22129280,Jim Sciutto,349173,,190,True
+Journalist,191,190,arielhelwani,17828988,Ariel Helwani,816854,,191,True
+Journalist,192,191,morninggloria,25375836,Erin effing golden Ryan,193004,,192,True
+Journalist,193,192,JaneMayerNYer,561516853,Jane Mayer,224154,,193,True
+Journalist,194,193,jbarro,16244449,Josh Barro,250994,,194,True
+Journalist,195,194,AngryBlackLady,46822887,Imani Gandy,188281,,195,True
+Journalist,196,195,SharylAttkisson,203226736,Sharyl Attkisson🕵️‍♂️,275725,,196,True
+Journalist,197,196,ditzkoff,81482674,Dave Itzkoff,230830,,197,True
+Journalist,198,197,KatrinaNation,59159771,Katrina vandenHeuvel,183498,,198,True
+Journalist,199,198,KristineLeahy,30924507,Kristine Leahy,220576,,199,True
+Journalist,200,199,tombrokaw,342803375,Tom Brokaw,309290,,200,True
+TelevisionHost,181,180,Totalbiscuit,16747981,TotalBiscuit,647757,,181,True
+TelevisionHost,182,181,Fwiz,22784458,Ryan Wyatt,362935,,182,True
+TelevisionHost,183,182,DylanRatigan,48847011,Dylan Ratigan,75179,,183,True
+TelevisionHost,184,183,iamweeman,28375496,Jason Weeman Acuna,279399,,184,True
+TelevisionHost,185,184,JohnBerman,20522862,John Berman,113512,,185,True
+TelevisionHost,186,185,ChrisMoyles,19982092,Chris Moyles,3682566,,186,True
+TelevisionHost,187,186,BiancaDLGarza,281677896,Bianca de la Garza,70027,,187,True
+TelevisionHost,188,187,melrobbins,18066665,Mel Robbins,119236,1.0,188,True
+TelevisionHost,189,188,jaymee,60778244,Jaymee Sire,53128,,189,True
+TelevisionHost,190,189,jonsnowC4,128216887,Jon Snow,1388195,,190,True
+TelevisionHost,191,190,gregjames,14100010,Greg James,1622951,,191,True
+TelevisionHost,192,191,MarkSimoneNY,18071459,MARK SIMONE,187286,,192,True
+TelevisionHost,193,192,mayaharris_,2314055840,Maya Harris,81265,,193,True
+TelevisionHost,194,193,tsnjamesduthie,62894963,James Duthie,889809,,194,True
+TelevisionHost,195,194,Ehmee,16435797,Emily Graslie 🌸🐝,94114,,195,True
+TelevisionHost,196,195,annecurtissmith,23563916,Anne Curtis-Smith,12582039,,196,True
+TelevisionHost,197,196,gusjohnson,519208523,Gus Johnson,58202,,197,True
+TelevisionHost,198,197,MikeRinder,1653075950,Mike Rinder,88678,,198,True
+TelevisionHost,199,198,higeorgeshelley,1650528535,George Shelley,663256,,199,True
+TelevisionHost,200,199,TiffanyDCross,200846651,Tiffany Cross,107758,,200,True

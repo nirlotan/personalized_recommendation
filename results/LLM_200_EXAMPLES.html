@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>200-Candidate LLM Examples</title><style>
+:root{color-scheme:light;
+ --page:#f9f9f7;--surface:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink-2:#52514e;--muted:#898781;
+ --grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;
+ --good:#006300;--bad:#b42f2f;--accent-wash:#eef4fc;--warn-wash:#fdf3ea;--chip:#f0efec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--card:#151514;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;
+ --good:#0ca30c;--bad:#e66767;--accent-wash:#14202f;--warn-wash:#2a1d14;--chip:#262624}}
+:root[data-theme="dark"]{color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--card:#151514;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;
+ --good:#0ca30c;--bad:#e66767;--accent-wash:#14202f;--warn-wash:#2a1d14;--chip:#262624}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header.hero{padding:56px 0 28px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(28px,4.4vw,42px);line-height:1.15;margin:0 0 14px;letter-spacing:-.01em;font-weight:650}
+.lede{font-size:18px;color:var(--ink-2);max-width:760px;margin:0}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0}
+nav.toc a{font-size:14px;color:var(--ink-2);text-decoration:none;padding:5px 12px;border-radius:999px;background:var(--chip)}
+nav.toc a:hover{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:34px 0 8px}
+.tile{background:var(--card);border-radius:14px;padding:18px 18px 16px;box-shadow:0 0 0 1px var(--ring)}
+.tile .label{font-size:13px;color:var(--ink-2)}
+.tile .value{font-size:32px;font-weight:620;margin:4px 0 2px;letter-spacing:-.01em}
+.tile .sub{font-size:13px;color:var(--muted)}
+section{padding:44px 0 8px}
+h2{font-size:26px;margin:0 0 6px;letter-spacing:-.005em;font-weight:640}
+h2 .num{color:var(--muted);font-weight:500;margin-right:8px}
+h3{font-size:18px;margin:34px 0 8px;font-weight:620}
+p{max-width:780px}
+.intro{color:var(--ink-2);margin-top:0}
+.card{background:var(--card);border-radius:16px;padding:20px 20px 14px;box-shadow:0 0 0 1px var(--ring);margin:16px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2);margin:0 0 8px}
+.key{display:inline-flex;align-items:center;gap:7px}
+.key i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.key i.dot{width:10px;height:10px;border-radius:50%}
+.key i.dia{width:9px;height:9px;transform:rotate(45deg);border:2px solid var(--ink);border-radius:1px;background:transparent}
+.key i.tick{width:2px;height:14px;background:var(--ink-2)}
+.key i.sq{width:12px;height:12px;border-radius:3px}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid{stroke:var(--grid);stroke-width:1}
+.chart .sep{stroke:var(--axis);stroke-width:1}
+.chart .tick{fill:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.chart .axis-title,.chart .col-head{fill:var(--muted);font-size:12px}
+.chart .cat{fill:var(--ink);font-size:13px}
+.chart .delta{fill:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+.chart .delta.neg{fill:var(--bad)}
+.chart .ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.chart .ref-label{fill:var(--muted);font-size:12px}
+.chart .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .line.s1{stroke:var(--s1)}.chart .line.s2{stroke:var(--s2)}.chart .line.s3{stroke:var(--s3)}
+.chart .dot{stroke:var(--card);stroke-width:2}
+.chart .dot.s1{fill:var(--s1)}.chart .dot.s2{fill:var(--s2)}.chart .dot.s3{fill:var(--s3)}
+.chart .paper-mark{fill:none;stroke:var(--ink);stroke-width:1.6}
+.chart .bar.s1{fill:var(--s1)}.chart .bar.s2{fill:var(--s2)}.chart .bar.s3{fill:var(--s3)}.chart .bar.muted-bar{fill:var(--axis)}
+.chart .rand{stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
+.chart .hit{fill:transparent;cursor:default}
+.chart .hit:hover{fill:rgba(127,127,127,.10)}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panels>.panel{min-width:0}
+.panel h4{margin:0 0 4px;font-size:15px;font-weight:620}
+.panel .note{font-size:13px;color:var(--muted);margin:0 0 6px}
+@media (max-width:820px){.panels{grid-template-columns:1fr}}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0}
+table.data{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+table.data th,table.data td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid)}
+table.data thead th{font-size:12px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--axis);vertical-align:bottom}
+table.data tr.super th{border-bottom:none;text-align:center;color:var(--muted);font-weight:500;padding-bottom:0}
+table.data tbody th,table.data thead tr:last-child th:first-child{text-align:left}
+table.data tbody th{font-weight:500}
+table.data tr.total th,table.data tr.total td{font-weight:650;border-top:1px solid var(--axis);border-bottom:none}
+table.data .grp{border-left:1px solid var(--axis)}
+table.data td.neg{color:var(--bad)}
+table.data td.below{text-decoration:underline dotted;text-underline-offset:3px;color:var(--bad)}
+table.data td.p{color:var(--ink-2)}
+table.data td.muted{color:var(--muted)}
+table.data .paper{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+table.data.compact td,table.data.compact th{padding:6px 10px}
+table.data td.names{white-space:normal;text-align:left;min-width:420px;color:var(--ink-2)}
+table.data td.nowrap{white-space:nowrap}
+.caption{font-size:13px;color:var(--muted);margin:6px 0 0;max-width:none}
+.heats{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+figure.heat{margin:0}
+figure.heat figcaption{font-size:14px;font-weight:600;margin:0 0 8px}
+figure.heat figcaption small{display:block;font-weight:400;color:var(--muted)}
+table.heatmap{border-collapse:separate;border-spacing:2px;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+table.heatmap td{padding:7px 0;text-align:center;border-radius:4px}
+table.heatmap th{font-size:12px;font-weight:500;color:var(--muted);padding:2px 4px}
+.callouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.callout{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 0 0 1px var(--ring)}
+.callout h4{margin:0 0 6px;font-size:15px}
+.callout p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.callout .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--ink-2);margin-bottom:8px}
+.highlights{list-style:none;padding:0;margin:16px 0;display:grid;gap:10px;max-width:820px}
+.highlights li{padding:12px 16px 12px 16px;background:var(--accent-wash);border-radius:12px;font-size:15px}
+.highlights li.warn{background:var(--warn-wash)}
+details{margin:10px 0}
+summary{cursor:pointer;color:var(--ink-2);font-size:14px}
+img.figure{width:100%;height:auto;border-radius:12px;background:#fff;display:block;margin-top:10px}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--chip);padding:1px 6px;border-radius:6px}
+pre{background:var(--card);box-shadow:0 0 0 1px var(--ring);border-radius:12px;padding:14px 16px;overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.status.ok{color:var(--good)}.status.no{color:var(--bad)}.status.part{color:var(--ink-2)}
+footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
+#tip{position:fixed;pointer-events:none;z-index:10;background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--ring),0 6px 24px rgba(0,0,0,.12);
+ border-radius:10px;padding:8px 11px;font-size:13px;line-height:1.45;opacity:0;transition:opacity .12s;max-width:260px}
+
+.example h4{margin:0 0 4px}.example .meta{color:var(--muted);font-size:13px;margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}.chip{background:var(--accent-wash);border-radius:999px;padding:3px 10px;font-size:13px}
+.chip b{font-variant-numeric:tabular-nums}
+.names{font-size:13px;color:var(--ink-2);line-height:1.5}
+.quote{margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--s1);background:var(--accent-wash);border-radius:0 10px 10px 0}
+table.data td.reason{white-space:normal;text-align:left;min-width:260px;font-size:13px}
+table.data td.acct{white-space:normal;text-align:left}
+.hit{color:var(--s3);font-weight:650}.miss{color:var(--muted)}
+.positions{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+</style></head>
+<body><div id="tip" role="tooltip"></div>
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Extension · Social Knowledge for Cross-Domain User Preference Modeling</p>
+  <h1>Ranking 200 candidates: worked examples</h1>
+  <p class="lede">Section B4 of <a href="results_backup.html#all200">the extended-lists results page</a> reports that GPT-6 Luna, given up to 200 followed
+  account names, ranks 200 candidates better than SocialVec. These six users show what that looks like: three where it went well and
+  three where it went badly, each rerun with the model asked to explain its choices.</p>
+</header>
+
+<section>
+  <h2><span class="num">1</span>How the examples were chosen</h2>
+  <ul>
+    <li><i>Eligible users:</i> those following at least 10 of the 200 candidates, so that a high AP cannot come from one lucky
+    guess; at most one user per category.</li>
+    <li><i>Good:</i> the largest AP above a random ranking, among answers that ranked at least 95% of the candidates.</li>
+    <li><i>Bad:</i> the lowest AP, whatever the answer's completeness.</li>
+    <li><i>Rerun:</i> the same prompt, followed accounts, shuffled candidates and reasoning effort (medium), with three output fields
+    instead of one: the user's interests, the ranked list, and a one-sentence reason for each of the top 10. The chips show the AP of
+    the original run (the one in Section B4) and of the rerun, which is a new call and can rank differently.</li>
+    <li><i>Caveat:</i> the reasons are written by the model alongside its answer. They are its account of the ranking, not a record of
+    the hidden reasoning, which the API does not return.</li>
+    <li><i>Privacy:</i> users are identified by internal row only. Followed and candidate accounts are public accounts in SocialVec.</li>
+  </ul>
+  <p>Across the three good examples, 26 of the 30 top-10 places in the original runs went to accounts the user
+  follows (26 in the reruns); across the bad ones, 7 (8 in the reruns).</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Where it went well</h2>
+  
+    <div class="example card">
+      <h4>Good example 1 · user row 5297 · TV shows</h4>
+      <p class="meta">Follows 29 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.885</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.752</b></span>
+        <span class="chip">LLM, no user information <b>0.111</b></span>
+        <span class="chip">Random (expected) <b>0.166</b></span>
+        <span class="chip">Candidates ranked <b>198 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.817</b> · ranked 40</span>
+        <span class="chip">Rerun with explanations <b>0.853</b> · ranked 194</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Gabriel Escobar, Michael Geist, Chris Cason, Mieke Eoyang, MATT DRUDGE, derek stewart🏴󠁧󠁢󠁳󠁣󠁴󠁿🇬🇧, Dr. Jessica Taylor, Robin Baumgarten, U.S. Army Reserve, Jim Newell, Seema, Ben Jealous, Adam Schiff, Kat Timpf, OSCE, Jesse Lee, VICE News, Brent Scher, DailyCaller Politics, U.S. Coast Guard, Symone D. Sanders-Townsend, Travel Tips &amp; Savings, Ashley Pratte Oates, Jeet Heer, USNI News, GoldStarDad⭐️, Anthony Albanese, VRA, Belinda Barnet, IL Republican Party, Tucker Carlson, ryan teague beckwith, Ted Lieu, Rep. Ralph Norman, Orrin G. Hatch Foundation, Margot Cleveland, Donovan Slack, NASA Sun &amp; Space, UN Peacekeeping, NYT Science …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">The Daily Show, E! News, Fallon Tonight, TODAY, Megyn Kelly, Jimmy Kimmel Live, Maddow Blog, PBS NewsHour, Andrea Mitchell, Anderson Cooper 360°, NBC Nightly News with Lester Holt, 60 Minutes, FOX &amp; friends, The Late Show, World News Tonight, Morning Joe, FRONTLINE, The Five, Martha MacCallum, The Last Word, CBS This Morning, Hardball, All In with Chris Hayes, Nightline, Outlander, CBS Sunday Morning 🌞, CBS Evening News, Duane Dog Chapman, CNN Newsroom</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest a strong interest in U.S. and international politics, journalism, public affairs, and military and national-security topics, with perspectives spanning the political spectrum. They also suggest interests in science and space, along with some entertainment and popular culture.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>PBS NewsHour</td><td><span class=hit>✓ follows</span></td><td class='reason'>PBS NewsHour fits the user&#x27;s broad interest in serious public-affairs reporting, reflected in follows such as <b>All Things Considered</b>, <b>Morning Edition</b>, and <b>Financial Times</b>.</td></tr><tr><td>2</td><td class='acct'>Maddow Blog</td><td><span class=hit>✓ follows</span></td><td class='reason'>Maddow Blog is a strong match for the user&#x27;s political-news interest, supported by follows such as <b>Chris Hayes</b>, <b>Symone D. Sanders-Townsend</b>, and <b>Jon Lovett</b>.</td></tr><tr><td>3</td><td class='acct'>All In with Chris Hayes</td><td><span class=hit>✓ follows</span></td><td class='reason'>All In with <b>Chris Hayes</b> aligns closely with the user&#x27;s interest in political analysis, as suggested by following <b>Chris Hayes</b>, <b>Adam Schiff</b>, and <b>Nancy Pelosi</b>.</td></tr><tr><td>4</td><td class='acct'>The Last Word</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Last Word offers political coverage that complements the user&#x27;s follows of <b>All Things Considered</b>, <b>Chris Hayes</b>, and <b>Kyle Griffin</b>.</td></tr><tr><td>5</td><td class='acct'>Hardball</td><td><span class=hit>✓ follows</span></td><td class='reason'>Hardball is a natural fit for the user&#x27;s sustained interest in U.S. politics, reflected in follows such as <b>Adam Schiff</b>, <b>Ted Lieu</b>, and <b>Nancy Pelosi</b>.</td></tr><tr><td>6</td><td class='acct'>FRONTLINE</td><td><span class=hit>✓ follows</span></td><td class='reason'>FRONTLINE&#x27;s investigative journalism suits the user&#x27;s interest in news and public affairs, supported by follows including <b>VICE News</b>, <b>Financial Times</b>, and <b>Michael Geist</b>.</td></tr><tr><td>7</td><td class='acct'>NBC Nightly News with Lester Holt</td><td><span class=hit>✓ follows</span></td><td class='reason'>NBC Nightly News matches the user&#x27;s broad appetite for current events, reflected in follows such as <b>Morning Edition</b>, <b>All Things Considered</b>, and <b>CTV National News</b>.</td></tr><tr><td>8</td><td class='acct'>Andrea Mitchell</td><td><span class=hit>✓ follows</span></td><td class='reason'>Andrea Mitchell is a strong fit for the user&#x27;s interest in political reporting, supported by follows such as <b>Carol Lee</b>, <b>Pamela Brown</b>, and <b>Molly Ball</b>.</td></tr><tr><td>9</td><td class='acct'>60 Minutes</td><td><span class=hit>✓ follows</span></td><td class='reason'>60 Minutes offers in-depth reporting that complements the user&#x27;s follows of <b>VICE News</b>, <b>Financial Times</b>, and <b>Pittsburgh Post-Gazette</b>.</td></tr><tr><td>10</td><td class='acct'>CNN Newsroom</td><td><span class=hit>✓ follows</span></td><td class='reason'>CNN Newsroom aligns with the user&#x27;s interest in current affairs and political coverage, as suggested by follows such as <b>Pamela Brown</b>, <b>Kyle Griffin</b>, and <b>Fox News Alert</b>.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 27, 30, 41, 88, 105, 106, 180; 0 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class='hit'>NBC Nightly News with Lester Holt</span>, <span class='hit'>FRONTLINE</span>, <span class='hit'>PBS NewsHour</span>, <span class='hit'>60 Minutes</span>, <span class='hit'>CBS Evening News</span>, <span class='hit'>CBS This Morning</span>, <span class='hit'>World News Tonight</span>, <span class='hit'>Nightline</span>, <span class='hit'>CNN Newsroom</span>, <span class='hit'>Andrea Mitchell</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 23, 24, 28, 29, 30, 34, 37, 41, 79, 120; 0 left out (counted as misses).</p>
+    </div>
+    <div class="example card">
+      <h4>Good example 2 · user row 8562 · Sports teams</h4>
+      <p class="meta">Follows 37 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.886</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.460</b></span>
+        <span class="chip">LLM, no user information <b>0.458</b></span>
+        <span class="chip">Random (expected) <b>0.205</b></span>
+        <span class="chip">Candidates ranked <b>190 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.930</b> · ranked 189</span>
+        <span class="chip">Rerun with explanations <b>0.454</b> · ranked 199</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Colt Ford, MLG, Nikki &amp; Brie, Cameron Magruder, Aaron Goodwin, GoodSmile_US, TG, Mónica Rial, Dmitri, Washington Commanders, Ninjas in Pyjamas, UpUpDownDown, James Bardolph, Stephen A Smith, EA SPORTS, Elemental Knives, Leah Clark🔜@UnlockTheCon, Assassin&#x27;s Creed, mayor of jackpot city, Ian Rapoport, Formula 1, WWE NXT, Randy Houser, SMii7Y, Ubisoft, Charlotte Flair, Jena Gares, EPOS Gaming, Brianna Knickerbocker, Seth “Freakin’” Rollins, TAYNARA MELO GUEVARA, KOEI TECMO AMERICA, Bandai Namco US, Aniplex of America, Adam Montoya, Dr Disrespect, Kane, SARAYA, Lauren Southern, MMG …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">Dallas Cowboys, New England Patriots, Pittsburgh Steelers, Philadelphia Eagles, Green Bay Packers, Seattle Seahawks, New York Giants, Carolina Panthers, San Francisco 49ers, Chicago Bears, Denver Broncos, Cleveland Browns, New Orleans Saints, Texas Rangers, Houston Texans, Atlanta Falcons, Kansas City Chiefs, Detroit Lions, Minnesota Vikings, Baltimore Ravens, New York Jets, Dallas Mavericks, Indianapolis Colts, Los Angeles Rams, Miami Dolphins, Los Angeles Chargers, Cincinnati Bengals, Tennessee Titans, Dallas Stars, Tampa Bay Buccaneers, Arizona Cardinals, OpTic Gaming™, #DUUUVAL, FaZe Clan, 100 Thieves, Aston Martin Red Bull Racing, Cloud9</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest strong interests in esports and gaming, especially competitive Counter-Strike, gaming creators, and teams such as 100 Thieves and OpTic. They also point to a broad sports interest, with a particular emphasis on NFL football, alongside WWE, Formula 1, and country music.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>100 Thieves</td><td><span class=hit>✓ follows</span></td><td class='reason'>100 Thieves is a strong fit with the user&#x27;s existing esports and creator interests, including <b>100T Nadeshot</b> and <b>100T seangares</b>.</td></tr><tr><td>2</td><td class='acct'>FaZe Clan</td><td><span class=hit>✓ follows</span></td><td class='reason'>FaZe Clan matches the user&#x27;s gaming and esports interests, especially their follow of <b>FaZe Teeqo</b>.</td></tr><tr><td>3</td><td class='acct'>OpTic Gaming™</td><td><span class=hit>✓ follows</span></td><td class='reason'>OpTic Gaming is a natural esports recommendation given the user&#x27;s existing follow of <b>OpTic FNS</b>.</td></tr><tr><td>4</td><td class='acct'>Cloud9</td><td><span class=hit>✓ follows</span></td><td class='reason'>Cloud9 suits the user&#x27;s strong competitive gaming interests reflected by <b>Ninjas in Pyjamas</b>, <b>Astralis Counter-Strike</b>, and <b>ESL Counter-Strike</b>.</td></tr><tr><td>5</td><td class='acct'>Baltimore Ravens</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Ravens fit the user&#x27;s clear NFL interest, supported by follows of the <b>Washington Commanders</b>, <b>Ian Rapoport</b>, and multiple NFL players.</td></tr><tr><td>6</td><td class='acct'>Philadelphia Eagles</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Eagles are a compelling NFL recommendation for someone who follows the <b>Washington Commanders</b>, <b>Ian Rapoport</b>, and players such as <b>Myles Garrett</b> and <b>Dak Prescott</b>.</td></tr><tr><td>7</td><td class='acct'>Dallas Cowboys</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Cowboys connect to the user&#x27;s established NFL interest, including their follows of the <b>Washington Commanders</b>, NFL players, and <b>ESPN</b>.</td></tr><tr><td>8</td><td class='acct'>Green Bay Packers</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Packers are likely relevant given the user&#x27;s many NFL follows, including the <b>Washington Commanders</b>, <b>Ian Rapoport</b>, and NFL players.</td></tr><tr><td>9</td><td class='acct'>Denver Broncos</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Broncos align with the user&#x27;s broad football interest, evidenced by follows of the <b>Washington Commanders</b>, <b>Drew Lock</b>, and other NFL players.</td></tr><tr><td>10</td><td class='acct'>New England Patriots</td><td><span class=hit>✓ follows</span></td><td class='reason'>The Patriots are a strong match for the user&#x27;s NFL interest, reflected in their follows of the <b>Washington Commanders</b>, <b>Ian Rapoport</b>, and <b>ESPN</b>.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 41, 44, 45, 46, 49, 57, 74, 85, 89, 92, 97, 107, 112, 117, 121, 124, 125, 128, 129, 132, 140, 147, 157, 160, 190, 195; 0 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class='hit'>100 Thieves</span>, <span class='hit'>OpTic Gaming™</span>, <span class='hit'>FaZe Clan</span>, <span class=''>TSM</span>, <span class='hit'>Cloud9</span>, <span class='hit'>Baltimore Ravens</span>, <span class='hit'>Philadelphia Eagles</span>, <span class='hit'>Dallas Cowboys</span>, <span class='hit'>Kansas City Chiefs</span>, <span class='hit'>Green Bay Packers</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 99, 129, 163; 0 left out (counted as misses).</p>
+    </div>
+    <div class="example card">
+      <h4>Good example 3 · user row 1446 · Musical artists</h4>
+      <p class="meta">Follows 10 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.692</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.237</b></span>
+        <span class="chip">LLM, no user information <b>0.274</b></span>
+        <span class="chip">Random (expected) <b>0.073</b></span>
+        <span class="chip">Candidates ranked <b>200 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.252</b> · ranked 195</span>
+        <span class="chip">Rerun with explanations <b>0.480</b> · ranked 200</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Monica Lewinsky (she/her), Ways &amp; Means Committee, Michael Crowley, Red Clay Democrats, Jon Ossoff, Donovan Reynolds, Hong Kong Free Press HKFP, Mitt Romney, Kiran Deol, Eugene Robinson, Ronan Farrow, Sheldon Whitehouse, Judd Apatow 🇺🇦, Christine Pelosi, Marilyn Marks, David Jolly, Mark Ruffalo, Jennifer Granholm, The New York Times, Chris Hahn, Tea Pain, Sherrod Brown, Rep. Marc Veasey, Nate Silver, Dina Titus, Asha Rangappa, Steve Lookner, Representative Park Cannon, Hillary Clinton, MichaelRapaport, Amanda Gorman, Mueller, She Wrote, Amanda Carpenter, Dan McCready, Gisele Barreto Fetterman, Michael S. Schmidt, David Frum, Heidi Przybyla, Andy Cohen, Mike Levin …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">Taylor Swift, Rihanna, Lady Gaga, P!nk, iamcardib, John Legend, COMMON, Michael Moore, Dolly Parton, K A C E Y</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest a strong interest in U.S. politics, journalism, social justice, and progressive activism, alongside comedians, actors, and other public figures. Among these candidates, politically engaged entertainers and prominent performers are likely to be the best fit.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>Michael Moore</td><td><span class=hit>✓ follows</span></td><td class='reason'>Michael Moore&#x27;s political filmmaking and commentary fit the user&#x27;s civic focus, reflected in follows such as <b>John Oliver</b> and <b>The Intercept</b>.</td></tr><tr><td>2</td><td class='acct'>Julia Louis-Dreyfus</td><td><span class=miss>–</span></td><td class='reason'>Julia Louis-Dreyfus connects the user&#x27;s interest in comedy and entertainment, seen in follows such as Judd Apatow and Leslie Jones.</td></tr><tr><td>3</td><td class='acct'>Lin-Manuel Miranda</td><td><span class=miss>–</span></td><td class='reason'>Lin-Manuel Miranda combines performing arts with public advocacy, a strong match for follows including <b>Amanda Gorman</b> and <b>Michelle Obama</b>.</td></tr><tr><td>4</td><td class='acct'>John Legend</td><td><span class=hit>✓ follows</span></td><td class='reason'>John Legend&#x27;s music career and advocacy align with the user&#x27;s interest in socially engaged public figures such as <b>Mark Ruffalo</b> and <b>Elizabeth Warren</b>.</td></tr><tr><td>5</td><td class='acct'>COMMON</td><td><span class=hit>✓ follows</span></td><td class='reason'>Common&#x27;s music and social-justice work fit the user&#x27;s interest in activism and culture, reflected by follows such as <b>Rev. Dr. William J. Barber II</b> and <b>Ben Crump</b>.</td></tr><tr><td>6</td><td class='acct'>BEYONCÉ</td><td><span class=miss>–</span></td><td class='reason'>Beyoncé is a major cultural figure whose public advocacy may appeal to someone following <b>Michelle Obama</b> and <b>Amanda Gorman</b>.</td></tr><tr><td>7</td><td class='acct'>P!nk</td><td><span class=hit>✓ follows</span></td><td class='reason'>P!nk&#x27;s outspoken public persona and entertainment career suit the user&#x27;s mix of activist and celebrity follows, including <b>Kathy Griffin</b> and <b>Mark Ruffalo</b>.</td></tr><tr><td>8</td><td class='acct'>Lady Gaga</td><td><span class=hit>✓ follows</span></td><td class='reason'>Lady Gaga&#x27;s performance career and advocacy are a natural fit with the user&#x27;s interest in outspoken entertainers such as <b>Sarah Silverman</b> and <b>Kathy Griffin</b>.</td></tr><tr><td>9</td><td class='acct'>Kendrick Lamar</td><td><span class=miss>–</span></td><td class='reason'>Kendrick Lamar&#x27;s socially conscious music fits the user&#x27;s interest in public issues and culture, reflected in follows such as <b>Michael Eric Dyson</b> and <b>Charlamagne Tha God</b>.</td></tr><tr><td>10</td><td class='acct'>Dolly Parton</td><td><span class=hit>✓ follows</span></td><td class='reason'>Dolly Parton&#x27;s broad cultural appeal and philanthropy align with the user&#x27;s interest in public figures who combine entertainment and social impact, such as <b>Mark Ruffalo</b> and <b>Amanda Gorman</b>.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 1, 4, 5, 7, 8, 10, 13, 45, 93, 106; 0 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class='hit'>Michael Moore</span>, <span class='hit'>John Legend</span>, <span class='hit'>COMMON</span>, <span class=''>Lin-Manuel Miranda</span>, <span class='hit'>Lady Gaga</span>, <span class=''>BEYONCÉ</span>, <span class='hit'>P!nk</span>, <span class='hit'>Taylor Swift</span>, <span class=''>Kendrick Lamar</span>, <span class='hit'>Dolly Parton</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 1, 2, 3, 5, 7, 8, 10, 12, 43, 122; 0 left out (counted as misses).</p>
+    </div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>Where it went badly</h2>
+  
+    <div class="example card">
+      <h4>Bad example 1 · user row 8353 · Sports teams</h4>
+      <p class="meta">Follows 16 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.089</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.260</b></span>
+        <span class="chip">LLM, no user information <b>0.129</b></span>
+        <span class="chip">Random (expected) <b>0.103</b></span>
+        <span class="chip">Candidates ranked <b>181 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.058</b> · ranked 194</span>
+        <span class="chip">Rerun with explanations <b>0.090</b> · ranked 200</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Channel Awesome, President Trump 45 Archived, Michelle Beadle, Eurobasket, Michael Jones, curvyllama💙🌙, NFL Network, Microsoft, Cultaholic Wrestling, ALGOP, Adam Kovic, Shinsuke Nakamura, Intel, Victor Lindelöf, Ann Coulter, Tama Tonga, Erica Steiner, Melania Trump 45 Archived, William Shatner, Blaine Gibson, Mr Ken Anderson, danawhite, 🎄dannyBstyle🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄, PWG, TigerNet.com, Kip Sabian, Daily Fantasy Nerd, Dan Le Batard Show with Stugotz, Kasey Kahne, ye, Minx, Michael Smith, Skip Bayless, The Univ. of Alabama, UFC, Bryan Danielson, Leva Bates, Solo, Left Wing Lock, Liverpool FC News …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">Los Angeles Lakers, Golden State Warriors, Los Angeles Dodgers, NEW YORK KNICKS, Minnesota Vikings, Vegas Golden Knights, Los Angeles Rams, Hendrick Motorsports, Milwaukee Bucks, Tampa Bay Lightning, OpTic Gaming™, #DUUUVAL, Denver Nuggets, Toronto Maple Leafs, UCF Football, Cloud9</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest strong interests in professional and college sports, especially Alabama athletics, NFL, soccer, wrestling, and motorsports. Gaming and esports are also recurring interests, alongside technology and political commentary.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>Alabama Athletics</td><td><span class=miss>–</span></td><td class='reason'>Alabama Athletics is a direct fit with the user&#x27;s following of <b>The Univ. of Alabama</b> and Alabama-related sports.</td></tr><tr><td>2</td><td class='acct'>Alabama Football</td><td><span class=miss>–</span></td><td class='reason'>Alabama Football closely matches the user&#x27;s interest in <b>The Univ. of Alabama</b> and college sports.</td></tr><tr><td>3</td><td class='acct'>Alabama Softball</td><td><span class=miss>–</span></td><td class='reason'>Alabama Softball is another direct university connection supported by the user&#x27;s following of <b>The Univ. of Alabama</b>.</td></tr><tr><td>4</td><td class='acct'>Kansas City Chiefs</td><td><span class=miss>–</span></td><td class='reason'>The Chiefs offer more NFL coverage for someone who follows <b>NFL Network</b>, <b>FantasyLabs NFL</b>, <b>Daily Fantasy Nerd</b>, and NFL players.</td></tr><tr><td>5</td><td class='acct'>Dallas Cowboys</td><td><span class=miss>–</span></td><td class='reason'>The Cowboys are a strong pro-football recommendation given the user&#x27;s following of <b>NFL Network</b> and several NFL fantasy accounts and players.</td></tr><tr><td>6</td><td class='acct'>Oklahoma Football</td><td><span class=miss>–</span></td><td class='reason'>Oklahoma Football fits the user&#x27;s established college-sports interest, especially their following of <b>The Univ. of Alabama</b>.</td></tr><tr><td>7</td><td class='acct'>Auburn Football</td><td><span class=miss>–</span></td><td class='reason'>Auburn Football is a relevant college football account for a user who follows <b>The Univ. of Alabama</b> and Alabama athletics.</td></tr><tr><td>8</td><td class='acct'>Ohio State Football</td><td><span class=miss>–</span></td><td class='reason'>Ohio State Football extends the college football content likely to appeal to someone following <b>The Univ. of Alabama</b> and Alabama Athletics.</td></tr><tr><td>9</td><td class='acct'>LSU Football</td><td><span class=miss>–</span></td><td class='reason'>LSU Football is a natural college football recommendation alongside the user&#x27;s following of <b>The Univ. of Alabama</b> and Alabama Athletics.</td></tr><tr><td>10</td><td class='acct'>New England Patriots</td><td><span class=miss>–</span></td><td class='reason'>The Patriots provide another NFL team feed that complements the user&#x27;s follows of <b>NFL Network</b>, <b>FantasyLabs NFL</b>, and other NFL-focused accounts.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 13, 18, 30, 64, 68, 71, 72, 77, 82, 114, 126, 131, 132, 154, 167, 197; 0 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class=''>Alabama Athletics</span>, <span class=''>Alabama Football</span>, <span class=''>Alabama Softball</span>, <span class=''>Clemson Athletics</span>, <span class=''>Clemson Football</span>, <span class=''>Auburn Tigers</span>, <span class=''>Team Penske</span>, <span class='hit'>Hendrick Motorsports</span>, <span class=''>RCR</span>, <span class=''>JR Motorsports</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 8, 23, 29, 41, 42, 45, 48, 101, 126, 134, 150, 158, 161, 177, 181; 1 left out (counted as misses).</p>
+    </div>
+    <div class="example card">
+      <h4>Bad example 2 · user row 6413 · TV stations</h4>
+      <p class="meta">Follows 23 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.135</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.287</b></span>
+        <span class="chip">LLM, no user information <b>0.247</b></span>
+        <span class="chip">Random (expected) <b>0.137</b></span>
+        <span class="chip">Candidates ranked <b>23 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.375</b> · ranked 193</span>
+        <span class="chip">Rerun with explanations <b>0.156</b> · ranked 88</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Seth Abramson, Jesse Ferguson, AntiNarcopathyPharmD, Jacob Soboroff, Andy Slavitt 💙💛, Matt Oswalt, Nick Knudsen 🇺🇸, robert jon anderson, Sasha Samberg-Champion, Lamar Louis, Mayo Clinic, Randy Rainbow, Monie Cashette, Mexi-&#x27;Can&#x27; Marine💪🇺🇸🇲🇽(F🖕U Reps!), Lisa Gerrish 🌊🌊🌊, Yamiche Alcindor, Will they suspend me?, José Andrés, Jennifer Ann Wilson, Sen. Debbie Stabenow, Andrew, Brittany 💙🇺🇦💛 Never Forget 1/6 ♥️, Michigan Football, Muckmaker™, WWJ 950, How To Get Away ABC, Shannon Watts, Diane Sawyer, Laiken Jordahl, Cheer-Up, Cher, Ahmed Baba, Fifty Shades of Whey, JB 💙 Just Blue 🇺🇸🇨🇦🇲🇽🇫🇷🇬🇧🇪🇺🇺🇦, Tommy Lightfoot Garrett, Us Weekly, Maxine Waters, Mike Sington, Drew Emery, TooFab …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">CNN Breaking News, CNN, BBC News (World), ABC News, E! News, NFL Network, The Weather Channel, PBS, Prime Video, HISTORY, Oprah Winfrey Network, Nat Geo Channel, Animal Planet, TLC Network, ABC, BBC America, Lifetime, Nat Geo WILD, BBC Earth, WXYZ Detroit, Local 4 WDIV Detroit, QVC, Hawaii News Now</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest strong interests in U.S. politics and current affairs, especially Democratic politics, public health, and Michigan news, alongside international events and science. They also point to interests in television, entertainment, sports—particularly Michigan football—and nature and travel.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>NBC News</td><td><span class=miss>–</span></td><td class='reason'>NBC News is a natural fit for the user&#x27;s interest in current affairs, reflected by following <b>Philip Rucker</b>, <b>Peter Baker</b>, and <b>Yamiche Alcindor</b>.</td></tr><tr><td>2</td><td class='acct'>CBS News</td><td><span class=miss>–</span></td><td class='reason'>CBS News offers broad reporting that complements the user&#x27;s follows of <b>Diane Sawyer</b>, <b>George Stephanopoulos</b>, and <b>WWJ 950</b>.</td></tr><tr><td>3</td><td class='acct'>CNN</td><td><span class=hit>✓ follows</span></td><td class='reason'>CNN aligns with the user&#x27;s sustained interest in political coverage, supported by following <b>Jake Sherman</b>, <b>Brian Stelter</b>, and <b>Dan Abrams</b>.</td></tr><tr><td>4</td><td class='acct'>CNN Politics</td><td><span class=miss>–</span></td><td class='reason'>CNN Politics is especially relevant given the user&#x27;s follows of <b>The Democrats</b>, <b>Adam Schiff</b>, and <b>Rep. <b>Jamie Raskin</b></b>.</td></tr><tr><td>5</td><td class='acct'>ABC News</td><td><span class=hit>✓ follows</span></td><td class='reason'>ABC News fits the user&#x27;s interest in national reporting, supported by follows of <b>Diane Sawyer</b>, <b>George Stephanopoulos</b>, and <b>Deborah Roberts</b>.</td></tr><tr><td>6</td><td class='acct'>NBC News Health</td><td><span class=miss>–</span></td><td class='reason'>NBC News Health connects directly to the user&#x27;s health interests, reflected by following <b>Mayo Clinic</b>, <b>Harvard Health</b>, and <b>Medical News Today</b>.</td></tr><tr><td>7</td><td class='acct'>CBS News Health</td><td><span class=miss>–</span></td><td class='reason'>CBS News Health is a strong match for the user&#x27;s healthcare focus, supported by <b>Mayo Clinic</b>, <b>MDedge Cardiology</b>, and <b>HealthCare.gov</b>.</td></tr><tr><td>8</td><td class='acct'>WXYZ Detroit</td><td><span class=hit>✓ follows</span></td><td class='reason'>WXYZ Detroit is highly relevant to the user&#x27;s Michigan focus, supported by following <b>The Detroit News</b>, <b>MLive</b>, and <b>WILX News 10</b>.</td></tr><tr><td>9</td><td class='acct'>Local 4 WDIV Detroit</td><td><span class=hit>✓ follows</span></td><td class='reason'>Local 4 WDIV provides Detroit-area coverage that complements the user&#x27;s follows of <b>WWJ 950</b>, <b>The Detroit News</b>, and <b>Mayor Mike Duggan</b>.</td></tr><tr><td>10</td><td class='acct'>Hawaii News Now</td><td><span class=hit>✓ follows</span></td><td class='reason'>Hawaii News Now fits the user&#x27;s travel and Hawaii interests, reflected by following <b>Kauai.com</b>, <b>HAWAI&#x27;I Magazine</b>, and <b>Hawaiian Airlines</b>.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 3, 5, 8, 9, 10, 12, 14, 15; 15 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class=''>CNN Politics</span>, <span class=''>NBC News</span>, <span class=''>CBS News</span>, <span class='hit'>ABC News</span>, <span class='hit'>CNN</span>, <span class='hit'>CNN Breaking News</span>, <span class=''>CSPAN</span>, <span class='hit'>PBS</span>, <span class=''>NBC News Health</span>, <span class=''>CBS News Health</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 4, 5, 6, 8, 12, 19, 20, 21; 15 left out (counted as misses).</p>
+    </div>
+    <div class="example card">
+      <h4>Bad example 3 · user row 3033 · Actors</h4>
+      <p class="meta">Follows 11 of the 200 candidates. 200 followed account names in the prompt.</p>
+      <div class="chips">
+        <span class="chip">LLM AP <b>0.152</b></span>
+        <span class="chip">SocialVec, same accounts <b>0.066</b></span>
+        <span class="chip">LLM, no user information <b>0.157</b></span>
+        <span class="chip">Random (expected) <b>0.078</b></span>
+        <span class="chip">Candidates ranked <b>198 / 200</b></span>
+        <span class="chip">Repeat, same prompt <b>0.165</b> · ranked 186</span>
+        <span class="chip">Rerun with explanations <b>0.253</b> · ranked 199</span>
+      </div>
+      <p class="step"><b>Followed accounts given to the model</b> (first 40 of 200, in prompt order)</p>
+      <p class="names">Chuck Schumer, David Axelrod, Kyle Griffin, Elijah E. Cummings, Star Wars | Andor Premieres Sept 21 on Disney+, WeRateDogs®, Jim Acosta, Jes Macallan, Bloomberg Law: Environment, Translate Things, FBI Little Rock, Hillary Clinton, Supernatural, Corey Ryan Forrester First of His Name, ABC News, The Humane Society of the United States, Wanda Sykes, Nick Akerman, Arkansas Travelers, Adam 🏳️‍🌈 (Taylor’s Version), Barb McQuade, Stephanie Ruhle, Richard W. Painter, THV11, Chelsea Clinton, Adrian Carrasquillo, Mueller, She Wrote, The Oval Pawffice® 🇺🇸 DOTUS Fans, Lisa Ray, P!nk, Marc E. Elias, Jane The Virgin, AO3 Status, Acxiom, Michael McFaul, NPR, Lucky Chops, Government Accountability Project, Dominique P-C, Chris Jackson …</p>
+      <p class="step"><b>Candidates the user follows</b> (the relevant ones, in category-list order)</p>
+      <p class="names">Ryan Reynolds, Emma Watson, Tom Hanks, Anna Kendrick, Leonardo DiCaprio, Chris Evans, Samuel L. Jackson, Elizabeth Banks, Jared Padalecki, Jensen Ackles, Blake Lively</p>
+      <p class="step"><b>What the model inferred</b> (rerun)</p>
+      <p class="quote">The followed accounts suggest strong interests in progressive U.S. politics, public-interest journalism, civil rights, and environmental and animal advocacy. They also point to enthusiasm for television and film fandoms—especially *Supernatural* and genre entertainment—along with celebrities who are outspoken about social issues.</p>
+      <p class="step"><b>Rerun: top 10 and the model's reasons</b> (followed accounts that appear in the prompt are in bold)</p>
+      <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
+      <tbody><tr><td>1</td><td class='acct'>Jensen Ackles</td><td><span class=hit>✓ follows</span></td><td class='reason'>Jensen Ackles is a direct match for the user&#x27;s interest in *<b>Supernatural</b>*, which they follow.</td></tr><tr><td>2</td><td class='acct'>Jared Padalecki</td><td><span class=hit>✓ follows</span></td><td class='reason'>Jared Padalecki is another central *<b>Supernatural</b>* connection, strongly supported by the user&#x27;s follow of *<b>Supernatural</b>*.</td></tr><tr><td>3</td><td class='acct'>Alyssa Milano</td><td><span class=miss>–</span></td><td class='reason'>Alyssa Milano&#x27;s public advocacy aligns with the user&#x27;s follows of <b>Women&#x27;s March</b>, <b>Moms Demand Action</b>, and <b>Hillary Clinton</b>.</td></tr><tr><td>4</td><td class='acct'>Mark Ruffalo</td><td><span class=miss>–</span></td><td class='reason'>Mark Ruffalo&#x27;s environmental and progressive advocacy fits the user&#x27;s follows of <b>The Nature Conservancy</b>, <b>Ocean Conservancy</b>, and <b>Public Citizen</b>.</td></tr><tr><td>5</td><td class='acct'>Ian Somerhalder</td><td><span class=miss>–</span></td><td class='reason'>Ian Somerhalder&#x27;s environmental advocacy and television work connect with the user&#x27;s environmental accounts and genre-TV interests, including *<b>Supernatural</b>*.</td></tr><tr><td>6</td><td class='acct'>Felicia Day</td><td><span class=miss>–</span></td><td class='reason'>Felicia Day&#x27;s genre and fan-community work is a strong fit for someone who follows *<b>Supernatural</b>*, *<b>Sense8</b>*, and <b>AO3 Status</b>.</td></tr><tr><td>7</td><td class='acct'>Wil &#x27;this account mocks fascists&#x27; Wheaton</td><td><span class=miss>–</span></td><td class='reason'>Wil Wheaton&#x27;s outspoken progressive persona and fandom connection suit the user&#x27;s follows of *Star Wars: Andor*, *<b>Supernatural</b>*, and progressive political accounts.</td></tr><tr><td>8</td><td class='acct'>Seth Rogen</td><td><span class=miss>–</span></td><td class='reason'>Seth Rogen&#x27;s comedy and public advocacy are a good fit for the user&#x27;s follows of <b>Wanda Sykes</b>, <b>Jordan Klepper</b>, and other outspoken public figures.</td></tr><tr><td>9</td><td class='acct'>LeVar Burton</td><td><span class=miss>–</span></td><td class='reason'>LeVar Burton&#x27;s entertainment and cultural presence fits the user&#x27;s broad television and film interests, including *Star Wars: Andor*, *<b>Sense8</b>*, and *<b>Fantastic Beasts</b>*.</td></tr><tr><td>10</td><td class='acct'>Chris Evans</td><td><span class=hit>✓ follows</span></td><td class='reason'>Chris Evans&#x27;s high-profile civic engagement aligns with the user&#x27;s extensive follows of <b>Joe Biden</b>, <b>Barack Obama</b>, and other pro-democracy figures.</td></tr></tbody></table></div>
+      <p class="positions">Rerun: relevant candidates at ranks 1, 2, 10, 82, 90, 95, 100, 126, 141, 163, 177; 0 left out.</p>
+      <p class="step"><b>Original run (scored in Section B4): top 10</b> (followed ones in green)</p>
+      <p class="names"><span class=''>Alyssa Milano</span>, <span class=''>Mark Ruffalo</span>, <span class=''>Wil &#x27;this account mocks fascists&#x27; Wheaton</span>, <span class=''>Seth Rogen</span>, <span class=''>John Cusack</span>, <span class=''>kerry washington</span>, <span class=''>LeVar Burton</span>, <span class='hit'>Leonardo DiCaprio</span>, <span class='hit'>Emma Watson</span>, <span class=''>olivia wilde</span></p>
+      <p class="positions">Original run: relevant candidates at ranks 8, 9, 15, 16, 20, 36, 47, 96, 99, 136, 165; 0 left out (counted as misses).</p>
+    </div>
+</section>
+
+<section>
+  <h2><span class="num">4</span>What the examples show</h2>
+  <ul class="highlights">
+    <li><b>When it works, the ranking follows a clear reading of the user.</b> The model names an interest that the followed accounts
+    support, such as political news (good example 1), esports and NFL (good example 2) or politically outspoken entertainers (good
+    example 3), and puts the matching candidates first. 59 of the 60 reasons cite at least one account that is
+    actually in the prompt (in bold).</li>
+    <li><b>The failures have different causes.</b>
+    <ul>
+      <li><i>A plausible but wrong reading</i> (bad example 1): following the University of Alabama leads the model to rank Alabama and
+      college football first, while the user follows mostly professional teams. SocialVec scores 0.260 here.</li>
+      <li><i>A cut-off answer</i> (bad example 2): the original answer ranked only 23 of
+      200 candidates. Its top picks are reasonable, but the relevant candidates it never listed count as misses.</li>
+      <li><i>Interests outside the category</i> (bad example 3): the model favours actors known for activism, matching the user's
+      political follows, over the mainstream actors the user follows. SocialVec does even worse here (0.066).</li>
+    </ul></li>
+    <li class="warn"><b>Single users vary a lot between runs.</b> Repeating the identical prompt changed AP by 0.139 on average
+    across these six users (from 0.692 to 0.252 for good example 3). The examples were chosen for
+    extreme AP, so some move back toward the middle on a repeat. Section B4's comparison averages over 270 users and is the better guide
+    to how well the method works; these examples show how it works.</li>
+  </ul>
+</section>
+
+<footer><p>Generated by <code>python make_llm_200_examples.py</code> from <code>results/llm/candidates_200_per_user.csv.gz</code>.</p></footer>
+</div>
+<script>
+const tip=document.getElementById('tip');
+function show(el,e){tip.innerHTML=el.dataset.tip;tip.style.opacity=1;
+  const x=Math.min(e.clientX+14,window.innerWidth-tip.offsetWidth-8);tip.style.left=x+'px';tip.style.top=(e.clientY+14)+'px';}
+document.querySelectorAll('[data-tip]').forEach(el=>{
+  el.addEventListener('mouseenter',e=>show(el,e));
+  el.addEventListener('mousemove',e=>show(el,e));
+  el.addEventListener('mouseleave',()=>{tip.style.opacity=0;});
+});
+</script>
+</body></html>

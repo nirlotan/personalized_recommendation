@@ -1,0 +1,14 @@
+{
+  "accounts": 31502,
+  "found_in_wikidata": 19343,
+  "wikidata_items": 19450,
+  "items_with_dbpedia_types": 17638,
+  "accounts_with_a_category": 9917,
+  "accounts_in_several_categories": 94,
+  "source_counts": {
+    "wikidata-occupation": 4692,
+    "dbpedia": 4668,
+    "wikidata": 654
+  },
+  "person_rule": "first"
+}

@@ -1,0 +1,15 @@
+category,sheet,accounts_found,accounts_kept,rank_of_100th,rank_of_200th,rank_of_1000th,from_dbpedia,from_wikidata,original_list,original_found_in_wikidata,original_recovered,validated_top20_recovered,validated_top20,top100_overlap_with_original
+Musical artists,MusicalArtist,3073,1000,491.0,1087.0,7779.0,637,363,100,94,76,15,20,52
+News outlets,news,478,478,3209.0,8702.0,,242,236,100,88,59,16,20,43
+Comedians,Comedian,411,411,2192.0,7177.0,,222,189,100,93,89,19,20,36
+Politicians,Politician,751,751,2241.0,5623.0,,686,65,100,89,88,18,19,56
+TV stations,TelevisionStation,408,408,5519.0,12958.0,,380,28,100,91,84,16,20,42
+Actors,Actor,2178,1000,506.0,1253.0,9646.0,6,994,100,98,83,16,20,32
+TV shows,TelevisionShow,488,488,2927.0,7345.0,,474,14,100,93,75,17,20,38
+Sports teams,SportsTeam,352,352,5402.0,16315.0,,214,138,100,95,89,19,20,64
+Fashion,fashion,90,90,,,,0,90,34,16,9,9,20,9
+Journalists,Journalist,1264,1000,2318.0,4403.0,23805.0,35,965,100,95,81,17,20,20
+TV hosts,TelevisionHost,304,304,5434.0,15860.0,,6,298,34,22,14,11,20,4
+Films,Film,70,70,,,,69,1,51,17,10,9,18,10
+Food chains,Resturants,107,107,27196.0,,,0,107,25,23,23,19,20,23
+Car makers,cars,40,40,,,,0,40,19,17,15,15,19,15

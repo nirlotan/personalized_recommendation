@@ -1,0 +1,5 @@
+# Extra dependencies for the optional GPT-4o experiment (run_reproduction.py --llm)
+-r requirements.txt
+dspy==3.4.1
+litellm==1.106.2     # dspy leaves it unpinned; 1.107.0 (and 1.82.7/1.82.8) were compromised on PyPI
+pyarrow==26.0.0      # reads the SocialVec entity names (metadata.parquet.gz)
