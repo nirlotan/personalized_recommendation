@@ -1,11 +1,15 @@
 """
 Build results/LLM_DEMOGRAPHICS_REPORT.html: the demographics-only LLM ranking experiment
-(run_llm_demographics.py) compared with every other method on the same users.
+(run_llm_demographics.py --describe-model gpt-4o) compared with every other method on the same users.
+
+GPT-4o writes the demographic descriptions and GPT-6 Luna ranks from them. The report covers the
+ranks 81-100 candidates, first in follower-count order and then shuffled (run_llm_demographics_bands.py).
 
     python make_demographics_report.py
 
 Reads the generated descriptions from data/llm_demographics/ (not tracked by git). The page
-identifies users by internal row only, never by username.
+identifies users by internal row only, never by username. Also writes results/llm/demographics_summary.json
+for the summaries in results.html and results_backup.html.
 """
 
 import html
@@ -14,14 +18,13 @@ import re
 
 import numpy as np
 import pandas as pd
-from scipy.stats import kendalltau, wilcoxon
+from scipy.stats import wilcoxon
 
 from reproduction.config import CATEGORY_LABELS, DATA_DIR, PAPER_CATEGORY_ORDER, RESULTS_DIR
 from reproduction.data import load_categories, load_users
 from reproduction.demographics import classify_users
 from reproduction.embeddings import SocialVec, load_metadata
 from reproduction.llm import names_of, ranked_ids, user_samples
-from reproduction.llm_demographics import PROMPT_VERSION
 from reproduction.page_style import CSS, JS
 from run_llm_experiments import band_sample
 
@@ -29,15 +32,16 @@ LLM = RESULTS_DIR / "llm"
 PRIVATE = DATA_DIR / "llm_demographics"
 
 # ---------------------------------------------------------------- data
-desc = pd.read_csv(PRIVATE / "descriptions.csv").set_index("row")
-demo = pd.read_csv(LLM / "demographics_per_user.csv.gz").set_index("user")
 band = pd.read_csv(LLM / "band_per_user.csv.gz").set_index("user")
+demo = pd.read_csv(LLM / "demographics_per_user_gpt-4o.csv.gz").set_index("user")
+desc = pd.read_csv(PRIVATE / "descriptions_gpt-4o.csv").set_index("row")
 m = band.join(demo[["llm_demographics", "n_accounts_described"]], how="inner").join(desc[["description", "ranking_response"]])
-# Stage 1 repeated with GPT-4o (Stage 2 still GPT-6 Luna)
-desc4 = pd.read_csv(PRIVATE / "descriptions_gpt-4o.csv").set_index("row")
-demo4 = pd.read_csv(LLM / "demographics_per_user_gpt-4o.csv.gz").set_index("user")
-m = m.join(demo4["llm_demographics"].rename("llm_demographics_4o")).join(
-    desc4[["description", "ranking_response"]].rename(columns=lambda c: f"{c}_4o"))
+# the no-information baseline always uses shuffled candidates (one random order per user, run_llm_demographics_bands.py);
+# with candidates in follower-count order it partly copies the presented order
+_shuffled = pd.read_csv(LLM / "demographics_bands_per_user.csv.gz")
+_shuffled = _shuffled[_shuffled["band"] == "81-100"].set_index("user")
+m["llm_baseline_sorted"] = m["llm_baseline"]
+m["llm_baseline"] = _shuffled["ap_baseline"].reindex(m.index)
 runs = json.loads((LLM / "run_info.json").read_text())
 run_4o = [r for r in runs if r.get("describe_model") == "gpt-4o"][-1]
 
@@ -49,30 +53,20 @@ names = dict(zip(metadata["twitter_id"].astype(str), metadata["name"]))
 prompt_ids = user_samples(sample, categories, names, exclude=exclude)["llm_k50"]
 cand_name = {int(i): n for c in candidates.values() for i, n in zip(c["twitter_user_id"], c["twitter_name"])}
 
-# ---------------------------------------------------------------- description status and parsed attributes
+# ---------------------------------------------------------------- description content and parsed attributes
 ATTR = {
-    "gender": r"\b(woman|man|female|male|women|men)\b",
-    "age": r"(\b\d0s\b|\bteen|\byoung\b|middle[- ]aged|\bolder\b|\bsenior|\badult\b|\b\d{2}\s*(?:-|to|–)\s*\d{2}\b)",
-    "ethnicity": r"\b(white|black|caucasian|african[- ]american|hispanic|latin[oax]\w*|asian)\b",
-    "education": r"(college|university|degree|high[- ]school|higher[- ]education|graduate|bachelor|primary school|educated)",
+    "gender": r"\b(?:woman|man|female|male|women|men)\b",
+    "age": r"(?:\b\d0s\b|\bteen|\byoung\b|middle[- ]aged|\bolder\b|\bsenior|\badult\b|\b\d{2}\s*(?:-|to|–)\s*\d{2}\b)",
+    "ethnicity": r"\b(?:white|black|caucasian|african[- ]american|hispanic|latin[oax]\w*|asian)\b",
+    "education": r"(?:college|university|degree|high[- ]school|higher[- ]education|graduate|bachelor|primary school|educated)",
 }
 # Topics or interests named in a description, which the prompt forbids (it leaks more than demographics)
 TOPICS = (r"\b(?:politic\w*|sport\w*|music\w*|entertainment|news|pop culture|conservative|liberal|progressive|republican|"
           r"democrat\w*|business|military|gaming|comedy|celebrit\w*|interest\w*|fan|fans|enthusiast\w*|hip[- ]hop|media)\b")
 
-
-def description_status(texts: pd.Series) -> pd.Series:
-    n = sum(texts.str.contains(p, case=False, regex=True).astype(int) for p in ATTR.values())
-    return pd.Series(np.select([n == 4, n == 0], ["complete", "declined"], "partial"), index=texts.index)
-
-
-for attr, pattern in ATTR.items():
-    m[attr] = m["description"].str.contains(pattern, case=False, regex=True)
-m["n_attr"] = m[list(ATTR)].sum(axis=1)
-m["status"] = description_status(m["description"])
-m["status_4o"] = description_status(m["description_4o"])
+n_attr = sum(m["description"].str.contains(p, case=False, regex=True).astype(int) for p in ATTR.values())
+m["status"] = np.select([n_attr == 4, n_attr == 0], ["complete", "declined"], "partial")
 m["leak"] = m["description"].str.contains(TOPICS, case=False, regex=True)
-m["leak_4o"] = m["description_4o"].str.contains(TOPICS, case=False, regex=True)
 
 
 def parse_gender(t):
@@ -105,22 +99,51 @@ def parse_age(t):
         return "Over25"
 
 
-def parse_attributes(texts: pd.Series) -> pd.DataFrame:
-    return pd.DataFrame({"gender": texts.map(parse_gender), "ethnicity": texts.map(parse_ethnicity),
-                         "education": texts.map(parse_education), "age": texts.map(parse_age)})
-
-
-parsed = parse_attributes(m.loc[m["status"] != "declined", "description"])
-parsed_4o = parse_attributes(m.loc[m["status_4o"] != "declined", "description_4o"])
+texts = m.loc[m["status"] != "declined", "description"]
+parsed = pd.DataFrame({"gender": texts.map(parse_gender), "ethnicity": texts.map(parse_ethnicity),
+                       "education": texts.map(parse_education), "age": texts.map(parse_age)})
 traits = classify_users(sample.loc[m.index], SocialVec("2020c"))
 
-# ---------------------------------------------------------------- numbers
+# Descriptive statistics of the stated attributes (results.html shows these counts, never the descriptions).
+# Each description gets the first value it states for an attribute; hedges such as "30s or 40s" also count as giving more than one.
+_RANGE = r"\s*(?:-|to|–)\s*\d{2}"
+ATTRIBUTE_VALUES = {
+    "Gender": [("Female", r"\b(?:female|woman|women)\b"), ("Male", r"\b(?:male|man|men)\b")],
+    "Age": [("Under 30", rf"\b(?:teen\w*|young adults?|20s|twenties|[12]\d{_RANGE})\b"),
+            ("30s", rf"\b(?:30s|thirties|3\d{_RANGE})\b"),
+            ("40s", rf"\b(?:40s|forties|4\d{_RANGE})\b"),
+            ("Middle-aged", r"\bmiddle[- ]aged\b"),
+            ("50 or older", rf"\b(?:[5-9]0s|older|seniors?|[5-9]\d{_RANGE})\b")],
+    "Ethnicity": [("Caucasian / White", r"\b(?:caucasian|white)\b"), ("African American / Black", r"\b(?:african[- ]american|black)\b"),
+                  ("Hispanic / Latino", r"\b(?:hispanic|latin[oax]\w*)\b"), ("Asian", r"\basian\b"),
+                  ("Mixed / diverse", r"\b(?:mixed|diverse|multi[- ]?ethnic|multiracial)\b")],
+    "Education": [("High school", r"\bhigh[- ]school\b"),
+                  ("Some higher education", r"\b(?:some college|some higher education|at least some (?:higher education|college))\b"),
+                  ("College / university degree", r"\b(?:bachelor\w*|college degree|university degree|undergraduate)\b"),
+                  ("Graduate degree", r"\b(?:graduate degree|postgraduate|master\w*|advanced degree|doctora\w*|phd)\b"),
+                  ("Higher education, level not stated", r"\b(?:higher education|college|university|degree)\b")],
+}
+UNSPECIFIC = "Higher education, level not stated"  # used only when no specific level is stated
+
+
+def stated_values(text, attr):
+    """The values a description states for an attribute, in order of first mention."""
+    hits = sorted((mt.start(), value) for value, pat in ATTRIBUTE_VALUES[attr] if (mt := re.search(pat, text, re.I)))
+    values = [v for _, v in hits]
+    specific = [v for v in values if v != UNSPECIFIC]
+    return specific or values
+
+
+attributes = pd.DataFrame({attr: m["description"].map(lambda t, a=attr: (stated_values(t, a) or ["Not stated"])[0])
+                           for attr in ATTRIBUTE_VALUES}, index=m.index)
+attributes_multiple = {attr: int(m["description"].map(lambda t, a=attr: len(stated_values(t, a)) > 1).sum()) for attr in ATTRIBUTE_VALUES}
+
+# ---------------------------------------------------------------- numbers, candidates in follower-count order
 METHODS = [
     ("random", "Random ranking (expected)", "Non-personalized"),
     ("popularity", "Popularity (follower count)", "Non-personalized"),
-    ("llm_baseline", "LLM, no user information", "Non-personalized"),
-    ("llm_demographics", "LLM, demographics by GPT-6 Luna", "This experiment"),
-    ("llm_demographics_4o", "LLM, demographics by GPT-4o", "This experiment"),
+    ("llm_baseline", "LLM, no user information (shuffled)", "Non-personalized"),
+    ("llm_demographics", "LLM, demographics by GPT-4o", "This experiment"),
     ("socialvec_k12", "SocialVec, 12 accounts", "Same 12 accounts"),
     ("llm_k12", "LLM, 12 account names", "Same 12 accounts"),
     ("socialvec_k25", "SocialVec, 25 accounts", "Same 25 accounts"),
@@ -131,6 +154,7 @@ METHODS = [
 cols = [c for c, _, _ in METHODS]
 by_cat = m.groupby("topic")[cols].mean().reindex([c for c in PAPER_CATEGORY_ORDER if c in set(m["topic"])])
 overall = by_cat.mean()
+sorted_baseline = m.groupby("topic")["llm_baseline_sorted"].mean().mean()  # for the text only
 by_cat.loc["Overall"] = overall
 
 
@@ -143,31 +167,20 @@ def ptxt(p):
     return "&lt; 0.001" if p < 0.001 else f"{p:.3f}"
 
 
+def p_eq(p):
+    """A p-value for running text: '< 0.001' or '= 0.006'."""
+    return ptxt(p) if p < 0.001 else f"= {p:.3f}"
+
+
 tests = [(label, overall["llm_demographics"] - overall[c], pv(m["llm_demographics"], m[c]))
-         for c, label, _ in METHODS if c not in ("llm_demographics", "llm_demographics_4o")]
-tests_4o = [(label, overall["llm_demographics_4o"] - overall[c], pv(m["llm_demographics_4o"], m[c]))
-            for c, label, _ in METHODS if c not in ("llm_demographics_4o", "random")]
+         for c, label, _ in METHODS if c not in ("llm_demographics", "random")]
 
-status_rows = []
-for s, label in [("complete", "All four attributes guessed"), ("partial", "Some attributes guessed"), ("declined", "Declined to guess")]:
-    g = m[m["status"] == s]
-    status_rows.append((label, len(g), g["llm_demographics"].mean(), g["llm_baseline"].mean(), g["popularity"].mean(),
-                        g["llm_k12"].mean(), g["socialvec_k12"].mean(), pv(g["llm_demographics"], g["llm_baseline"])))
-by_status_cat = m.groupby(["topic", "status"]).size().unstack(fill_value=0).reindex(by_cat.index[:-1])
+leak, clean = m[m["leak"]], m[~m["leak"]]
+subset_rows = [(label, len(g), g["llm_demographics"].mean(), g["llm_baseline"].mean(), pv(g["llm_demographics"], g["llm_baseline"]))
+               for label, g in [("All users", m), ("Description also names interests", leak), ("Description is demographics only", clean)]]
+_, leak_n, leak_d, leak_b, leak_p = subset_rows[1]
+_, clean_n, clean_d, clean_b, clean_p = subset_rows[2]
 
-
-def tau(response, reference):
-    ids = [a for a in ranked_ids(response) if a in set(reference)]
-    if len(ids) < 3:
-        return np.nan
-    pos = {a: i for i, a in enumerate(reference)}
-    return kendalltau(range(len(ids)), [pos[a] for a in ids]).statistic
-
-
-pop_order = {t: [int(i) for i in c.sort_values("followers_count", ascending=False)["twitter_user_id"]] for t, c in candidates.items()}
-m["tau_baseline"] = [tau(r, ranked_ids(b)) for r, b in zip(m["ranking_response"], m["resp_llm_baseline"])]
-m["tau_popularity"] = [tau(r, pop_order[t]) for r, t in zip(m["ranking_response"], m["topic"])]
-tau_by_status = m.groupby("status")[["tau_baseline", "tau_popularity"]].mean()
 
 def agreement_with_socialvec(parsed_attrs):
     """Per attribute: users with a parsed binary guess, agreement with SocialVec, majority-class rate, guess counts."""
@@ -182,86 +195,52 @@ def agreement_with_socialvec(parsed_attrs):
 
 
 agreement = agreement_with_socialvec(parsed)
-agreement_4o = agreement_with_socialvec(parsed_4o)
-
-# GPT-4o descriptions: who complied, who leaked interests, and what each subset scores
-clean_4o = m[(m["status_4o"] == "complete") & ~m["leak_4o"]]
-leak_4o = m[m["leak_4o"]]
-luna_declined = m[m["status"] == "declined"]
-luna_complete = m[m["status"] == "complete"]
-subsets_4o = [
-    ("All users", m),
-    ("GPT-4o description names interests or topics", leak_4o),
-    ("GPT-4o description is demographics only", m[~m["leak_4o"]]),
-    ("GPT-6 Luna declined; GPT-4o described", luna_declined),
-    ("Both models gave complete descriptions", luna_complete[luna_complete["status_4o"] == "complete"]),
-]
-subset_rows_4o = [(label, len(g), g["llm_demographics_4o"].mean(), g["llm_demographics"].mean(), g["llm_baseline"].mean(),
-                   pv(g["llm_demographics_4o"], g["llm_baseline"]))
-                  for label, g in subsets_4o]
-
-# ---------------------------------------------------------------- examples
-complete = m[m["status"] == "complete"]
-multi = complete[complete["n_relevant"] >= 2]
-ex_high = multi.sort_values(["llm_demographics", "n_relevant"], ascending=False).index[0]
-ex_low = multi.assign(gap=multi["llm_baseline"] - multi["llm_demographics"]).sort_values(["llm_demographics", "gap"], ascending=[True, False]).index[0]
-declined = m[m["status"] == "declined"]
-ex_declined = (declined["llm_demographics"] - declined["llm_demographics"].median()).abs().sort_values().index[0]
-examples = [(ex_high, "A high-AP case"), (ex_low, "A low-AP case"), (ex_declined, "A case where the model declined")]
-if 1864 in m.index and 1864 not in {ex_high, ex_low, ex_declined}:
-    examples.append((1864, "The debugging user"))
-# GPT-4o: the user GPT-6 Luna declined in both debugging rounds, and a leaking description with typical AP
-leaks = m[m["leak_4o"]]
-ex_leak = (leaks["llm_demographics_4o"] - leaks["llm_demographics_4o"].median()).abs().sort_values().index[0]
-examples_4o = [(1808, "GPT-6 Luna declined; GPT-4o described"), (ex_leak, "A GPT-4o description that names interests")]
+above = [(label.split(" (")[0].lower(), a, maj) for label, _, a, maj, _ in agreement if a - maj >= 0.05]
+dominant = {label.split(" (")[0].lower(): max(dist.items(), key=lambda kv: kv[1]) for label, _, _, _, dist in agreement}
+agreement_text = (
+    "GPT-4o's guesses lean heavily toward the most common class: "
+    + ", ".join(f"{dominant[n][1]} of its {n} guesses are {dominant[n][0]}" for n in ("education", "age", "ethnicity"))
+    + ". Agreement with SocialVec is therefore close to the majority-class rate, except for "
+    + " and ".join(f"{n} ({a:.0%} vs. {maj:.0%})" for n, a, maj in above) + "."
+) if above else ""
+cost = run_4o["cost_by_model"]
 
 # ---------------------------------------------------------------- shuffled-order rankings (run_llm_demographics_bands.py)
-sh = pd.read_csv(LLM / "demographics_bands_per_user.csv.gz")
-sh["luna_status"] = sh["user"].map(m["status"])
-sh["leak_4o"] = sh["user"].map(m["leak_4o"])
-run_sh = [r for r in runs if r.get("parts") == ["demographics-bands"]]
-sh_calls, sh_cost = sum(r["calls"] for r in run_sh), sum(r["cost_usd"] for r in run_sh)
+sh_all = pd.read_csv(LLM / "demographics_bands_per_user.csv.gz")
+sh_all["leak"] = sh_all["user"].map(m["leak"]).astype(bool)
 SH_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
-              ("ap_baseline", "LLM, no user information"), ("ap_luna", "LLM, demographics by GPT-6 Luna"),
-              ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("ap_k12", "LLM, 12 followed account names"),
-              ("ap_k25", "LLM, 25 followed account names"), ("ap_k50", "LLM, 50 followed account names"),
-              ("socialvec", "SocialVec, all followed entities")]
-SH_COLORS = {"ap_luna": "s1", "ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k50": "s3"}  # highlighted LLM rankings
-SH_BANDS = ["81-100", "181-200"]
-sh_cat = {b: sh[sh["band"] == b].groupby("topic")[[c for c, _ in SH_METHODS]].mean() for b in SH_BANDS}
+              ("ap_baseline", "LLM, no user information"), ("ap_gpt-4o", "LLM, demographics by GPT-4o"),
+              ("ap_k12", "LLM, 12 followed account names"), ("ap_k25", "LLM, 25 followed account names"),
+              ("ap_k50", "LLM, 50 followed account names"), ("socialvec", "SocialVec, all followed entities")]
+SH_COLORS = {"ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k50": "s3"}  # highlighted LLM rankings
+SH_BANDS = ["1-20", "81-100", "181-200"]  # the report shows 81-100; 1-20 feeds results.html, 181-200 (extended lists) results_backup.html
+sh_cat = {b: sh_all[sh_all["band"] == b].groupby("topic")[[c for c, _ in SH_METHODS]].mean() for b in SH_BANDS}
 sh_overall = {b: t.mean() for b, t in sh_cat.items()}  # unweighted mean over categories
-sh_n = sh.groupby("band").size().to_dict()
-
-
-def sh_groups(band):
-    """Description types within a band: users, ranking from the description, no-information ranking, p."""
-    g = sh[sh["band"] == band]
-    out = []
-    for label, sub, col in [("GPT-6 Luna: all four attributes guessed", g[g["luna_status"] == "complete"], "ap_luna"),
-                            ("GPT-6 Luna: declined to guess", g[g["luna_status"] == "declined"], "ap_luna"),
-                            ("GPT-4o: demographics only", g[~g["leak_4o"].astype(bool)], "ap_gpt-4o"),
-                            ("GPT-4o: also names interests", g[g["leak_4o"].astype(bool)], "ap_gpt-4o")]:
-        out.append((label, len(sub), sub[col].mean(), sub["ap_baseline"].mean(), pv(sub[col], sub["ap_baseline"])))
-    return out
-
-
-sh_group_rows = {b: sh_groups(b) for b in SH_BANDS}
-sh_tests = {b: {name: pv(sh.loc[sh["band"] == b, x], sh.loc[sh["band"] == b, y]) for name, x, y in [
-    ("luna_vs_baseline", "ap_luna", "ap_baseline"), ("4o_vs_baseline", "ap_gpt-4o", "ap_baseline"),
-    ("4o_vs_luna", "ap_gpt-4o", "ap_luna"), ("baseline_vs_popularity", "ap_baseline", "popularity"),
+sh_n = sh_all.groupby("band").size().to_dict()
+sh_tests = {b: {name: pv(sh_all.loc[sh_all["band"] == b, x], sh_all.loc[sh_all["band"] == b, y]) for name, x, y in [
+    ("4o_vs_baseline", "ap_gpt-4o", "ap_baseline"), ("baseline_vs_popularity", "ap_baseline", "popularity"),
     ("baseline_vs_random", "ap_baseline", "random"), ("4o_vs_socialvec", "ap_gpt-4o", "socialvec"),
     ("k12_vs_baseline", "ap_k12", "ap_baseline"), ("k12_vs_4o", "ap_k12", "ap_gpt-4o"), ("k25_vs_k12", "ap_k25", "ap_k12"),
     ("k50_vs_k12", "ap_k50", "ap_k12"), ("k50_vs_socialvec", "ap_k50", "socialvec")]} for b in SH_BANDS}
-s81 = sh[sh["band"] == "81-100"]
-order_effect = {k: (s81[a].mean(), s81[b].mean(), pv(s81[a], s81[b])) for k, a, b in [
-    ("baseline", "ap_baseline", "ordered_llm_baseline"), ("luna", "ap_luna", "ordered_llm_demographics"),
-    ("4o", "ap_gpt-4o", "ordered_llm_demographics_4o"), ("k12", "ap_k12", "ordered_llm_k12"), ("k25", "ap_k25", "ordered_llm_k25"),
-    ("k50", "ap_k50", "ordered_llm_k50")]}
-# SocialVec on the same 12 / 25 account names (Table C of results.html); it does not depend on the candidate order
-names_vs_sv = {k: (s81[f"ap_k{k}"].mean(), s81[f"ordered_socialvec_k{k}"].mean(), pv(s81[f"ap_k{k}"], s81[f"ordered_socialvec_k{k}"]))
+sh_groups = {b: [(label, len(g), g["ap_gpt-4o"].mean(), g["ap_baseline"].mean(), pv(g["ap_gpt-4o"], g["ap_baseline"]))
+                 for label, g in [("Demographics only", sh_all[(sh_all["band"] == b) & ~sh_all["leak"]]),
+                                  ("Also names interests", sh_all[(sh_all["band"] == b) & sh_all["leak"]])]] for b in SH_BANDS}
+sh = sh_all[sh_all["band"] == "81-100"]
+so, st = sh_overall["81-100"], sh_tests["81-100"]
+order_effect = {k: (sh[a].mean(), sh[b].mean(), pv(sh[a], sh[b])) for k, a, b in [
+    ("baseline", "ap_baseline", "ordered_llm_baseline"), ("4o", "ap_gpt-4o", "ordered_llm_demographics_4o"),
+    ("k12", "ap_k12", "ordered_llm_k12"), ("k25", "ap_k25", "ordered_llm_k25"), ("k50", "ap_k50", "ordered_llm_k50")]}
+# SocialVec on the same 12 / 25 account names (Table 9 of results.html); it does not depend on the candidate order
+names_vs_sv = {k: (sh[f"ap_k{k}"].mean(), sh[f"ordered_socialvec_k{k}"].mean(), pv(sh[f"ap_k{k}"], sh[f"ordered_socialvec_k{k}"]))
                for k in (12, 25)}
-sh_complete = {b: float((sh.loc[sh["band"] == b, [f"returned_{k}" for k in ("baseline", "luna", "gpt-4o", "k12", "k25", "k50")]]
-                         .eq(sh.loc[sh["band"] == b, "n_candidates"], axis=0)).mean().min()) for b in SH_BANDS}
+sh_complete = float(sh[[f"returned_{k}" for k in ("baseline", "gpt-4o", "k12", "k25", "k50")]].eq(sh["n_candidates"], axis=0).mean().min())
+
+# ---------------------------------------------------------------- examples, chosen by rule
+multi = m[(m["status"] == "complete") & ~m["leak"] & (m["n_relevant"] >= 2)]
+ex_high = multi.sort_values(["llm_demographics", "n_relevant"], ascending=False).index[0]
+ex_low = multi.assign(gap=multi["llm_baseline"] - multi["llm_demographics"]).sort_values(["llm_demographics", "gap"], ascending=[True, False]).index[0]
+ex_leak = (leak["llm_demographics"] - leak["llm_demographics"].median()).abs().sort_values().index[0]
+examples = [(ex_high, "A high-AP case"), (ex_low, "A low-AP case"), (ex_leak, "A description that also names interests")]
 
 # ---------------------------------------------------------------- html helpers
 esc = html.escape
@@ -275,82 +254,74 @@ def signed(v):
     return f"{v:+.3f}".replace("-", "−")
 
 
-def methods_table():
-    head = "".join(f"<th>{esc(label)}</th>" for _, label, _ in METHODS)
-    rows = []
-    for cat, r in by_cat.iterrows():
-        cls = " class='total'" if cat == "Overall" else ""
-        best = r[cols].max()
-        cells = "".join(f"<td class='{'hl' if c.startswith('llm_demographics') else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>" for c in cols)
-        rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th>{cells}</tr>")
-    return f"<div class='scroll'><table class='data compact'><thead><tr><th>Category</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
-
-
-def overall_chart():
-    W, L, Rm, T, rowh = 760, 250, 60, 10, 30
-    H = T + rowh * len(METHODS) + 30
-    x1 = 0.55
+def bar_chart(values, methods, colors, context, W=760, L=250, x1=0.55):
+    """Horizontal bars of overall MAP per method; methods in `colors` are highlighted."""
+    Rm, T, rowh = 60, 10, 30
+    H = T + rowh * len(methods) + 30
     px = lambda v: L + v / x1 * (W - L - Rm)
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method">']
-    for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, {context}">']
+    ticks = np.arange(0, x1 + 1e-9, 0.1)
+    for v in ticks:
         parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-24}"/>'
                      f'<text class="tick" x="{px(v):.1f}" y="{H-8}" text-anchor="middle">{v:.1f}</text>')
-    for i, (c, label, group) in enumerate(METHODS):
-        y = T + i * rowh
-        v = overall[c]
-        cls = {"llm_demographics": "s1", "llm_demographics_4o": "s2"}.get(c, "muted-bar")
+    for i, (c, label) in enumerate(methods):
+        y, v = T + i * rowh, values[c]
         w = px(v) - L
-        weight = ' font-weight="650"' if c.startswith("llm_demographics") else ""
+        weight = ' font-weight="650"' if c in colors else ""
         parts.append(f'<text class="cat" x="{L-10}" y="{y+17}" text-anchor="end"{weight}>{esc(label)}</text>'
-                     f'<path class="bar {cls}" d="M{L},{y+6} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
+                     f'<path class="bar {colors.get(c, "muted-bar")}" d="M{L},{y+6} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
                      f'<text class="delta" x="{px(v)+8:.1f}" y="{y+17}"{weight}>{v:.3f}</text>'
-                     f'<rect class="hit" x="{L}" y="{y+4}" width="{w:.1f}" height="18" data-tip="{esc(label)}<br>MAP <b>{v:.3f}</b> · {esc(group)}"/>')
+                     f'<rect class="hit" x="{L}" y="{y+4}" width="{w:.1f}" height="18" data-tip="{esc(label)}, {context}<br>MAP <b>{v:.3f}</b>"/>')
     parts.append("</svg>")
     return "\n".join(parts)
 
 
-def example_block(row, title, variant=""):
-    """One worked example; variant "" shows the GPT-6 Luna description, "_4o" the GPT-4o one."""
+def category_table(table, methods, highlight, users=None):
+    rows = []
+    for cat, r in table.iterrows():
+        cls = " class='total'" if cat == "Overall" else ""
+        best = r[[c for c, _ in methods]].max()
+        cells = "".join(f"<td class='{'hl' if c in highlight else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>"
+                        for c, _ in methods)
+        n = f"<td>{users.get(cat, '')}</td>" if users is not None else ""
+        rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th>{n}{cells}</tr>")
+    head = ("<th>Users</th>" if users is not None else "") + "".join(f"<th>{esc(label)}</th>" for _, label in methods)
+    return f"<div class='scroll'><table class='data compact'><thead><tr><th>Category</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
+
+
+def example_block(row, title):
     r = m.loc[row]
     topic = r["topic"]
     followed = names_of(prompt_ids[row], names)
     relevant = {f for f in sample.at[row, "friends_ids"] if f in set(candidates[topic]["twitter_user_id"])}
-    order = ranked_ids(r[f"ranking_response{variant}"])
+    order = ranked_ids(r["ranking_response"])
     missing = [i for i in candidates[topic]["twitter_user_id"] if int(i) not in set(order)]
     items = "".join(f"<li class='{'hit-item' if a in relevant else ''}'>{esc(cand_name.get(a, str(a)))}{' ✓' if a in relevant else ''}</li>" for a in order)
     found = sorted(order.index(a) + 1 for a in relevant if a in order)
     calc = " + ".join(f"{i + 1}/{p}" for i, p in enumerate(found))
-    model = "GPT-4o" if variant else "GPT-6 Luna"
-    this = f"llm_demographics{variant}"
     comp = [("Random (expected)", "random"), ("Popularity", "popularity"), ("LLM, no information", "llm_baseline"),
-            ("LLM, demographics by GPT-6 Luna", "llm_demographics"), ("LLM, demographics by GPT-4o", "llm_demographics_4o"),
-            ("LLM, 12 names", "llm_k12"), ("SocialVec, same 12", "socialvec_k12"), ("SocialVec, all entities", "socialvec")]
-    comp_rows = "".join(f"<tr{' class=hl-row' if c == this else ''}><th>{n}</th><td>{f3(r[c])}</td></tr>" for n, c in comp)
-    status_label = {"complete": "all four attributes guessed", "partial": "some attributes guessed",
-                    "declined": "declined to guess"}[r[f"status{variant}"]]
-    if variant and r["leak_4o"]:
-        status_label += "; also names interests"
-    other = ""
-    if variant:
-        other = (f"<p class='step'><span>·</span>For comparison, GPT-6 Luna's description</p>"
-                 f"<p class='quote small'>{esc(r['description'])}</p>")
+            ("LLM, demographics by GPT-4o", "llm_demographics"), ("LLM, 12 names", "llm_k12"),
+            ("SocialVec, same 12", "socialvec_k12"), ("SocialVec, all entities", "socialvec")]
+    comp_rows = "".join(f"<tr{' class=hl-row' if c == 'llm_demographics' else ''}><th>{n}</th><td>{f3(r[c])}</td></tr>" for n, c in comp)
+    label = {"complete": "all four attributes guessed", "partial": "some attributes guessed", "declined": "no attribute guessed"}[r["status"]]
+    if r["leak"]:
+        label += "; also names interests"
     return f"""
     <div class="example card">
       <h4>{esc(title)} · user row {row} · {esc(CATEGORY_LABELS[topic])}</h4>
       <div class="ex-grid">
         <div>
-          <p class="step"><span>1</span>Accounts given to the model ({len(prompt_ids[row])} names)</p>
+          <p class="step"><span>1</span>Accounts given to GPT-4o ({len(prompt_ids[row])} names)</p>
           <p class="quote small">{esc(followed)}</p>
-          <p class="step"><span>2</span>Description by {model} ({status_label})</p>
-          <p class="quote">{esc(r[f'description{variant}'])}</p>
-          {other}
+          <p class="step"><span>2</span>Description by GPT-4o ({label})</p>
+          <p class="quote">{esc(r['description'])}</p>
           <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
           <ol class="ranking">{items}</ol>
           {f"<p class='caption'>Not returned by the model: {', '.join(esc(cand_name.get(int(i), str(i))) for i in missing)}.</p>" if missing else ""}
         </div>
         <div>
           <p class="step"><span>4</span>Score</p>
-          <p class="ap">AP = ({calc}) / {len(found)} = <b>{r[this]:.3f}</b></p>
+          <p class="ap">AP = ({calc}) / {len(found)} = <b>{r['llm_demographics']:.3f}</b></p>
           <table class="data compact mini"><tbody>{comp_rows}</tbody></table>
         </div>
       </div>
@@ -358,7 +329,6 @@ def example_block(row, title, variant=""):
 
 
 EXTRA_CSS = """
-
 table.data td.hl{background:var(--accent-wash)}
 table.data tr.hl-row th,table.data tr.hl-row td{background:var(--accent-wash);font-weight:650}
 .example h4{margin:0 0 12px;font-size:16px}
@@ -378,115 +348,18 @@ pre.prompt{white-space:pre-wrap;font-size:12.5px}
 """
 
 # ---------------------------------------------------------------- page
-comp_label, comp_n, comp_demo, comp_base, comp_pop, comp_k12, comp_sv12, comp_p = status_rows[0]
-dec_label, dec_n, dec_demo, dec_base, dec_pop, dec_k12, dec_sv12, dec_p = status_rows[2]
-part_n = status_rows[1][1]
-
-status_table = "".join(
-    f"<tr><th>{label}</th><td>{n}</td><td class='hl'>{f3(d)}</td><td>{f3(b)}</td><td>{f3(p)}</td><td>{f3(k)}</td><td>{f3(s12)}</td><td>{ptxt(pp) if not pd.isna(pp) else ''}</td></tr>"
-    for label, n, d, b, p, k, s12, pp in status_rows)
-cat_status = "".join(f"<tr><th>{esc(CATEGORY_LABELS[c])}</th><td>{r.get('complete', 0)}</td><td>{r.get('partial', 0)}</td><td>{r.get('declined', 0)}</td></tr>"
-                     for c, r in by_status_cat.iterrows())
+o = overall
+counts = m["status"].value_counts()
 test_rows = "".join(f"<tr><th>{esc(label)}</th><td>{signed(diff)}</td><td>{ptxt(p)}</td></tr>" for label, diff, p in tests)
+subset_table = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td class='hl'>{f3(d)}</td><td>{f3(b)}</td><td>{ptxt(p)}</td></tr>"
+                       for label, n, d, b, p in subset_rows)
 agree_rows = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td>{a:.0%}</td><td>{maj:.0%}</td><td class='muted'>{esc(', '.join(f'{k} {v}' for k, v in dist.items()))}</td></tr>"
                      for label, n, a, maj, dist in agreement)
-tau_rows = "".join(f"<tr><th>{s.capitalize()}</th><td>{f3(r['tau_baseline'])}</td><td>{f3(r['tau_popularity'])}</td></tr>"
-                   for s, r in tau_by_status.reindex(["complete", "partial", "declined"]).iterrows())
+group_rows = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td class='hl'>{f3(d)}</td><td>{f3(b)}</td><td>{signed(d - b)}</td><td>{ptxt(p)}</td></tr>"
+                     for label, n, d, b, p in sh_groups["81-100"])
+SORTED_LABELS = [(c, label) for c, label, _ in METHODS]
+g_clean = sh_groups["81-100"][0]
 
-above = [(label.split(" (")[0].lower(), a, maj) for label, _, a, maj, _ in agreement if a - maj >= 0.1]
-near = [(label.split(" (")[0].lower(), a, maj) for label, _, a, maj, _ in agreement if a - maj < 0.1]
-agreement_text = (
-    "Where the model did state an attribute, its guesses agree with SocialVec's classifiers well beyond a constant guess for "
-    + " and ".join(f"{n} ({a:.0%} vs. {maj:.0%})" for n, a, maj in above)
-    + ". For " + " and ".join(f"{n} ({a:.0%} vs. {maj:.0%})" for n, a, maj in near)
-    + ", agreement is close to what always guessing the most common class would give, so the guesses add little there."
-) if above and near else ""
-
-# GPT-4o section tables
-test_rows_4o = "".join(f"<tr><th>{esc(label)}</th><td>{signed(diff)}</td><td>{ptxt(p)}</td></tr>" for label, diff, p in tests_4o)
-subset_table_4o = "".join(
-    f"<tr><th>{esc(label)}</th><td>{n}</td><td class='hl'>{f3(g4)}</td><td>{f3(gl)}</td><td>{f3(b)}</td><td>{ptxt(p) if not pd.isna(p) else ''}</td></tr>"
-    for label, n, g4, gl, b, p in subset_rows_4o)
-agree_rows_4o = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td>{a:.0%}</td><td>{maj:.0%}</td><td class='muted'>{esc(', '.join(f'{k} {v}' for k, v in dist.items()))}</td></tr>"
-                        for label, n, a, maj, dist in agreement_4o)
-outcomes = "".join(
-    f"<tr><th>{model}</th><td>{(m[s] == 'complete').sum()}</td><td>{(m[s] == 'partial').sum()}</td><td>{(m[s] == 'declined').sum()}</td><td>{int(m[lk].sum())}</td></tr>"
-    for model, s, lk in [("GPT-6 Luna", "status", "leak"), ("GPT-4o", "status_4o", "leak_4o")])
-s4 = {label: (n, g4, gl, b, p) for label, n, g4, gl, b, p in subset_rows_4o}
-leak_n, leak_g4, _, leak_b, leak_p = s4["GPT-4o description names interests or topics"]
-clean_n, clean_g4, _, clean_b, clean_p = s4["GPT-4o description is demographics only"]
-switch_n, switch_g4, switch_gl, switch_b, _ = s4["GPT-6 Luna declined; GPT-4o described"]
-both_n, both_g4, both_gl, both_b, _ = s4["Both models gave complete descriptions"]
-p_4o_luna = pv(m["llm_demographics_4o"], m["llm_demographics"])
-p_switch = pv(luna_declined["llm_demographics_4o"], luna_declined["llm_demographics"])
-p_both = pv(*[luna_complete.loc[luna_complete["status_4o"] == "complete", c] for c in ("llm_demographics_4o", "llm_demographics")])
-switch_leak, switch_clean = luna_declined[luna_declined["leak_4o"]], luna_declined[~luna_declined["leak_4o"]]
-p_switch_clean = pv(switch_clean["llm_demographics_4o"], switch_clean["llm_demographics"])
-cost_4o = run_4o["cost_by_model"]
-
-
-def p_eq(p):
-    """A p-value for running text: '< 0.001' or '= 0.006'."""
-    return ptxt(p) if p < 0.001 else f"= {p:.3f}"
-
-
-above_4o = [(label.split(" (")[0].lower(), a, maj) for label, _, a, maj, _ in agreement_4o if a - maj >= 0.05]
-dominant = {label.split(" (")[0].lower(): max(dist.items(), key=lambda kv: kv[1]) for label, _, _, _, dist in agreement_4o}
-agreement_text_4o = (
-    "GPT-4o's guesses lean heavily toward the most common class: "
-    + ", ".join(f"{dominant[n][1]} of its {n} guesses are {dominant[n][0]}" for n in ("education", "age", "ethnicity"))
-    + ". Agreement with SocialVec is therefore close to the majority-class rate, except for "
-    + " and ".join(f"{n} ({a:.0%} vs. {maj:.0%})" for n, a, maj in above_4o) + "."
-) if above_4o else ""
-
-def shuffled_chart(band):
-    """Overall MAP per method for one band, shuffled candidates."""
-    W, L, Rm, T, rowh = 520, 230, 50, 6, 28
-    H = T + rowh * len(SH_METHODS) + 28
-    x1 = 0.6
-    px = lambda v: L + v / x1 * (W - L - Rm)
-    o_ = sh_overall[band]
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Overall MAP by method, ranks {band}">']
-    for v in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
-        parts.append(f'<line class="grid" x1="{px(v):.1f}" x2="{px(v):.1f}" y1="{T}" y2="{H-22}"/>'
-                     f'<text class="tick" x="{px(v):.1f}" y="{H-6}" text-anchor="middle">{v:.1f}</text>')
-    for i, (c, label) in enumerate(SH_METHODS):
-        y = T + i * rowh
-        v = o_[c]
-        cls = SH_COLORS.get(c, "muted-bar")
-        w = px(v) - L
-        weight = ' font-weight="650"' if c in SH_COLORS else ""
-        parts.append(f'<text class="cat" x="{L-10}" y="{y+16}" text-anchor="end"{weight}>{esc(label)}</text>'
-                     f'<path class="bar {cls}" d="M{L},{y+5} h{w-4:.1f} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-{w-4:.1f} z"/>'
-                     f'<text class="delta" x="{px(v)+8:.1f}" y="{y+16}"{weight}>{v:.3f}</text>'
-                     f'<rect class="hit" x="{L}" y="{y+3}" width="{w:.1f}" height="18" data-tip="{esc(label)}, ranks {band}<br>MAP <b>{v:.3f}</b>"/>')
-    parts.append("</svg>")
-    return "\n".join(parts)
-
-
-def shuffled_category_table(band):
-    t = sh_cat[band].reindex([c for c in PAPER_CATEGORY_ORDER if c in sh_cat[band].index])
-    users = sh[sh["band"] == band].groupby("topic").size()
-    rows = []
-    for cat, r in t.iterrows():
-        best = r.max()
-        cells = "".join(f"<td class='{'hl' if c in SH_COLORS else ''}'>{'<b>' if r[c] == best else ''}{f3(r[c])}{'</b>' if r[c] == best else ''}</td>"
-                        for c, _ in SH_METHODS)
-        rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td>{users[cat]}</td>{cells}</tr>")
-    o_ = sh_overall[band]
-    rows.append("<tr class='total'><th>Overall</th><td>" + f"{sh_n[band]}</td>" + "".join(f"<td>{f3(o_[c])}</td>" for c, _ in SH_METHODS) + "</tr>")
-    head = "".join(f"<th>{esc(label)}</th>" for _, label in SH_METHODS)
-    return f"<div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>"
-
-
-def shuffled_group_table(band):
-    body = "".join(f"<tr><th>{esc(label)}</th><td>{n}</td><td class='hl'>{f3(d)}</td><td>{f3(b)}</td><td>{signed(d - b)}</td><td>{ptxt(p)}</td></tr>"
-                   for label, n, d, b, p in sh_group_rows[band])
-    return ("<div class='scroll'><table class='data compact'><thead><tr><th>Description</th><th>Users</th><th>Ranking from the description</th>"
-            "<th>LLM, no user information</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead>" f"<tbody>{body}</tbody></table></div>")
-
-
-o = overall
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Demographic LLM Ranking</title><style>{CSS}{EXTRA_CSS}</style></head>
@@ -495,16 +368,15 @@ page = f"""<!doctype html>
 <header class="hero">
   <p class="eyebrow">Extension · Social Knowledge for Cross-Domain User Preference Modeling</p>
   <h1>Can demographics alone personalize an LLM's recommendations?</h1>
-  <p class="lede">An LLM first infers a user's gender, age, ethnicity and education from the names of accounts they follow,
-  then ranks less popular entities given only that inferred description. I compare this with ranking from the account
-  names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users. I then repeat the
-  ranking with shuffled candidates, for ranks 81–100 and 181–200 (Section 6).</p>
+  <p class="lede">GPT-4o infers a user's gender, age, ethnicity and education from the names of accounts they follow, and
+  GPT-6 Luna then ranks less popular entities given only that inferred description. I compare this with ranking from the
+  account names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users, first with
+  the candidates in follower-count order (Section 2) and then shuffled (Section 4).</p>
   <div class="tiles">
-    <div class="tile"><div class="label">MAP, demographic description only</div><div class="value">{o['llm_demographics']:.3f} · {o['llm_demographics_4o']:.3f}</div><div class="sub">descriptions by GPT-6 Luna · by GPT-4o; {o['llm_baseline']:.3f} with no user information</div></div>
-    <div class="tile"><div class="label">Users the model declined to describe</div><div class="value">{dec_n} · {int((m['status_4o'] == 'declined').sum())}</div><div class="sub">of {len(m)}: GPT-6 Luna · GPT-4o, despite being told to always guess</div></div>
-    <div class="tile"><div class="label">GPT-4o descriptions that also name interests</div><div class="value">{leak_n} / {len(m)}</div><div class="sub">MAP {leak_g4:.3f} for those users; {clean_g4:.3f} for demographics-only descriptions</div></div>
-    <div class="tile"><div class="label">MAP when GPT-6 Luna guessed all four attributes</div><div class="value">{comp_demo:.3f}</div><div class="sub">vs. {comp_base:.3f} without user information; {comp_k12:.3f} from 12 account names ({comp_n} users)</div></div>
-    <div class="tile"><div class="label">Shuffled candidates: demographics-only vs. no information</div><div class="value">{sh_group_rows['81-100'][2][2]:.3f} vs. {sh_group_rows['81-100'][2][3]:.3f}</div><div class="sub">GPT-4o's descriptions without interests, ranks 81–100 ({sh_group_rows['181-200'][2][2]:.3f} vs. {sh_group_rows['181-200'][2][3]:.3f} at ranks 181–200)</div></div>
+    <div class="tile"><div class="label">Shuffled candidates: demographics vs. no information</div><div class="value">{so['ap_gpt-4o']:.3f} vs. {so['ap_baseline']:.3f}</div><div class="sub">MAP, p {p_eq(st['4o_vs_baseline'])}</div></div>
+    <div class="tile"><div class="label">Shuffled, demographics-only descriptions</div><div class="value">{g_clean[2]:.3f} vs. {g_clean[3]:.3f}</div><div class="sub">{g_clean[1]} users whose description names no interests</div></div>
+    <div class="tile"><div class="label">Descriptions that also name interests</div><div class="value">{leak_n} / {len(m)}</div><div class="sub">against the instruction to describe demographics only</div></div>
+    <div class="tile"><div class="label">Shuffled: 12 account names</div><div class="value">{so['ap_k12']:.3f}</div><div class="sub">above the demographic description (p {p_eq(st['k12_vs_4o'])})</div></div>
   </div>
 </header>
 
@@ -517,14 +389,14 @@ page = f"""<!doctype html>
   for the LLM experiments on this band: 30 users per category (270 in total), drawn with a fixed seed from the users
   sampled for that category who follow at least one candidate. The candidates a user follows are the relevant answers.</p>
 
-  <p><b>Stage 1: demographic inference.</b> For each user, the LLM receives the names of the accounts listed in that user's
-  k = 50 prompt. These are 50 accounts drawn at random from everything the user follows, after removing every listed entity of the
-  target category, keeping only accounts with a known display name ({m['n_accounts_described'].mean():.1f} names on average;
-  minimum {int(m['n_accounts_described'].min())}). The model is asked for a one- or two-sentence description stating the user's
-  most likely gender, age, ethnicity and level of education. It is instructed to always guess from stereotypes about the
-  typical audience of the accounts, never to state that the attributes cannot be determined, and not to mention interests or
-  accounts, so that the description carries demographic information only. The prompt, in the dspy signature format of the
-  original experiments:</p>
+  <p><b>Stage 1: demographic inference (GPT-4o).</b> For each user, GPT-4o (default sampling settings) receives the names of the
+  accounts listed in that user's k = 50 prompt. These are 50 accounts drawn at random from everything the user follows, after
+  removing every listed entity of the target category, keeping only accounts with a known display name
+  ({m['n_accounts_described'].mean():.1f} names on average; minimum {int(m['n_accounts_described'].min())}). The model is asked for a
+  one- or two-sentence description stating the user's most likely gender, age, ethnicity and level of education. It is
+  instructed to always guess from stereotypes about the typical audience of the accounts, never to state that the attributes
+  cannot be determined, and not to mention interests or accounts, so that the description carries demographic information
+  only. The prompt, in the dspy signature format of the original experiments:</p>
   <pre class="prompt">Given the names of accounts that a Twitter user follows, write a short, concise description of the user that states their
 most likely gender, age, ethnicity, and level of education (primary school, high school, higher education, etc.).
 Deduce these attributes only from the names of the accounts they follow.
@@ -536,9 +408,10 @@ Describe only these four attributes: do not mention the user's interests or hobb
 Input  followed_accounts: Names of accounts the user follows
 Output description: One or two sentences stating the user's most likely gender, age, ethnicity, and level of education</pre>
 
-  <p><b>Stage 2: ranking from the description.</b> The ranking prompt is the authors' personalized ranking prompt, with the
-  list of followed accounts replaced by the Stage 1 description. As in the original experiments, the candidates are given as a
-  JSON list of ids and display names, sorted by follower count, and the model must return a full ranking of the ids:</p>
+  <p><b>Stage 2: ranking from the description (GPT-6 Luna).</b> The ranking prompt is the authors' personalized ranking prompt,
+  with the list of followed accounts replaced by the Stage 1 description. The candidates are given as a JSON list of ids and
+  display names, and the model must return a full ranking of the ids. GPT-6 Luna runs at reasoning effort <i>low</i>, as in the
+  other LLM experiments:</p>
   <pre class="prompt">given the below Twitter user, for whom we provide a short demographic description, and a list of possible accounts to
 recommend for the user to follow, create a prioritized recommendation list.
 You must rank the entire list provided to you.
@@ -548,6 +421,10 @@ include name or reasoning.
 
 Inputs user_description, potential_accounts (JSON list of twitter_user_id and names)
 Output ranked_ids</pre>
+
+  <p><b>Candidate order.</b> Section 2 lists the candidates sorted by follower count, as in the original experiments. Because an
+  LLM partly copies the order it is given, Section 4 repeats Stage 2 with the candidates in one random order per user, shared by
+  every condition of that user.</p>
 
   <p><b>Evaluation.</b> Each ranking is scored by average precision over the candidates the user follows, using the legacy
   scoring rule (relevant candidates missing from the response are skipped). MAP is the mean over users within a category,
@@ -560,300 +437,148 @@ Output ranked_ids</pre>
   </ul>
   Differences are tested with two-sided paired Wilcoxon signed-rank tests on per-user AP.</p>
 
-  <p><b>Repeating Stage 1 with GPT-4o.</b> Because GPT-6 Luna often refused to infer the attributes (Section 3), we
-  repeated Stage 1 with GPT-4o (default sampling settings), using the identical prompt and inputs. Stage 2 was left
-  unchanged: GPT-6 Luna ranks the candidates from GPT-4o's description, so the two runs differ only in who wrote the
-  description. Since the prompt forbids mentioning interests, we also flag descriptions that name topics or interests (for
-  example politics, sports, music or news) as <i>leaking</i> information beyond demographics.</p>
-
-  <p><b>Implementation.</b> GPT-6 Luna with reasoning effort <i>low</i>, called through dspy without caching, under a
-  spending cap. Responses are cached locally per prompt version (this run uses version {PROMPT_VERSION}).
-  dspy's end-of-output marker, which the model sometimes leaves inside the description, is removed before Stage 2.
-  To measure how much demographic information each description carries, we label it <i>complete</i> if it states a value
-  for all four attributes, <i>declined</i> if it states none, and <i>partial</i> otherwise. For complete and partial
-  descriptions, we parse the stated values into the binary classes of SocialVec's trait classifiers, and compare them with
-  those classifiers' predictions from the user's full embedding.</p>
+  <p><b>Description content.</b> A description is <i>complete</i> if it states a value for all four attributes, <i>declined</i> if
+  it states none, and <i>partial</i> otherwise. Since the prompt forbids mentioning interests, descriptions that name topics or
+  interests (for example politics, sports, music or news) are flagged as <i>naming interests</i>: they carry information beyond
+  demographics. Stated values are also parsed into the binary classes of SocialVec's trait classifiers and compared with those
+  classifiers' predictions from the user's full embedding.</p>
 </section>
 
 <section>
-  <h2><span class="num">2</span>Results</h2>
-  <p class="intro">With GPT-6 Luna's descriptions, demographics add almost nothing: {o['llm_demographics']:.3f} MAP, compared with
-  {o['llm_baseline']:.3f} for the LLM without user information and {o['popularity']:.3f} for popularity. GPT-4o's descriptions
-  give {o['llm_demographics_4o']:.3f}, but most of that gain comes from descriptions that break the prompt by naming the user's
-  interests (Section 4). Naming 12 followed accounts gives {o['llm_k12']:.3f}.</p>
-  <div class="card">{overall_chart()}
+  <h2><span class="num">2</span>Results with candidates in follower-count order</h2>
+  <p class="intro">GPT-4o's descriptions give {o['llm_demographics']:.3f} MAP, compared with {o['llm_baseline']:.3f} for the LLM
+  without user information and {o['popularity']:.3f} for popularity. The gain is largest for descriptions that break the prompt by
+  naming the user's interests (Section 3). Naming 12 followed accounts gives {o['llm_k12']:.3f}. In every table, the LLM without user
+  information gets the candidates in a random order per user; with the candidates in follower-count order it scores
+  {sorted_baseline:.3f}, because it partly copies the
+  presented order (Section 4). The rankings that use user information barely depend on the order, so they are compared with the
+  shuffled baseline.</p>
+  <div class="card">{bar_chart(o, SORTED_LABELS, {"llm_demographics": "s2"}, "candidates in follower-count order")}
   <p class="caption">Overall MAP (mean over nine categories) on the same 270 users. The highlighted bar is this experiment.</p></div>
 
   <h3>Per category</h3>
-  <div class="card">{methods_table()}
+  <div class="card">{category_table(by_cat, SORTED_LABELS, {"llm_demographics"})}
   <p class="caption">MAP per category; bold marks the best method in each row. With 30 users per category, per-category MAP has a
-  standard error of about 0.05. The demographic ranking helps most for musical artists ({by_cat.loc['MusicalArtist','llm_demographics']:.3f} vs.
-  {by_cat.loc['MusicalArtist','llm_baseline']:.3f} without user information) and news outlets ({by_cat.loc['news','llm_demographics']:.3f} vs.
-  {by_cat.loc['news','llm_baseline']:.3f}), and hurts for politicians ({by_cat.loc['Politician','llm_demographics']:.3f} vs.
-  {by_cat.loc['Politician','llm_baseline']:.3f}).</p></div>
+  standard error of about 0.05.</p></div>
 
   <h3>Statistical tests</h3>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-6 Luna vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-4o vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
   <tbody>{test_rows}</tbody></table></div>
-  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method. The same tests for
-  GPT-4o's descriptions are in Section 4.</p></div>
+  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method.</p></div>
 </section>
 
 <section>
-  <h2><span class="num">3</span>The model often refused to infer demographics</h2>
-  <p class="intro">Despite the instruction to always guess, the model declined to state any attribute for {dec_n} of the {len(m)}
-  users ({dec_n / len(m):.0%}). Typical answers were "I can’t infer the user’s gender, age, ethnicity, or education level
-  from the accounts they follow." It gave all four attributes for {comp_n} users, and only some for {part_n}, typically
-  refusing ethnicity alone. Refusals occur in every category, from {by_status_cat['declined'].min()} to {by_status_cat['declined'].max()}
-  of the 30 users, and are most frequent for {' and '.join(CATEGORY_LABELS[c].lower() for c in by_status_cat.index[by_status_cat['declined'] == by_status_cat['declined'].max()])}.
-  The debugging runs did not reveal how common refusals are. Row 1864 complied, while row 1808, which had declined under the
-  first prompt, declined again in the full run despite the stricter instruction.</p>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Description</th><th>Users</th><th>LLM, demographics</th>
-  <th>LLM, no information</th><th>Popularity</th><th>LLM, 12 names</th><th>SocialVec, same 12</th><th>p (demographics vs. no information)</th></tr></thead>
-  <tbody>{status_table}</tbody></table></div>
-  <p class="caption">MAP by description type (users pooled across categories, so values are not directly comparable to the
-  per-category means above).</p></div>
-  <p><b>When the model does describe the user, demographics carry real signal.</b> For the {comp_n} complete descriptions, the
-  demographic ranking reaches {comp_demo:.3f}, compared with {comp_base:.3f} without user information (p = {comp_p:.2f}) and
-  {comp_pop:.3f} for popularity. It is on par with the LLM given 12 account names ({comp_k12:.3f}) and with SocialVec on those
-  same 12 accounts ({comp_sv12:.3f}). For declined descriptions, the model ranks from an uninformative sentence, and the result
-  is slightly but significantly worse than the no-information baseline ({dec_demo:.3f} vs. {dec_base:.3f}, p = {dec_p:.2f}).
-  The overall null result is therefore mostly a consequence of the refusals.</p>
-  <p><b>Caveat.</b> With {comp_n} users, the complete-description estimate is uncertain. These users were also not selected at
-  random: the model may comply more readily when the accounts point clearly to a demographic group, which may also make the
-  ranking easier.</p>
+  <h2><span class="num">3</span>What the descriptions contain</h2>
+  <p class="intro">GPT-4o described every user: {counts.get('complete', 0)} descriptions state all four attributes,
+  {counts.get('partial', 0)} only some (in wording the parser misses, such as "twenties" or "diverse ethnicity") and
+  {counts.get('declined', 0)} none. But {leak_n} of the {len(m)} ({leak_n / len(m):.0%}) also name the user's interests, despite the
+  instruction, for example "…with a higher education level, likely due to the interest in diverse media and sports analysts,
+  personalities, and NFL-related accounts".</p>
 
-  <div class="panels">
-    <div class="panel"><h4>How much the description changes the ranking</h4><div class="scroll"><table class="data compact">
-    <thead><tr><th>Description</th><th>τ with no-information ranking</th><th>τ with popularity order</th></tr></thead>
-    <tbody>{tau_rows}</tbody></table></div>
-    <p class="caption">Mean Kendall τ between the demographic ranking and (a) the LLM's ranking without user information for
-    the same category, (b) follower-count order. A complete description moves the ranking further away from both.</p></div>
-    <div class="panel"><h4>Descriptions by category</h4><div class="scroll"><table class="data compact">
-    <thead><tr><th>Category</th><th>Complete</th><th>Partial</th><th>Declined</th></tr></thead><tbody>{cat_status}</tbody></table></div></div>
-  </div>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Users</th><th>n</th><th>LLM, demographics by GPT-4o</th>
+  <th>LLM, no information</th><th>p</th></tr></thead><tbody>{subset_table}</tbody></table></div>
+  <p class="caption">MAP over the users in each row, pooled across categories. The demographic ranking lists the candidates by
+  follower count; the baseline gets them shuffled.</p></div>
+
+  <p><b>Leaked interests give most of the gain, but demographics alone also help.</b> For the {leak_n} users whose description names
+  interests, the ranking reaches {leak_d:.3f}, far above the no-information baseline ({leak_b:.3f}, p {p_eq(leak_p)}). For the remaining
+  {clean_n} users, whose descriptions are demographics only, the score is {clean_d:.3f} against {clean_b:.3f} (p {p_eq(clean_p)}): a smaller
+  but significant gain. Against the baseline with sorted candidates, the demographics-only descriptions had looked no better
+  ({clean_d:.3f} vs. {clean['llm_baseline_sorted'].mean():.3f}, p {p_eq(pv(clean['llm_demographics'], clean['llm_baseline_sorted']))}).</p>
 
   <h3>Do the guesses agree with SocialVec's trait classifiers?</h3>
   <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Attribute</th><th>Users with a parsed guess</th>
-  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>LLM guesses</th></tr></thead><tbody>{agree_rows}</tbody></table></div>
-  <p class="caption">For complete and partial descriptions, the stated value is mapped to the classifier's binary classes
-  (descriptions stating another value, or an ambiguous one such as "20s" for age, are left out). The majority-class rate is
-  the agreement a constant guess of SocialVec's most frequent class would achieve. Treat this as a rough check: the parsing is
-  rule-based, and SocialVec's classifiers are themselves only estimates.</p></div>
+  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>GPT-4o guesses</th></tr></thead><tbody>{agree_rows}</tbody></table></div>
+  <p class="caption">The stated value is mapped to the classifier's binary classes (descriptions stating another value, or an
+  ambiguous one such as "20s" for age, are left out). The majority-class rate is the agreement a constant guess of SocialVec's
+  most frequent class would achieve. Treat this as a rough check: the parsing is rule-based, and SocialVec's classifiers are
+  themselves only estimates.</p></div>
   <p>{agreement_text}</p>
 </section>
 
 <section>
-  <h2><span class="num">4</span>Repeating the inference with GPT-4o</h2>
-  <p class="intro">GPT-4o's policy is looser: it described every user. But it also often ignored the instruction to describe
-  demographics only, and the extra information it added explains most of its advantage.</p>
+  <h2><span class="num">4</span>Shuffled candidates</h2>
+  <p class="intro">With the candidates sorted by follower count, an LLM that partly follows the order it is given gets a
+  popularity ranking for free, which can hide what a description adds. Here every user's candidates are put in one random order,
+  used for all of that user's rankings: with no user information, from GPT-4o's description, and from the names of 12, 25 or 50
+  followed accounts (the prompts of Table 9 in <code>results/results.html</code>). Differences between them therefore come from the
+  user information alone. All {sh_n['81-100']} users are included.</p>
 
-  <div class="panels">
-    <div class="panel"><h4>Description outcomes</h4><div class="scroll"><table class="data compact">
-    <thead><tr><th>Stage 1 model</th><th>Complete</th><th>Partial</th><th>Declined</th><th>Names interests</th></tr></thead>
-    <tbody>{outcomes}</tbody></table></div>
-    <p class="caption">Users out of {len(m)}. GPT-4o's two "partial" descriptions do guess all four attributes, but in wording the
-    parser misses ("twenties", "diverse ethnicity"). The last column counts descriptions that name topics or interests.</p></div>
-    <div class="panel"><h4>Cost</h4><div class="scroll"><table class="data compact"><thead><tr><th>Model</th><th>Role</th><th>Cost</th></tr></thead><tbody>
-    <tr><th>GPT-4o</th><td>Stage 1, {len(m)} descriptions</td><td>${cost_4o.get('openai/gpt-4o', 0):.2f}</td></tr>
-    <tr><th>GPT-6 Luna</th><td>Stage 2, {len(m)} rankings</td><td>${cost_4o.get('openai/gpt-6-luna', 0):.2f}</td></tr>
-    <tr class="total"><th>Total</th><td></td><td>${run_4o['cost_usd']:.2f}</td></tr></tbody></table></div></div>
-  </div>
-
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Users</th><th>n</th><th>Demographics by GPT-4o</th>
-  <th>Demographics by GPT-6 Luna</th><th>LLM, no information</th><th>p (GPT-4o vs. no information)</th></tr></thead>
-  <tbody>{subset_table_4o}</tbody></table></div>
-  <p class="caption">MAP over the users in each row, pooled across categories. In every row, Stage 2 is GPT-6 Luna.</p></div>
-
-  <p><b>More descriptions, mostly from leaked interests.</b>
-  <ul>
-    <li><i>Overall:</i> GPT-4o's descriptions improve on GPT-6 Luna's ({o['llm_demographics_4o']:.3f} vs. {o['llm_demographics']:.3f}
-    overall MAP, p = {p_4o_luna:.3f}).</li>
-    <li><i>Leaking descriptions:</i> {leak_n} of them ({leak_n / len(m):.0%}) also name the user's interests, despite the instruction,
-    for example "…with a higher education level, likely due to the interest in diverse media and sports analysts,
-    personalities, and NFL-related accounts". For these users the ranking reaches {leak_g4:.3f}, far above the no-information
-    baseline ({leak_b:.3f}, p {p_eq(leak_p)}).</li>
-    <li><i>Demographics-only descriptions:</i> for the remaining {clean_n} users the score is {clean_g4:.3f}, indistinguishable from
-    the baseline ({clean_b:.3f}, p = {clean_p:.2f}).</li>
-  </ul>
-  With the candidates sorted by popularity, GPT-4o's advantage therefore reflects interest information, not
-  demographics. Section 6 shows that this changes once the candidates are shuffled.</p>
-
-  <p><b>Same users, both models.</b>
-  <ul>
-    <li><i>Both models complete:</i> where GPT-6 Luna had given a complete description, GPT-4o's descriptions perform the same
-    ({both_g4:.3f} vs. {both_gl:.3f}, {both_n} users, p = {p_both:.2f}).</li>
-    <li><i>GPT-6 Luna declined:</i> for the {switch_n} users GPT-6 Luna refused, GPT-4o's descriptions raise MAP from
-    {switch_gl:.3f} to {switch_g4:.3f} (p {p_eq(p_switch)}). Most of this gain comes from the {len(switch_leak)} of them whose
-    GPT-4o description leaked interests ({switch_leak['llm_demographics'].mean():.3f} → {switch_leak['llm_demographics_4o'].mean():.3f}).
-    For the other {len(switch_clean)}, MAP rises only from {switch_clean['llm_demographics'].mean():.3f} to
-    {switch_clean['llm_demographics_4o'].mean():.3f} (p {p_eq(p_switch_clean)}).</li>
-  </ul>
-  Taken together, explicit demographic guesses help most for the users whose followed accounts point clearly to a
-  demographic group, which are also the users GPT-6 Luna was willing to describe.</p>
-
-  <h3>GPT-4o's guesses vs. SocialVec's trait classifiers</h3>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Attribute</th><th>Users with a parsed guess</th>
-  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>GPT-4o guesses</th></tr></thead><tbody>{agree_rows_4o}</tbody></table></div>
-  <p class="caption">As in Section 3, using the same parsing rules, on all users GPT-4o described.</p></div>
-  <p>{agreement_text_4o}</p>
-
-  <h3>Statistical tests for GPT-4o's descriptions</h3>
-  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-4o vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
-  <tbody>{test_rows_4o}</tbody></table></div></div>
-
-  <h3>GPT-4o examples</h3>
-  {''.join(example_block(r, t, "_4o") for r, t in examples_4o)}
-</section>
-
-<section>
-  <h2><span class="num">5</span>Examples</h2>
-  <p class="intro">The cases are chosen by rule rather than by hand: the highest and the lowest AP among complete descriptions
-  for users who follow at least two candidates; a declined description with typical AP; and the user used for debugging.
-  Users are identified by internal row only.</p>
-  {''.join(example_block(r, t) for r, t in examples)}
-</section>
-
-<section>
-  <h2><span class="num">6</span>Shuffled candidates, ranks 81–100 and 181–200</h2>
-  <p class="intro">The rankings above listed the candidates by follower count, as in the original experiments. An LLM that
-  partly follows the order it is given (see the candidate-order experiment) then gets a popularity ranking for free, which
-  can hide what a description adds. We therefore repeated Stage 2 with the candidates in random order, for ranks 81–100 and
-  for the less popular ranks 181–200 of the extended category lists.</p>
-
-  <p><b>Setup.</b>
-  <ul>
-    <li><i>Descriptions:</i> the Stage 1 descriptions are reused unchanged, both GPT-6 Luna's and GPT-4o's. Only the ranking
-    is repeated, by GPT-6 Luna (reasoning effort low) with the same prompt.</li>
-    <li><i>Account names:</i> for comparison, GPT-6 Luna also ranks the same candidates from the names of 12, 25 or 50 accounts
-    the user follows. These are the prompts of Table C in <code>results/results.html</code>, with every account of the band's
-    category lists removed.</li>
-    <li><i>Shared random order:</i> for every user and band, the candidates are put in one random order. That order is used for
-    all six rankings of the user: with no user information, from each of the two descriptions, and from the three name lists.
-    Differences between them therefore come from the user information alone. The no-information ranking is a per-user call
-    here, not one call per category as before.</li>
-    <li><i>Ranks 81–100:</i> the same candidates and all {sh_n['81-100']} users as above.</li>
-    <li><i>Ranks 181–200:</i> the candidates are ranks 181–200 of the extended lists (by SocialVec popularity; see
-    <code>results/EXTENDED_CATEGORIES_REPORT.md</code>). We use the {sh_n['181-200']} of the same users who follow at least one of
-    these candidates. TV hosts are not part of this user sample.</li>
-    <li><i>Other methods:</i> random, popularity and SocialVec scores are those of the popularity-band experiments for the same
-    users and candidates.</li>
-    <li><i>Cost:</i> {sh_calls:,} calls, ${sh_cost:.2f}.</li>
-  </ul></p>
-
-  <div class="panels">
-    <div class="panel card"><h4>Ranks 81–100 · {sh_n['81-100']} users</h4>{shuffled_chart('81-100')}</div>
-    <div class="panel card"><h4>Ranks 181–200 · {sh_n['181-200']} users</h4>{shuffled_chart('181-200')}</div>
-  </div>
+  <div class="card">{bar_chart(so, SH_METHODS, SH_COLORS, "shuffled candidates", x1=0.6)}
   <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Highlighted bars: LLM rankings from
-  the demographic descriptions (blue, orange) and from the names of followed accounts (green).</p>
+  GPT-4o's demographic description (orange) and from the names of followed accounts (green).</p></div>
 
   <p><b>Findings.</b>
   <ul>
-    <li><b>Shuffling removes the order advantage of the no-information ranking.</b> At ranks 81–100 it drops from
-    {order_effect['baseline'][1]:.3f} (popularity-sorted candidates) to {order_effect['baseline'][0]:.3f} with shuffled candidates
-    (p {p_eq(order_effect['baseline'][2])}). The description-based rankings barely change: GPT-6 Luna {order_effect['luna'][1]:.3f} →
-    {order_effect['luna'][0]:.3f} (p = {order_effect['luna'][2]:.2f}), GPT-4o {order_effect['4o'][1]:.3f} → {order_effect['4o'][0]:.3f}
-    (p = {order_effect['4o'][2]:.2f}). The name-based rankings show no significant change either: {order_effect['k12'][1]:.3f} → {order_effect['k12'][0]:.3f},
-    {order_effect['k25'][1]:.3f} → {order_effect['k25'][0]:.3f} and {order_effect['k50'][1]:.3f} → {order_effect['k50'][0]:.3f} for 12,
-    25 and 50 names (p ≥ {min(order_effect[k][2] for k in ('k12', 'k25', 'k50')):.2f}).</li>
-    <li><b>With a fair baseline, demographic descriptions help in both bands.</b>
+    <li><b>Shuffling removes the order advantage of the no-information ranking.</b> It drops from {order_effect['baseline'][1]:.3f}
+    (popularity-sorted candidates) to {order_effect['baseline'][0]:.3f} (p {p_eq(order_effect['baseline'][2])}). The ranking from GPT-4o's
+    descriptions barely changes ({order_effect['4o'][1]:.3f} → {order_effect['4o'][0]:.3f}, p = {order_effect['4o'][2]:.2f}), and neither
+    do the name-based rankings ({order_effect['k12'][1]:.3f} → {order_effect['k12'][0]:.3f}, {order_effect['k25'][1]:.3f} → {order_effect['k25'][0]:.3f}
+    and {order_effect['k50'][1]:.3f} → {order_effect['k50'][0]:.3f} for 12, 25 and 50 names, p ≥ {min(order_effect[k][2] for k in ('k12', 'k25', 'k50')):.2f}).</li>
+    <li><b>With a fair baseline, demographic descriptions help.</b> GPT-4o's descriptions score {so['ap_gpt-4o']:.3f} against
+    {so['ap_baseline']:.3f} without user information (p {p_eq(st['4o_vs_baseline'])}).</li>
+    <li><b>The gain does not depend on leaked interests.</b> Demographics-only descriptions also beat the no-information ranking
+    ({g_clean[2]:.3f} vs. {g_clean[3]:.3f}, p {p_eq(g_clean[4])}), as they do in Section 3.</li>
+    <li><b>Account names give larger gains than demographics.</b> Ranking from 12 followed account names scores {so['ap_k12']:.3f},
+    above GPT-4o's descriptions (p {p_eq(st['k12_vs_4o'])}). 25 names add nothing over 12 (p = {st['k25_vs_k12']:.2f}); 50 names do
+    ({so['ap_k50']:.3f}, p {p_eq(st['k50_vs_k12'])}).</li>
+    <li><b>Social embeddings vs. the LLM.</b> SocialVec, using all of the user's followed entities, scores {so['socialvec']:.3f}.
     <ul>
-      <li><i>GPT-4o's descriptions:</i> they beat the no-information ranking at ranks 81–100 ({sh_overall['81-100']['ap_gpt-4o']:.3f} vs.
-      {sh_overall['81-100']['ap_baseline']:.3f}, p {p_eq(sh_tests['81-100']['4o_vs_baseline'])}) and at ranks 181–200
-      ({sh_overall['181-200']['ap_gpt-4o']:.3f} vs. {sh_overall['181-200']['ap_baseline']:.3f}, p {p_eq(sh_tests['181-200']['4o_vs_baseline'])}).</li>
-      <li><i>GPT-6 Luna's descriptions:</i> they help less, because most of them are refusals. The gain is significant at ranks
-      81–100 (p {p_eq(sh_tests['81-100']['luna_vs_baseline'])}) but not at ranks 181–200
-      (p {p_eq(sh_tests['181-200']['luna_vs_baseline'])}).</li>
-    </ul></li>
-    <li><b>The gain does not depend on leaked interests.</b> GPT-4o's demographics-only descriptions beat the no-information
-    ranking in both bands ({sh_group_rows['81-100'][2][2]:.3f} vs. {sh_group_rows['81-100'][2][3]:.3f} and
-    {sh_group_rows['181-200'][2][2]:.3f} vs. {sh_group_rows['181-200'][2][3]:.3f}, both p {p_eq(max(sh_group_rows['81-100'][2][4], sh_group_rows['181-200'][2][4]))}).
-    So do GPT-6 Luna's complete descriptions ({sh_group_rows['81-100'][0][2]:.3f} vs. {sh_group_rows['81-100'][0][3]:.3f} and
-    {sh_group_rows['181-200'][0][2]:.3f} vs. {sh_group_rows['181-200'][0][3]:.3f}). Its refusals give exactly the no-information result.
-    With popularity-sorted candidates, the demographics-only descriptions had looked no better than the baseline (Section 4).</li>
-    <li><b>The LLM knows something about less popular accounts.</b> Even without user information, GPT-6 Luna ranks the
-    181–200 candidates better than chance ({sh_overall['181-200']['ap_baseline']:.3f} vs. {sh_overall['181-200']['random']:.3f},
-    p {p_eq(sh_tests['181-200']['baseline_vs_random'])}). It also beats follower-count popularity, which is below chance in this band
-    ({sh_overall['181-200']['popularity']:.3f}).</li>
-    <li><b>Account names give larger gains than demographics.</b> Ranking from 12 followed account names scores
-    {sh_overall['81-100']['ap_k12']:.3f} at ranks 81–100 and {sh_overall['181-200']['ap_k12']:.3f} at ranks 181–200, well above the
-    no-information ranking (both p {p_eq(max(sh_tests[b]['k12_vs_baseline'] for b in SH_BANDS))}).
-    <ul>
-      <li><i>Against GPT-4o's descriptions:</i> 12 names are better at ranks 81–100 (p {p_eq(sh_tests['81-100']['k12_vs_4o'])}); at
-      ranks 181–200 the difference is not significant (p = {sh_tests['181-200']['k12_vs_4o']:.2f}).</li>
-      <li><i>More names:</i> 25 names add nothing over 12 (p = {sh_tests['81-100']['k25_vs_k12']:.2f} and
-      {sh_tests['181-200']['k25_vs_k12']:.2f}). 50 names do: {sh_overall['81-100']['ap_k50']:.3f} and {sh_overall['181-200']['ap_k50']:.3f}
-      (p {p_eq(max(sh_tests[b]['k50_vs_k12'] for b in SH_BANDS))} against 12 names in both bands).</li>
-    </ul></li>
-    <li><b>Social embeddings vs. the LLM.</b> SocialVec, using all of the user's followed entities, scores
-    {sh_overall['81-100']['socialvec']:.3f} and {sh_overall['181-200']['socialvec']:.3f}.
-    <ul>
-      <li><i>Demographics:</i> the best description-based ranking reaches {sh_overall['81-100']['ap_gpt-4o']:.3f} and
-      {sh_overall['181-200']['ap_gpt-4o']:.3f}. The gap is significant at ranks 81–100 (p {p_eq(sh_tests['81-100']['4o_vs_socialvec'])})
-      but not at ranks 181–200 (p = {sh_tests['181-200']['4o_vs_socialvec']:.2f}).</li>
-      <li><i>50 names:</i> the LLM with 50 account names scores above SocialVec's full profile in both bands
-      (p {p_eq(sh_tests['81-100']['k50_vs_socialvec'])} and p {p_eq(sh_tests['181-200']['k50_vs_socialvec'])}).</li>
-      <li><i>Same accounts:</i> at ranks 81–100, SocialVec using only the same 12 or 25 accounts scores {names_vs_sv[12][1]:.3f} and
+      <li><i>Demographics:</i> GPT-4o's descriptions stay below it (p {p_eq(st['4o_vs_socialvec'])}).</li>
+      <li><i>50 names:</i> the LLM with 50 account names scores above it (p {p_eq(st['k50_vs_socialvec'])}).</li>
+      <li><i>Same accounts:</i> SocialVec using only the same 12 or 25 accounts scores {names_vs_sv[12][1]:.3f} and
       {names_vs_sv[25][1]:.3f}, below the LLM's {names_vs_sv[12][0]:.3f} and {names_vs_sv[25][0]:.3f}
       (p {p_eq(names_vs_sv[12][2])} and p {p_eq(names_vs_sv[25][2])}; means over users).</li>
     </ul></li>
   </ul></p>
 
   <h3>By description type</h3>
-  <h4>Ranks 81–100</h4>
-  <div class="card">{shuffled_group_table('81-100')}</div>
-  <h4>Ranks 181–200</h4>
-  <div class="card">{shuffled_group_table('181-200')}</div>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>GPT-4o description</th><th>Users</th>
+  <th>Ranking from the description</th><th>LLM, no user information</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead>
+  <tbody>{group_rows}</tbody></table></div>
   <p class="caption">MAP over the users of each row, pooled across categories. Both rankings in a row used the same shuffled
-  candidates. GPT-6 Luna's partial descriptions (5 and 3 users) are omitted.</p>
+  candidates.</p></div>
 
   <h3>Per category</h3>
-  <h4>Ranks 81–100</h4>
-  <div class="card">{shuffled_category_table('81-100')}</div>
-  <h4>Ranks 181–200</h4>
-  <div class="card">{shuffled_category_table('181-200')}
-  <p class="caption">MAP per category with shuffled candidates; bold marks the best method in each row. Categories have 30 users at
-  ranks 81–100 and 13–29 at ranks 181–200, so per-category values are noisy.</p></div>
-
-  <p class="caption">Ranking completeness: in each band, at least {min(sh_complete.values()):.0%} of the responses of every condition
-  listed all candidates (legacy scoring skips missing ones).</p>
+  <div class="card">{category_table(sh_cat['81-100'], SH_METHODS, SH_COLORS, sh.groupby('topic').size().to_dict())}
+  <p class="caption">MAP per category with shuffled candidates; bold marks the best method in each row. Ranking completeness: at least
+  {sh_complete:.0%} of the responses of every condition listed all candidates (legacy scoring skips missing ones).</p></div>
 </section>
 
 <section>
-  <h2><span class="num">7</span>Discussion and limitations</h2>
+  <h2><span class="num">5</span>Examples</h2>
+  <p class="intro">The cases are chosen by rule rather than by hand: the highest and the lowest AP among complete,
+  demographics-only descriptions for users who follow at least two candidates, and a description that names interests with
+  typical AP. Rankings are those with candidates in follower-count order. Users are identified by internal row only.</p>
+  {''.join(example_block(r, t) for r, t in examples)}
+</section>
+
+<section>
+  <h2><span class="num">6</span>Discussion and limitations</h2>
   <ul class="highlights">
-    <li><b>Model policies shape the result.</b> GPT-6 Luna declined to infer demographics for {dec_n / len(m):.0%} of users, even
-    when told to rely on stereotypes. GPT-4o described every user, but in {leak_n / len(m):.0%} of cases it also named the user's
-    interests, against the instruction. Neither model gives a clean demographics-only condition for all users.
-    <ul>
-      <li><i>Cleaner subsets:</i> the clean conditions are GPT-6 Luna's complete descriptions and GPT-4o's demographics-only
-      descriptions.</li>
-      <li><i>A stricter test:</i> filter or rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the
-      attributes from SocialVec's classifiers directly.</li>
-    </ul></li>
+    <li><b>The model does not always follow the instruction.</b> GPT-4o described every user, but in {leak_n / len(m):.0%} of
+    cases it also named the user's interests. The clean condition is the demographics-only subset. A stricter test would filter or
+    rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the attributes from SocialVec's classifiers
+    directly.</li>
     <li><b>The candidate order matters for this comparison.</b> With popularity-sorted candidates, the no-information ranking
-    partly copies the presented order, and demographics-only descriptions looked no better than it. With shuffled candidates, the
-    clean descriptions give a consistent, significant gain in both popularity bands (Section 6). Comparisons with a
-    non-personalized LLM ranking should therefore use randomized candidate orders.</li>
-    <li><b>Demographics are a coarse summary of taste.</b> Even when the description was complete, ranking from four
-    attributes did not beat ranking from 12 account names, and it scored below SocialVec's full-profile embedding overall in
-    both bands. With shuffled candidates, the same 12 names beat GPT-4o's descriptions at ranks 81–100, and 50 names beat
-    SocialVec in both bands (Section 6). The account names carry information beyond the demographic groups they imply.</li>
+    partly copies the presented order, and demographics-only descriptions looked no better than it. With shuffled candidates, they
+    give a significant gain. Comparisons with a non-personalized LLM ranking should therefore use randomized candidate orders.</li>
+    <li><b>Demographics are a coarse summary of taste.</b> Ranking from four attributes scores below ranking from 12 account names
+    and below SocialVec's full-profile embedding. The account names carry information beyond the demographic groups they imply.</li>
     <li><b>Stereotype-based inference.</b> The method asks a model to apply stereotypes about gender, age, ethnicity and
     education. The resulting descriptions are guesses about real people. They are stored outside the repository, and this page
     identifies users by internal row only. Conclusions about which groups like which entities should not be drawn from them.</li>
-    <li><b>Scale and noise.</b> 30 users per category, one description and one ranking per user, at reasoning effort low.
-    LLM outputs are not deterministic: repeated identical prompts change a user's AP by about 0.06 on average (see the
-    candidate-order experiment).</li>
+    <li><b>Scale and noise.</b> 30 users per category, one description and one ranking per user. LLM outputs are not
+    deterministic: repeated identical prompts change a user's AP by about 0.06 on average (see the candidate-order experiment).
+    Stage 1 with GPT-4o cost ${cost.get('openai/gpt-4o', 0):.2f} for {len(m)} descriptions.</li>
   </ul>
 </section>
 
-<footer><p>Regenerate with <code>python run_llm_demographics.py</code>,
-<code>python run_llm_demographics.py --describe-model gpt-4o</code> and <code>python run_llm_demographics_bands.py</code>
-(model calls; cached responses are reused), then <code>python make_demographics_report.py</code>. Per-user scores are in
-<code>results/llm/demographics_per_user*.csv.gz</code> and <code>results/llm/demographics_bands_per_user.csv.gz</code>;
-descriptions and usernames are in <code>data/llm_demographics/</code>, which is not tracked by git.</p></footer>
+<footer><p>Regenerate with <code>python run_llm_demographics.py --describe-model gpt-4o</code> and
+<code>python run_llm_demographics_bands.py</code> (model calls; cached responses are reused), then
+<code>python make_demographics_report.py</code>. Per-user scores are in <code>results/llm/demographics_per_user_gpt-4o.csv.gz</code>
+and <code>results/llm/demographics_bands_per_user.csv.gz</code>; descriptions and usernames are in <code>data/llm_demographics/</code>,
+which is not tracked by git.</p></footer>
 </div>
 <script>{JS}</script>
 </body></html>
@@ -861,18 +586,18 @@ descriptions and usernames are in <code>data/llm_demographics/</code>, which is 
 (RESULTS_DIR / "LLM_DEMOGRAPHICS_REPORT.html").write_text(page, encoding="utf-8")
 print("wrote", RESULTS_DIR / "LLM_DEMOGRAPHICS_REPORT.html")
 
-# headline numbers for the summary in results.html (make_results_page.py)
+# headline numbers for the summaries in results.html and results_backup.html (make_results_page.py)
 summary = {
-    "users": len(m), "declined": {"luna": int(dec_n), "gpt-4o": int((m["status_4o"] == "declined").sum())}, "leak_4o": int(leak_n),
-    "sorted_map": overall.round(4).to_dict(),
+    "users": len(m), "leak_4o": int(leak_n), "sorted_map": overall.round(4).to_dict(),
     "shuffled": {b: {"users": int(sh_n[b]), "map": sh_overall[b].round(4).to_dict(), "tests": sh_tests[b],
-                     "clean_4o": dict(zip(["label", "users", "map", "baseline", "p"], sh_group_rows[b][2]))} for b in SH_BANDS},
+                     "clean_4o": dict(zip(["label", "users", "map", "baseline", "p"], sh_groups[b][0]))} for b in SH_BANDS},
     "order_effect": {k: dict(zip(["shuffled", "sorted", "p"], v)) for k, v in order_effect.items()},
     "names_vs_socialvec_81_100": {k: dict(zip(["llm", "socialvec", "p"], v)) for k, v in names_vs_sv.items()},
-    "shuffled_cost_usd": round(sh_cost, 2), "shuffled_calls": sh_calls,
+    "attributes": {attr: {"values": [v for v, _ in ATTRIBUTE_VALUES[attr]] + ["Not stated"],
+                          "counts": attributes[attr].value_counts().to_dict(), "multiple": attributes_multiple[attr],
+                          "by_category": {t: g.value_counts().to_dict() for t, g in attributes[attr].groupby(m["topic"])}}
+                   for attr in ATTRIBUTE_VALUES},
 }
 (LLM / "demographics_summary.json").write_text(json.dumps(summary, indent=2, default=float))
 print("examples:", examples)
-print("status:", m["status"].value_counts().to_dict())
-print("agreement:", [(a[0], a[1], round(a[2], 3), round(a[3], 3)) for a in agreement])
-print("tau:", tau_by_status.round(3).to_dict())
+print("status:", m["status"].value_counts().to_dict(), "leak:", leak_n)

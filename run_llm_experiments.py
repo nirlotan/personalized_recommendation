@@ -125,10 +125,12 @@ def band_setup(users, categories, band=DEFAULT_BAND):
     return candidates, exclude, vocab
 
 
-def band_sample(users, categories, band=DEFAULT_BAND):
+def band_sample(users, categories, band=DEFAULT_BAND, n=BAND_USERS_PER_CATEGORY):
     """
     The users of a band's LLM experiment: per category, a random sample of the
     users sampled for that category who follow at least one band candidate.
+    A larger n keeps the default sample and adds further random users to it
+    (all eligible users if a category has fewer than n).
 
     Returns:
         (sample, band candidates, per-topic exclusions, SocialVec embeddings)
@@ -138,12 +140,16 @@ def band_sample(users, categories, band=DEFAULT_BAND):
     ids = {t: set(c["twitter_user_id"]) for t, c in candidates.items()}
     eligible = eligible[[not ids[t].isdisjoint(f) for t, f in zip(eligible["topic"], eligible["friends_ids"])]]
     sample = eligible.groupby("topic").sample(n=BAND_USERS_PER_CATEGORY, random_state=SEED)
+    if n > BAND_USERS_PER_CATEGORY:
+        rest = eligible.drop(sample.index)
+        more = [g.sample(n=min(n - BAND_USERS_PER_CATEGORY, len(g)), random_state=SEED) for _, g in rest.groupby("topic")]
+        sample = pd.concat([sample, *more])
     return sample, candidates, exclude, sv
 
 
-def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND):
+def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND, n=BAND_USERS_PER_CATEGORY):
     suffix = band_suffix(band)
-    sample, candidates, exclude, sv = band_sample(users, categories, band)
+    sample, candidates, exclude, sv = band_sample(users, categories, band, n)
     prompts = user_prompts(sample, categories, names, exclude=exclude)
     res = run_llm(sample, candidates, prompts, *rankers, out / "cache" / f"band{suffix}.jsonl", workers=workers)
 
@@ -165,7 +171,8 @@ def run_band(users, categories, names, rankers, out, workers, band=DEFAULT_BAND)
     band_ap = pd.read_csv(band_dir / "per_user_ap.csv.gz")
     band_ap = band_ap[(band_ap["population"] == "category") & (band_ap["candidates"] == "band")
                       & (band_ap["exclusion"] == "exclude_category")][["user", "random", "popularity", "socialvec"]]
-    res.merge(band_ap, on="user").to_csv(out / f"band_per_user{suffix}.csv.gz", index=False)
+    users_suffix = "" if n == BAND_USERS_PER_CATEGORY else f"_n{n}"
+    res.merge(band_ap, on="user").to_csv(out / f"band_per_user{suffix}{users_suffix}.csv.gz", index=False)
 
 
 # ---------------------------------------------------------------- analysis

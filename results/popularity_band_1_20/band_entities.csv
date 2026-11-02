@@ -1,0 +1,261 @@
+category,popularity_rank,sheet_row,twitter_screen_name,twitter_user_id,twitter_name,followers_count,use,in_socialvec
+MusicalArtist,1,19,justinbieber,27260086,Justin Bieber,111215956.0,1.0,True
+MusicalArtist,2,7,katyperry,21447363,KATY PERRY,108525012.0,1.0,True
+MusicalArtist,3,0,rihanna,79293791,Rihanna,96169997.0,1.0,True
+MusicalArtist,4,2,taylorswift13,17919972,Taylor Swift,85988026.0,1.0,True
+MusicalArtist,5,3,ArianaGrande,34507480,Ariana Grande,72794047.0,1.0,True
+MusicalArtist,6,8,jtimberlake,26565946,Justin Timberlake,64805844.0,1.0,True
+MusicalArtist,7,18,selenagomez,23375688,Selena Gomez,60609293.0,1.0,True
+MusicalArtist,8,14,britneyspears,16409683,Britney Spears,56133229.0,1.0,True
+MusicalArtist,9,52,shakira,44409004,Shakira,52223013.0,,True
+MusicalArtist,10,13,MileyCyrus,268414482,Miley Ray Cyrus,45008722.0,1.0,True
+MusicalArtist,11,69,NiallOfficial,105119490,Niall Horan,39462884.0,,True
+MusicalArtist,12,15,wizkhalifa,20322929,Wiz Khalifa,36295633.0,1.0,True
+MusicalArtist,13,34,Harry_Styles,181561712,Harry Styles.,34238311.0,,True
+MusicalArtist,14,96,Louis_Tomlinson,84279963,Louis Tomlinson,33647240.0,,True
+MusicalArtist,15,23,chrisbrown,119509520,Chris Brown,31753820.0,,True
+MusicalArtist,16,30,aliciakeys,35094637,Alicia Keys,30178174.0,,True
+MusicalArtist,17,1,kanyewest,169686021,ye,29493380.0,1.0,True
+MusicalArtist,18,74,zaynmalik,176566242,zayn,28549665.0,,True
+MusicalArtist,19,28,Adele,184910040,Adele,27290717.0,,True
+MusicalArtist,20,68,ShawnMendes,379408088,Shawn Mendes,25028646.0,,True
+news,1,2,cnnbrk,428333,CNN Breaking News,57385221.0,1.0,True
+news,2,1,CNN,759251,CNN,47152017.0,,True
+news,3,0,nytimes,807095,The New York Times,46204009.0,1.0,True
+news,4,7,SportsCenter,26257166,SportsCenter,36481309.0,1.0,True
+news,5,6,BBCWorld,742143,BBC News (World),27715984.0,1.0,True
+news,6,18,TheEconomist,5988062,The Economist,24622783.0,1.0,True
+news,7,9,Reuters,1652541,Reuters,21747636.0,1.0,True
+news,8,12,FoxNews,1367531,Fox News,18910253.0,1.0,True
+news,9,5,washingtonpost,2467791,The Washington Post,15487060.0,1.0,True
+news,10,11,ABC,28785486,ABC News,15390534.0,1.0,True
+news,11,3,AP,51241574,The Associated Press,13991916.0,1.0,True
+news,12,16,HuffPost,14511951,HuffPost,11492651.0,1.0,True
+news,13,8,TheOnion,14075928,The Onion,11429820.0,1.0,True
+news,14,27,cnni,2097571,CNN International,10320872.0,,True
+news,15,39,TechCrunch,816653,TechCrunch,10139239.0,,True
+news,16,4,maddow,16129920,Rachel Maddow MSNBC,10034804.0,,True
+news,17,38,mashable,972651,Mashable,9789395.0,,True
+news,18,29,BreakingNews,6017542,Breaking News,9521994.0,,True
+news,19,22,guardian,87818409,The Guardian,8672475.0,1.0,True
+news,20,13,BleacherReport,890891,Bleacher Report,8520296.0,1.0,True
+Comedian,1,2,TheEllenShow,15846407,Ellen DeGeneres,80101425.0,1.0,True
+Comedian,2,1,jimmyfallon,15485441,jimmy fallon,51954929.0,1.0,True
+Comedian,3,11,danieltosh,25521487,daniel tosh,25621986.0,1.0,True
+Comedian,4,0,StephenAtHome,16303106,Stephen Colbert,18816618.0,1.0,True
+Comedian,5,7,rickygervais,20015311,Ricky Gervais,14290867.0,1.0,True
+Comedian,6,6,SarahKSilverman,30364057,Sarah Silverman,12588884.0,1.0,True
+Comedian,7,4,jimmykimmel,26053643,Jimmy Kimmel,11757494.0,1.0,True
+Comedian,8,14,rustyrockets,19562228,Russell Brand,11521295.0,1.0,True
+Comedian,9,5,billmaher,19697415,Bill Maher,11070328.0,1.0,True
+Comedian,10,8,Trevornoah,46335511,Trevor Noah,10509254.0,1.0,True
+Comedian,11,70,jimmycarr,17020962,Jimmy Carr,6796468.0,,True
+Comedian,12,3,joerogan,18208354,Joe Rogan,5950298.0,1.0,True
+Comedian,13,10,chrisrock,238319766,Chris Rock,5266305.0,1.0,True
+Comedian,14,12,sethmeyers,44039298,Seth Meyers,5070030.0,1.0,True
+Comedian,15,15,amyschumer,55117855,Amy Schumer,4670853.0,1.0,True
+Comedian,16,13,JerrySeinfeld,336116660,Jerry Seinfeld,4262983.0,1.0,True
+Comedian,17,96,BillBailey,20155652,Bill Bailey,3371509.0,,True
+Comedian,18,9,JimGaffigan,6539592,Jim Gaffigan,2974293.0,1.0,True
+Comedian,19,17,DavidSpade,22657153,David Spade,2772560.0,1.0,True
+Comedian,20,20,CraigyFerg,112508240,Craig Ferguson,2742640.0,,True
+Politician,1,0,BarackObama,813286,Barack Obama,115819215.0,1.0,True
+Politician,2,9,realDonaldTrump,822215679726100480,President Trump,29466570.0,1.0,True
+Politician,3,6,HillaryClinton,1339835893,Hillary Clinton,27458427.0,1.0,True
+Politician,4,13,POTUS44,1536791610,President Obama,14899481.0,,True
+Politician,5,5,MichelleObama,409486555,Michelle Obama,14880932.0,1.0,True
+Politician,6,7,BernieSanders,216776631,Bernie Sanders,11798141.0,1.0,True
+Politician,7,18,BillClinton,1330457336,Bill Clinton,11759330.0,1.0,True
+Politician,8,2,AOC,138203134,Alexandria Ocasio-Cortez,6767292.0,1.0,True
+Politician,9,60,FLOTUS44,1093090866,First Lady- Archived,6606728.0,,True
+Politician,10,10,SenWarren,970207298,Elizabeth Warren,5837417.0,1.0,True
+Politician,11,73,JustinTrudeau,14260960,Justin Trudeau,4949250.0,,True
+Politician,12,1,JoeBiden,939091,Joe Biden,4936410.0,1.0,True
+Politician,13,51,Schwarzenegger,12044602,Arnold,4631879.0,,True
+Politician,14,46,Mike_Pence,22203756,Mike Pence,4627671.0,,True
+Politician,15,22,CoryBooker,15808765,Cory Booker,4485465.0,,True
+Politician,16,8,SpeakerPelosi,15764644,Nancy Pelosi,4446490.0,1.0,True
+Politician,17,56,marcorubio,15745368,Marco Rubio,4132629.0,,True
+Politician,18,25,tedcruz,23022687,Ted Cruz,3677116.0,,True
+Politician,19,3,KamalaHarris,30354991,Kamala Harris,3564389.0,1.0,True
+Politician,20,99,JohnKerry,15007149,John Kerry,3381459.0,,True
+TelevisionStation,1,1,cnnbrk,428333,CNN Breaking News,57385221.0,,True
+TelevisionStation,2,0,CNN,759251,CNN,47152017.0,1.0,True
+TelevisionStation,3,3,espn,2557521,ESPN,35278307.0,1.0,True
+TelevisionStation,4,2,BBCWorld,742143,BBC News (World),27715984.0,1.0,True
+TelevisionStation,5,5,FoxNews,1367531,Fox News,18910253.0,1.0,True
+TelevisionStation,6,76,CNNEE,33884545,CNN en Español,18478126.0,,True
+TelevisionStation,7,14,MTV,2367911,MTV,15837259.0,1.0,True
+TelevisionStation,8,15,enews,2883841,E! News,11776951.0,1.0,True
+TelevisionStation,9,8,cnni,2097571,CNN International,10320872.0,,True
+TelevisionStation,10,16,Discovery,17842366,Discovery,8623086.0,1.0,True
+TelevisionStation,11,39,SkySportsNews,108568373,Sky Sports News,7425482.0,,True
+TelevisionStation,12,19,ytcreators,239760107,YouTube Creators #StayHome,6305920.0,1.0,True
+TelevisionStation,13,18,FoodNetwork,20710809,Food Network,4728320.0,1.0,True
+TelevisionStation,14,41,SkySportsPL,713993413,Sky Sports Premier League,4718077.0,,True
+TelevisionStation,15,20,NBATV,25319414,NBA TV,4593322.0,1.0,True
+TelevisionStation,16,10,nflnetwork,19362299,NFL Network,3897614.0,1.0,True
+TelevisionStation,17,29,Nickelodeon,58309829,Nickelodeon,3888527.0,,True
+TelevisionStation,18,25,eentertainment,22179997,E! Entertainment,3740031.0,1.0,True
+TelevisionStation,19,11,weatherchannel,20998647,The Weather Channel,3694410.0,1.0,True
+TelevisionStation,20,13,CNBC,20402945,CNBC,3557369.0,1.0,True
+Actor,1,23,JLo,85603854,Jennifer Lopez,45219187.0,,True
+Actor,2,3,JimCarrey,52551600,Jim Carrey,18656698.0,1.0,True
+Actor,3,1,tomhanks,50374439,Tom Hanks,16716394.0,1.0,True
+Actor,4,0,RobertDowneyJr,47786101,Robert Downey Jr,14920855.0,1.0,True
+Actor,5,2,ChrisEvans,580097412,Chris Evans,13707054.0,1.0,True
+Actor,6,49,azizansari,6480682,Aziz Ansari,10646662.0,,True
+Actor,7,43,colesprouse,266336410,Cole M. Sprouse,9915329.0,,True
+Actor,8,95,lindsaylohan,65992743,Lindsay Lohan,8649382.0,,True
+Actor,9,4,Sethrogen,443215941,Seth Rogen,8383374.0,1.0,True
+Actor,10,58,channingtatum,6427882,Channing Tatum,8297708.0,,True
+Actor,11,7,prattprattpratt,241382835,chris pratt,7680235.0,1.0,True
+Actor,12,12,AnnaKendrick47,59949396,Anna Kendrick,7369421.0,1.0,True
+Actor,13,97,EvaLongoria,110827653,Eva Longoria Baston,7150329.0,,True
+Actor,14,13,chrishemsworth,3063032281,Chris Hemsworth,6736712.0,1.0,True
+Actor,15,5,MarkRuffalo,47285504,Mark Ruffalo,6563395.0,1.0,True
+Actor,16,17,SteveCarell,500042487,Steve Carell,5765378.0,1.0,True
+Actor,17,19,JohnCleese,10810102,John Cleese,5726534.0,1.0,True
+Actor,18,35,TherealTaraji,84358766,Taraji P. Henson,5457625.0,,True
+Actor,19,30,kerrywashington,205302299,kerry washington,5334194.0,,True
+Actor,20,16,TomHolland1996,624056226,Tom Holland,4908695.0,1.0,True
+TelevisionShow,1,1,SportsCenter,26257166,SportsCenter,36481309.0,1.0,True
+TelevisionShow,2,0,TheDailyShow,158414847,The Daily Show,8567254.0,1.0,True
+TelevisionShow,3,42,bigbangtheory,72644483,The Big Bang Theory,4542738.0,,True
+TelevisionShow,4,7,FallonTonight,19777398,The Tonight Show,4205253.0,1.0,True
+TelevisionShow,5,64,PLLTVSeries,109303622,Pretty Little Liars,4149928.0,,True
+TelevisionShow,6,47,SoVeryBritish,1023072078,VeryBritishProblems,4017646.0,,True
+TelevisionShow,7,10,GMA,22650211,Good Morning America,3720157.0,1.0,True
+TelevisionShow,8,13,SouthPark,23504870,South Park,3003119.0,1.0,True
+TelevisionShow,9,5,Stranger_Things,3320478908,Stranger Things,2886859.0,1.0,True
+TelevisionShow,10,15,NBA2K,15573174,NBA 2K20,2816339.0,1.0,True
+TelevisionShow,11,4,nbcsnl,28221296,Saturday Night Live - SNL,2779051.0,1.0,True
+TelevisionShow,12,90,cwtvd,1209309782,The Vampire Diaries,2550814.0,,True
+TelevisionShow,13,39,kingsthings,22685200,Larry King,2493662.0,,True
+TelevisionShow,14,69,Channel4News,14569869,Channel 4 News,2314231.0,,True
+TelevisionShow,15,32,TheSims,16582027,The Sims,2308566.0,,True
+TelevisionShow,16,17,GameGrumps,701983068,Game Grumps,2291314.0,1.0,True
+TelevisionShow,17,18,SpongeBob,17088779,SpongeBob,2286496.0,1.0,True
+TelevisionShow,18,3,marklevinshow,38495835,Mark R. Levin,2117138.0,1.0,True
+TelevisionShow,19,55,AmericanIdol,62988756,American Idol,2022471.0,,True
+TelevisionShow,20,74,DuckDynastyAE,770120310,Duck Dynasty,1936625.0,,True
+SportsTeam,1,1,warriors,26270913,Golden State Warriors,6479945.0,1.0,True
+SportsTeam,2,13,MiamiHEAT,11026952,Miami HEAT,4725453.0,1.0,True
+SportsTeam,3,4,FaZeClan,238431491,FaZe Clan,4347394.0,1.0,True
+SportsTeam,4,12,chicagobulls,16212685,Chicago Bulls,4141374.0,1.0,True
+SportsTeam,5,3,celtics,18139461,Boston Celtics,3557548.0,1.0,True
+SportsTeam,6,0,Yankees,40927173,New York Yankees,3469371.0,1.0,True
+SportsTeam,7,19,cavs,19263978,Cleveland Cavaliers,3271096.0,1.0,True
+SportsTeam,8,18,OpTicGaming,61933836,OpTic Gaming™,3228266.0,,True
+SportsTeam,9,33,HoustonRockets,19077044,Houston Rockets,3069943.0,,True
+SportsTeam,10,14,Broncos,18734310,Denver Broncos,2655723.0,1.0,True
+SportsTeam,11,8,Cubs,41144996,Chicago Cubs,2576771.0,1.0,True
+SportsTeam,12,66,ScuderiaFerrari,108247668,Scuderia Ferrari,2574562.0,,True
+SportsTeam,13,41,NHLBlackhawks,14498484,Chicago Blackhawks,2474141.0,,True
+SportsTeam,14,23,AtlantaFalcons,16347506,Atlanta Falcons,2380911.0,,True
+SportsTeam,15,5,packers,35865630,Green Bay Packers,2305058.0,1.0,True
+SportsTeam,16,82,BlueJays,41468683,Toronto Blue Jays,2260842.0,,True
+SportsTeam,17,15,49ers,43403778,San Francisco 49ers,2192316.0,1.0,True
+SportsTeam,18,9,Dodgers,23043294,Los Angeles Dodgers,2189869.0,1.0,True
+SportsTeam,19,76,Raptors,73406718,Toronto Raptors,2180554.0,,True
+SportsTeam,20,10,nyknicks,20265254,NEW YORK KNICKS,2174968.0,1.0,True
+fashion,1,2,hm,14399483,H&M,8351822.0,1.0,True
+fashion,2,0,LouisVuitton,44084633,Louis Vuitton,7505839.0,1.0,True
+fashion,3,1,Versace,72568426,VERSACE,4802985.0,1.0,True
+fashion,4,10,Roberto_Cavalli,49239873,Roberto Cavalli,1538295.0,,True
+fashion,5,7,LACOSTE,18481641,Lacoste,1005552.0,1.0,True
+fashion,6,3,UnderArmour,23114836,Under Armour,970512.0,1.0,True
+fashion,7,8,BALENCIAGA,180124279,Balenciaga,807463.0,1.0,True
+fashion,8,5,LEVIS,203144854,Levi's®,774808.0,1.0,True
+fashion,9,12,HUGOBOSS,155949831,HUGO BOSS Corporate,700082.0,1.0,True
+fashion,10,30,myntra,89443197,Myntra,584945.0,,False
+fashion,11,4,hmusa,16407145,H&M USA,516580.0,,True
+fashion,12,17,nautica,84394857,Nautica,281865.0,1.0,True
+fashion,13,9,Barbie,19005152,Barbie,267931.0,,True
+fashion,14,13,Stussy,82979341,Stüssy,225116.0,1.0,True
+fashion,15,31,hmunitedkingdom,93839201,H&M United Kingdom,218299.0,,True
+fashion,16,6,FashionNova,811941728,FashionNova,157550.0,1.0,True
+fashion,17,15,juicycouture,41689267,Juicy Couture,135343.0,1.0,True
+fashion,18,27,GStarRAW,60404690,G-Star RAW,111827.0,,True
+fashion,19,28,ted_baker,16527648,Ted Baker,104812.0,,True
+fashion,20,26,Superdry,47477421,Superdry,94521.0,,True
+Journalist,1,12,ezraklein,18622869,Ezra Klein,2585971.0,1.0,True
+Journalist,2,2,chrislhayes,4207961,Chris Hayes,2081116.0,1.0,True
+Journalist,3,24,chucktodd,50325797,Chuck Todd,2077203.0,,True
+Journalist,4,1,JoyAnnReid,49698134,Joy Reid,1575638.0,1.0,True
+Journalist,5,16,ChrisCuomo,22799750,Christopher C. Cuomo,1480999.0,1.0,True
+Journalist,6,0,Acosta,22771961,Jim Acosta,1441324.0,1.0,True
+Journalist,7,82,TheSteinLine,48488561,Marc Stein,1384742.0,,True
+Journalist,8,75,karaswisher,5763262,Kara Swisher,1346332.0,,True
+Journalist,9,7,maggieNYT,93069110,Maggie Haberman,1267583.0,1.0,True
+Journalist,10,26,mehdirhasan,130557513,Mehdi Hasan,847263.0,,True
+Journalist,11,5,DavidCornDC,15220768,David Corn,812891.0,1.0,True
+Journalist,12,30,KatiePavlich,48459553,Katie Pavlich,736233.0,,True
+Journalist,13,9,Fahrenthold,61734492,David Fahrenthold,714788.0,1.0,True
+Journalist,14,3,ddale8,225265639,Daniel Dale,710363.0,1.0,True
+Journalist,15,11,KatyTurNBC,39000115,Katy Tur,709785.0,1.0,True
+Journalist,16,71,MHarrisPerry,18587457,Melissa Harris-Perry,680687.0,,True
+Journalist,17,88,CillizzaCNN,14412533,Chris Cillizza,663376.0,,True
+Journalist,18,8,AriMelber,15441965,Ari Melber,654669.0,1.0,True
+Journalist,19,81,WesleyLowery,14849562,Wesley,606586.0,,True
+Journalist,20,17,AprilDRyan,18018355,AprilDRyan,601746.0,1.0,True
+TelevisionHost,1,25,shugairi,175883705,أحمد الشقيري,18193134.0,,True
+TelevisionHost,2,27,cuervotinelli,789856765,marcelo tinelli,10366489.0,,True
+TelevisionHost,3,20,soyfdelrincon,34140316,Fernando Del Rincon,3443903.0,,True
+TelevisionHost,4,0,IngrahamAngle,50769180,Laura Ingraham,3304497.0,1.0,True
+TelevisionHost,5,26,JoeyEssex_,250090860,Joey Essex,3276670.0,,True
+TelevisionHost,6,28,Tabatajalilreal,132312811,Tabata Jalil,2247578.0,,False
+TelevisionHost,7,1,LouDobbs,26487169,Lou Dobbs,2132650.0,1.0,True
+TelevisionHost,8,7,AdamRichman,25456478,Adam Richman,618758.0,1.0,True
+TelevisionHost,9,12,CakeBossBuddy,26628211,Buddy Valastro,581553.0,1.0,True
+TelevisionHost,10,2,NPRinskeep,115710058,Steve Inskeep,298612.0,1.0,True
+TelevisionHost,11,6,GuyAdami,39264827,Guy Adami,297806.0,1.0,True
+TelevisionHost,12,3,jeffzeleny,85131054,Jeff Zeleny,279181.0,1.0,True
+TelevisionHost,13,4,CariChampion,25471833,Cari Champion,247486.0,1.0,True
+TelevisionHost,14,32,VenenoSandoval,52223905,ॐCarolina Sandovalॐ,189016.0,,True
+TelevisionHost,15,13,JennaCompono,309895827,Jenna Compono,177645.0,1.0,True
+TelevisionHost,16,5,HuntsmanAbby,531627880,Abby Huntsman,168462.0,1.0,True
+TelevisionHost,17,31,DinaPugliese,147966474,Dina Pugliese-Mirkovich,148942.0,,False
+TelevisionHost,18,15,nicolecurtis,262283601,Nicole Curtis,129835.0,1.0,True
+TelevisionHost,19,9,melrobbins,18066665,Mel Robbins,122513.0,1.0,True
+TelevisionHost,20,8,ClaytonMorris,14331688,Clayton Morris,101820.0,1.0,True
+Film,1,0,wbpictures,20255162,Warner Bros. Pictures,4558066.0,,True
+Film,2,7,DesignMuseum,22009731,Design Museum,4311416.0,,True
+Film,3,9,DowntonAbbey,193757722,Downton Abbey,645046.0,,True
+Film,4,19,Divergent,257305275,TheDivergentSeries,591863.0,1.0,True
+Film,5,18,WhatTedSaid,419177567,Ted,565649.0,1.0,True
+Film,6,3,HolocaustMuseum,8487622,US Holocaust Museum,318527.0,,True
+Film,7,14,sense8,2906071884,Sense8,317135.0,1.0,True
+Film,8,1,UnplannedMovie,1029600409554308992,UnplannedMovie,309076.0,,False
+Film,9,5,NFLFilms,81111260,NFL Films,260244.0,,True
+Film,10,13,ThisOldHouse,36376198,This Old House,206427.0,,True
+Film,11,12,Skydance,352586927,Skydance,167045.0,,True
+Film,12,17,StarTrekMovie,254271245,Star Trek,163172.0,1.0,True
+Film,13,20,DisneyFrozen,1398492114,Disney's Frozen 2,148200.0,1.0,True
+Film,14,8,paddingtonbear,166985114,Paddington,133366.0,1.0,True
+Film,15,15,toystory,883434812266094592,Toy Story 4,132506.0,1.0,True
+Film,16,6,uscensusbureau,23092890,U.S. Census Bureau,111434.0,,True
+Film,17,10,Mike_Matei,874884121,Mike Matei,93351.0,,True
+Film,18,46,ZoolanderMovie,2896071332,Zoolander,80819.0,,False
+Film,19,38,StudiocanalUK,160567660,STUDIOCANALUK,75083.0,,True
+Film,20,26,LaLaLand,4709822887,La La Land,74568.0,1.0,True
+Resturants,1,0,McDonalds,71026122,McDonald's,4500000.0,1.0,True
+Resturants,2,1,kfc,15392391,KFC,1500000.0,1.0,True
+Resturants,3,2,ChipotleTweets,141341662,Chipotle,1300000.0,1.0,True
+Resturants,4,3,Whataburger,353060311,Whataburger®,1100000.0,1.0,True
+Resturants,5,4,ChickfilA,16043308,"Chick-fil-A, Inc.",1000000.0,1.0,True
+Resturants,6,5,BWWings,314662792,Buffalo Wild Wings,590900.0,1.0,True
+Resturants,7,6,Applebees,74452613,Applebee's,538200.0,1.0,True
+Resturants,8,7,DairyQueen,21659166,Dairy Queen,516200.0,1.0,True
+Resturants,9,8,SteaknShake,567562934,Steak 'n Shake,463500.0,1.0,True
+Resturants,10,9,Chilis,65051962,Chili's Grill & Bar,440500.0,1.0,True
+Resturants,11,10,sonicdrivein,40349928,Sonic Drive-In,387600.0,1.0,True
+Resturants,12,11,DennysDiner,23112346,Denny's,386900.0,1.0,True
+Resturants,13,12,TGIFridays,158122818,TGI Fridays,205800.0,1.0,True
+Resturants,14,13,JackBox,18956020,Jack in the Box,163900.0,1.0,True
+Resturants,15,14,McDonaldsCorp,111679943,McDonald's Corporation,157200.0,,True
+Resturants,16,15,Hooters,16012601,Hootie,143700.0,1.0,True
+Resturants,17,16,Wahlburgers,364345806,Wahlburgers,137400.0,,True
+Resturants,18,17,CrackerBarrel,301112153,Cracker Barrel,134900.0,1.0,True
+Resturants,19,18,raisingcanes,28172701,Raising Cane's,112900.0,1.0,True
+Resturants,20,19,CarlsJr,16103650,Carl’s Jr.,109900.0,,True

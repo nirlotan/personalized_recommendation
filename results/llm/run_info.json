@@ -184,5 +184,46 @@
     "calls": 7,
     "cost_usd": 0.0292,
     "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-shuffled-baseline"
+    ],
+    "band": [
+      181,
+      200,
+      "extended"
+    ],
+    "calls": 100,
+    "cost_usd": 0.0171,
+    "budget_usd": 0.2
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-more-users"
+    ],
+    "band": [
+      81,
+      100,
+      "original"
+    ],
+    "users_per_category": 200,
+    "calls": 6112,
+    "cost_usd": 1.1921,
+    "budget_usd": 1.8
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1320,
+    "cost_usd": 0.2284,
+    "budget_usd": 0.5
   }
 ]

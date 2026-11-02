@@ -150,7 +150,7 @@ def example_html(kind, i, ex):
       <div class="scroll"><table class="data compact"><thead><tr><th>#</th><th>Account</th><th>User follows it?</th><th>Model's reason</th></tr></thead>
       <tbody>{rows}</tbody></table></div>
       <p class="positions">Rerun: relevant candidates at ranks {', '.join(map(str, rerun_pos)) or '–'}; {len(rel) - len(rerun_pos)} left out.</p>
-      <p class="step"><b>Original run (scored in Section 7): top {TOP}</b> (followed ones in green)</p>
+      <p class="step"><b>Original run (scored in Section B4): top {TOP}</b> (followed ones in green)</p>
       <p class="names">{orig_top}</p>
       <p class="positions">Original run: relevant candidates at ranks {', '.join(map(str, pos)) or '–'}; {missing} left out (counted as misses).</p>
     </div>"""
@@ -224,7 +224,7 @@ def main():
 <header class="hero">
   <p class="eyebrow">Extension · Social Knowledge for Cross-Domain User Preference Modeling</p>
   <h1>Ranking 200 candidates: worked examples</h1>
-  <p class="lede">Section 7 of <a href="results.html#all200">the results page</a> reports that GPT-6 Luna, given up to 200 followed
+  <p class="lede">Section B4 of <a href="results_backup.html#all200">the extended-lists results page</a> reports that GPT-6 Luna, given up to 200 followed
   account names, ranks 200 candidates better than SocialVec. These six users show what that looks like: three where it went well and
   three where it went badly, each rerun with the model asked to explain its choices.</p>
 </header>
@@ -238,7 +238,7 @@ def main():
     <li><i>Bad:</i> the lowest AP, whatever the answer's completeness.</li>
     <li><i>Rerun:</i> the same prompt, followed accounts, shuffled candidates and reasoning effort (medium), with three output fields
     instead of one: the user's interests, the ranked list, and a one-sentence reason for each of the top {TOP}. The chips show the AP of
-    the original run (the one in Section 7) and of the rerun, which is a new call and can rank differently.</li>
+    the original run (the one in Section B4) and of the rerun, which is a new call and can rank differently.</li>
     <li><i>Caveat:</i> the reasons are written by the model alongside its answer. They are its account of the ranking, not a record of
     the hidden reasoning, which the API does not return.</li>
     <li><i>Privacy:</i> users are identified by internal row only. Followed and candidate accounts are public accounts in SocialVec.</li>
@@ -275,7 +275,7 @@ def main():
     </ul></li>
     <li class="warn"><b>Single users vary a lot between runs.</b> Repeating the identical prompt changed AP by {repeat_diff:.3f} on average
     across these six users (from {g[2]['row']['llm_k200']:.3f} to {g[2]['repeat_ap']:.3f} for good example 3). The examples were chosen for
-    extreme AP, so some move back toward the middle on a repeat. Section 7's comparison averages over 270 users and is the better guide
+    extreme AP, so some move back toward the middle on a repeat. Section B4's comparison averages over 270 users and is the better guide
     to how well the method works; these examples show how it works.</li>
   </ul>
 </section>
