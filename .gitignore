@@ -180,3 +180,20 @@ results/llm_responses.jsonl
 # Local secrets and raw LLM response caches (responses are kept in results/llm/*_per_user.csv.gz)
 .env.local
 results/llm/cache/
+
+# Input data: large pickles (up to 306 MB), user lists, demographic descriptions and the
+# Wikidata/DBpedia caches. Not redistributable, and some files identify users.
+data/
+*.pkl
+*.pickle
+*.pkl.gz
+
+# Reference copy of the paper (available on arXiv)
+paper/
+
+# Local tool settings (Claude Code preview config) and editor/OS files
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
