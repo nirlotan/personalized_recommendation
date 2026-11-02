@@ -404,7 +404,7 @@ def table1d_html():
                     f"<td>{o[f'se1_k{k}']:.3f}</td><td>{se2}</td><td class='muted'>{'' if ref2 is None else f'{ref2:.3f}'}</td></tr>")
     rows.append(f"<tr class='total'><th>All</th><td>{o['se1_all_legacy']:.3f}</td><td class='muted'>{paper.TABLE2_OVERALL['all']:.3f}</td>"
                 f"<td>{o['se1_all']:.3f}</td><td>{o['se2_all']:.3f}</td><td class='muted'>{paper.TABLE2_OVERALL['sampled']:.3f}</td></tr>")
-    return (f"<details><summary>{ttitle('fig1_data')}</summary><div class='scroll'><table class='data compact'><thead><tr><th>k</th>"
+    return (f"<details open><summary>{ttitle('fig1_data')}</summary><div class='scroll'><table class='data compact'><thead><tr><th>k</th>"
             "<th>SE1 · paper setup</th><th>Paper</th><th>SE1 · target removed</th><th>SE2</th><th>Paper</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
@@ -416,7 +416,7 @@ def entities_html(entities=None, key="band_entities"):
         names = ", ".join(esc(n) + ("<sup>*</sup>" if not v else "") for n, v in zip(g["twitter_screen_name"], g["in_socialvec"]))
         rng = f"{g['followers_count'].min()/1e3:,.0f}K – {g['followers_count'].max()/1e3:,.0f}K"
         rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td class='nowrap'>{rng}</td><td class='names'>{names}</td></tr>")
-    return (f"<details><summary>{ttitle(key)} (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
+    return (f"<details open><summary>{ttitle(key)} (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
             "<thead><tr><th>Category</th><th>Followers</th><th>Entities</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
@@ -967,7 +967,7 @@ page = f"""<!doctype html>
     <span class="key"><i class="dia"></i>Value reported in the paper</span></div>
     {line_chart()}
     {table1d_html()}
-    <details><summary>Per-category panels</summary><img class="figure" alt="Figure 1 per category" src="data:image/png;base64,{fig1_png}"></details>
+    <details open><summary>Per-category panels</summary><img class="figure" alt="Figure 1 per category" src="data:image/png;base64,{fig1_png}"></details>
   </div>
 
   <h3>{ttitle('llm')}</h3>
@@ -982,7 +982,7 @@ page = f"""<!doctype html>
     <div class="legend"><span class="key"><i class="sq" style="background:var(--s1)"></i>{model_name}, 700 sampled users</span>
     <span class="key"><i class="sq" style="background:var(--s2)"></i>GPT-4o, as reported in the paper</span></div>
     {llm_chart()}
-    <details><summary>Show {tnum('llm')} (per category)</summary>{table3_html()}</details>
+    <details open><summary>Show {tnum('llm')} (per category)</summary>{table3_html()}</details>
     <p class="caption">Overall MAP (mean over 14 categories). The dashed reference lines are computed on the same 700 users.
     The baseline (no user information) is the mean of 10 calls per category with the candidates in random order (Section 4);
     with the candidates sorted by follower count it scores {_trials[_trials['order_type'] == 'original'].groupby('topic')['MAP'].mean().mean():.3f}.
@@ -1122,7 +1122,7 @@ page = f"""<!doctype html>
   <p class="caption">Overall MAP (mean over the 9 categories). The ranks 81–100 column is {tnum('band_llm')}; its other
   {band_llm.loc['Overall','users'] - top_llm.loc['Overall','users']:,.0f} users follow none of the top-20 candidates. Both bands use one random candidate order per user for the baseline
   and the follower-count order for the personalized prompts. p values are paired Wilcoxon tests over users.</p>
-  <details><summary>{ttitle('top_llm')}</summary>{band_llm_html(top_llm)}</details></div>
+  <details open><summary>{ttitle('top_llm')}</summary>{band_llm_html(top_llm)}</details></div>
 
   <h3>Limitations</h3>
   <p>Only the original top-20 candidates were manually validated; the lower ranks include some mistyped entities (esports teams
