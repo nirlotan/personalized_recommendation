@@ -12,6 +12,7 @@ import html
 import json
 import pickle
 import re
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -409,14 +410,30 @@ def table1d_html():
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
 
+# Real names for accounts whose Twitter display name is a nickname, a joke or oddly cased (keyed by handle)
+ENTITY_NAMES = pd.read_csv(ROOT / "reproduction" / "entity_names.csv").set_index("twitter_screen_name")["name"].to_dict()
+
+
+def entity_name(display, handle):
+    """The mapped real name, else the display name without emoji and other symbols, else the handle."""
+    if handle in ENTITY_NAMES:
+        return ENTITY_NAMES[handle]
+    if not isinstance(display, str):
+        return handle
+    clean = "".join(ch for ch in display if unicodedata.category(ch) not in ("So", "Sk", "Cf") and ch != "️")
+    return re.sub(r"\s+", " ", clean).strip() or handle
+
+
 def entities_html(entities=None, key="band_entities"):
     entities = band_entities if entities is None else entities
     rows = []
     for cat, g in entities.groupby("category", sort=False):
-        names = ", ".join(esc(n) + ("<sup>*</sup>" if not v else "") for n, v in zip(g["twitter_screen_name"], g["in_socialvec"]))
+        # entity names, with the handle on hover
+        names = ", ".join(f"<span title='@{esc(h)}'>{esc(entity_name(n, h))}</span>" + ("<sup>*</sup>" if not v else "")
+                          for n, h, v in zip(g["twitter_name"], g["twitter_screen_name"], g["in_socialvec"]))
         rng = f"{g['followers_count'].min()/1e3:,.0f}K – {g['followers_count'].max()/1e3:,.0f}K"
         rows.append(f"<tr><th>{esc(CATEGORY_LABELS[cat])}</th><td class='nowrap'>{rng}</td><td class='names'>{names}</td></tr>")
-    return (f"<details open><summary>{ttitle(key)} (* no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
+    return (f"<details open><summary>{ttitle(key)} (hover a name for its Twitter handle; * no SocialVec embedding, excluded)</summary><div class='scroll'><table class='data compact'>"
             "<thead><tr><th>Category</th><th>Followers</th><th>Entities</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div></details>")
 
