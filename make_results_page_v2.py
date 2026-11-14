@@ -147,6 +147,9 @@ MAIN_TABLES = {
     "demo_attrs": "Demographic attributes stated in GPT-4o's descriptions",
     "demo_attrs_cat": "Demographic attributes stated in GPT-4o's descriptions, by category",
     "demo_examples": "Examples: known entities a user follows and GPT-4o's description",
+    "haiku_1_20": "Supplementary · Claude Haiku 5.5 ranking per category, ranks 1–20",
+    "haiku_81_100": "Supplementary · Claude Haiku 5.5 ranking per category, ranks 81–100",
+    "haiku_complete": "Supplementary · Completeness of the rankings, Claude Haiku 5.5 and GPT-6 Luna",
 }
 BACKUP_TABLES = {
     "bands_overview": "Overall MAP by popularity band",
@@ -785,6 +788,57 @@ def haiku_summary(b):
 
 
 dhk = {b: haiku_summary(_hk_users[_hk_users["band"] == b]) for b in ("1-20", "81-100")}
+_luna_users = pd.read_csv(LLM / "demographics_v2_per_user.csv.gz")
+_hk_runs = [r for r in json.loads((LLM / "run_info.json").read_text()) if r["model"] == "claude-haiku-5-5"]
+hk_calls, hk_cost = sum(r["calls"] for r in _hk_runs), sum(r["cost_usd"] for r in _hk_runs)
+HK_CONDS = [("ap_baseline", "No user information"), ("ap_gpt-4o", "Demographics by GPT-4o"), ("ap_k12", "12 account names"),
+            ("ap_k25", "25 account names"), ("ap_k50", "50 account names")]
+
+
+def haiku_category_table(band):
+    """Supplementary: Claude Haiku 5.5 MAP per category and condition, with the non-LLM methods and GPT-6 Luna's overall row."""
+    b = _hk_users[_hk_users["band"] == band]
+    cols = ["random", "popularity", "socialvec"] + [c for c, _ in HK_CONDS]
+    t = b.groupby("topic")[cols].mean()
+    t = t.reindex([c for c in PAPER_CATEGORY_ORDER if c in t.index])
+    t.insert(0, "users", b.groupby("topic").size())
+    t.loc["Overall"] = t.mean()
+    t.loc["Overall", "users"] = len(b)
+    luna = _luna_users[_luna_users["band"] == band].groupby("topic")[[c for c, _ in HK_CONDS]].mean().mean()
+    grp = {"socialvec", "ap_baseline"}
+    rows = []
+    for cat, r in t.iterrows():
+        cls = " class='total'" if cat == "Overall" else ""
+        best = max(r[c] for c in cols)
+        cells = "".join(f"<td{' class=grp' if c in grp else ''}>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>"
+                        for c in cols)
+        rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{r['users']:,.0f}</td>{cells}</tr>")
+    rows.append(f"<tr class='muted'><th>{esc(model_name)}, overall</th><td></td><td></td><td></td><td class='grp'></td>"
+                + "".join(f"<td{' class=grp' if c == 'ap_baseline' else ''}>{luna[c]:.3f}</td>" for c, _ in HK_CONDS) + "</tr>")
+    return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='2'>Non-personalized</th>"
+            f"<th class='grp'>SocialVec</th><th colspan='5' class='grp'>{HAIKU}</th></tr>"
+            "<tr><th>Category</th><th>Users</th><th>Random</th><th>Popularity</th><th class='grp'>All entities</th>"
+            + "".join(f"<th{' class=grp' if c == 'ap_baseline' else ''}>{esc(label)}</th>" for c, label in HK_CONDS)
+            + f"</tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
+
+
+def haiku_completeness_table():
+    """Supplementary: share of answers that rank every candidate, at least 95% of them, or none, per model, band and condition."""
+    n_cand = _luna_users.set_index(["user", "band"])["n_candidates"]
+    rows = []
+    for name, users in [(HAIKU, _hk_users), (model_name, _luna_users)]:
+        for band in ("1-20", "81-100"):
+            u = users[users["band"] == band].set_index(["user", "band"])
+            cells = []
+            for c, _ in HK_CONDS:
+                share = u[c.replace("ap_", "returned_")] / n_cand.reindex(u.index)
+                cells.append(f"<td class='grp'>{(share >= 1).mean():.1%}</td><td>{(share >= 0.95).mean():.1%}</td><td>{(share == 0).mean():.1%}</td>")
+            rows.append(f"<tr><th>{esc(name)}</th><td>Ranks {band.replace('-', '–')}</td>{''.join(cells)}</tr>")
+    head = "".join(f"<th colspan='3' class='grp'>{esc(label)}</th>" for _, label in HK_CONDS)
+    sub = "<th class='grp'>All</th><th>≥ 95%</th><th>None</th>" * len(HK_CONDS)
+    return ("<div class='scroll'><table class='data compact'><thead>"
+            f"<tr class='super'><th></th><th></th>{head}</tr><tr><th>Model</th><th>Band</th>{sub}</tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table></div>")
 
 
 def demographics_chart(band, summary=None, model=None):
@@ -1060,7 +1114,7 @@ page = f"""<!doctype html>
   one-size-fits-all popularity ranking has the least to offer.</p>
   <nav class="toc"><a href="#reproduction">1 · Reproduction</a><a href="#legacy">2 · Notes on the original code</a>
   <a href="#tail">3 · Less popular entities</a><a href="#order">4 · LLM candidate order</a>
-  <a href="#demographics">5 · Demographics-only LLM</a><a href="#open">6 · Open items</a></nav>
+  <a href="#demographics">5 · Demographics-only LLM</a><a href="#supplement">S · Claude Haiku 5.5</a><a href="#open">6 · Open items</a></nav>
   <div class="tiles">
     <div class="tile"><div class="label">Values matching the paper's Table 2</div><div class="value">42 / 42</div><div class="sub">largest difference {max_t2:.4f} ({tnum('ranking')})</div></div>
     <div class="tile"><div class="label">Overall MAP, social vs. popularity</div><div class="value">{ov['se1_all_legacy']:.3f}</div><div class="sub">vs. {ov['popularity']:.3f} · {pct(ov['se1_all_legacy_gain'])}, as in the paper</div></div>
@@ -1440,13 +1494,40 @@ page = f"""<!doctype html>
   They should not be read as findings about which groups like which entities.</p>
 </section>
 
+<section id="supplement">
+  <h2><span class="num">S</span>Supplementary · Ranking with {HAIKU}</h2>
+  <p class="intro">All results of the {HAIKU} rankings of Section 5: the same {dhk['81-100']['users']:,} users (ranks 81–100) and
+  {dhk['1-20']['users']:,} users (ranks 1–20), candidate orders, GPT-4o descriptions and prompts as {model_name}.</p>
+  <p>{HAIKU} received the exact chat messages dspy renders for each signature (system and user message), through the Anthropic API
+  with adaptive thinking at effort <i>low</i> and the Message Batches API: {hk_calls:,} calls costing ${hk_cost:.2f}. The answer's
+  <code>ranked_ids</code> field is scored as for {model_name}: candidates it leaves out count as misses. The overall figures are in
+  {tnum('demo_bands')} and Figure 4.</p>
+
+  <h3>{ttitle('haiku_1_20')}</h3>
+  <div class="card">{haiku_category_table('1-20')}
+  <p class="caption">MAP per category with the candidates in each user's random order; Overall is the mean over categories. Bold marks
+  the best method in each row. The last row gives {model_name}'s overall MAP in the same conditions ({tnum('demo_bands')}).</p></div>
+
+  <h3>{ttitle('haiku_81_100')}</h3>
+  <div class="card">{haiku_category_table('81-100')}
+  <p class="caption">As above, for the candidates at ranks 81–100.</p></div>
+
+  <h3>{ttitle('haiku_complete')}</h3>
+  <div class="card">{haiku_completeness_table()}
+  <p class="caption">Share of answers whose <code>ranked_ids</code> contain every candidate, at least 95% of them, or no usable
+  ranking at all, per model, band and condition.</p></div>
+</section>
+
 <section id="open">
   <h2><span class="num">6</span>Open items</h2>
   <div class="callouts">
     <div class="callout"><span class="tag">Scale</span><h4>LLM experiments on all users</h4>
-    <p>The LLM results use samples of 50 users per category (200 for ranks 81–100), which keeps overall MAP within
-    about ±0.01. A full-population run takes about 45K calls. The same command runs it with larger samples, and cached
-    responses are reused.</p></div>
+    <p>The LLM results still use samples: 50 users per category for {tnum('llm')} (700 of the {len(_all_users):,} users), and
+    200 per category for {tnum('band_llm')}–{tnum('top_llm')}, Section 5 and the supplement ({band_llm.loc['Overall','users']:,.0f} of the
+    3,798 users who follow a ranks 81–100 candidate; TV stations have only 198). Overall MAP is then within about ±0.01. Running every
+    remaining user would take about 73K more calls, about $19 at this page's measured cost per call: {tnum('llm')} ~31K calls (~$8),
+    {tnum('band_llm')}–{tnum('top_llm')} ~16K (~$4), Section 5 ~6K (~$4, with the GPT-4o descriptions), {HAIKU} ~20K (~$2). The same
+    scripts run larger samples, and cached responses are reused.</p></div>
     <div class="callout"><span class="tag">Next</span><h4>Description-based tail candidates</h4>
     <p>The requested variant selects 50–100 accounts per category by their <i>textual descriptions</i>, below the top 10K/20K
     SocialVec entities. The ranks 81–100 band does not meet that criterion fully: {n_below_10k} of its {n_band_in_sv} candidates

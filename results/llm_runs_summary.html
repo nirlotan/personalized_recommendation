@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>LLM Runs Summary</title><style>
+:root{--bg:#faf9f6;--card:#ffffff;--ink:#1f1e1b;--ink2:#5c5a54;--line:#e4e1d8;--accent:#2f6fd6;--head:#f3f1ec}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1b1a18;--card:#242320;--ink:#ecebe6;--ink2:#a8a59c;--line:#3a3833;--accent:#7aa7f0;--head:#2c2b27}}
+:root[data-theme="dark"]{--bg:#1b1a18;--card:#242320;--ink:#ecebe6;--ink2:#a8a59c;--line:#3a3833;--accent:#7aa7f0;--head:#2c2b27}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:32px 16px 48px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:19px;margin:30px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
+h3{font-size:15px;margin:20px 0 6px;color:var(--accent)}
+p{margin:6px 0 10px;color:var(--ink2)}
+code{font-size:13px;background:var(--head);padding:1px 5px;border-radius:4px}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;margin:8px 0 14px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td:nth-last-child(-n+2){font-variant-numeric:tabular-nums}
+tr.total td{font-weight:600}
+</style></head><body><main>
+<h1>LLM runs: what was run, what it cost, and what was not run</h1>
+<p>Costs are as logged in <code>results/llm/run_info.json</code>, in USD. Table numbers refer to <code>results/results_v2.html</code>.</p>
+<h2>Totals</h2>
+<div class='scroll'><table><thead><tr><th>Model</th><th>Role</th><th>Calls</th><th>Cost</th></tr></thead><tbody><tr><td>GPT-6 Luna (OpenAI, effort <i>low</i>; <i>medium</i> for the 200-candidate runs)</td><td>Ranks the candidates</td><td>39,938</td><td>$9.89</td></tr><tr><td>GPT-4o (OpenAI)</td><td>Writes the demographic descriptions</td><td>2,260</td><td>$3.41</td></tr><tr><td>Claude Haiku 5.5 (Anthropic, adaptive thinking, effort <i>low</i>, Batch API)</td><td>Ranks the candidates (second model)</td><td>17,745</td><td>$2.03</td></tr><tr class='total'><td><b>All</b></td><td></td><td><b>59,943</b></td><td><b>$15.33</b></td></tr></tbody></table></div>
+<h2>What was run</h2>
+<h3>GPT-6 Luna</h3>
+<div class='scroll'><table><thead><tr><th>Experiment</th><th>Users</th><th>Calls</th><th>Cost</th></tr></thead><tbody><tr><td>Table 3 (paper's LLM table), Section 4 (candidate order) and a first 30-per-category Table 9</td><td>700 (50 per category, 14 categories)</td><td>4,613</td><td>$0.86</td></tr><tr><td>Table 3 and Tables 9–11 again, with shuffled candidates in the personalized prompts</td><td>700; 1,798 and 1,751</td><td>9,155</td><td>$1.77</td></tr><tr><td>Tables 9–11 extended to 200 users per category</td><td>1,798 (ranks 81–100), 1,751 (ranks 1–20)</td><td>12,865</td><td>$2.39</td></tr><tr><td>Section 5, ranking from demographics (all versions: 270 users, then 437, then all 1,798)</td><td>270 → 1,798</td><td>11,433</td><td>$2.03</td></tr><tr><td>Backup page: ranks 181–200 and 200-candidate experiments (extended lists, not in results_v2)</td><td>270</td><td>1,872</td><td>$2.84</td></tr></tbody></table></div>
+<h3>GPT-4o (descriptions only)</h3>
+<div class='scroll'><table><thead><tr><th>Experiment</th><th>Descriptions</th><th>Cost</th></tr></thead><tbody><tr><td>Section 5, first version (results.html)</td><td>270</td><td>$0.39</td></tr><tr><td>Section 5, one-value prompt, filtered 437 users (superseded; 255 reused)</td><td>456</td><td>$0.71</td></tr><tr><td>Section 5, all Table 9 users</td><td>1,534 new</td><td>$2.31</td></tr></tbody></table></div>
+<h3>Claude Haiku 5.5</h3>
+<div class='scroll'><table><thead><tr><th>Experiment</th><th>Users</th><th>Calls</th><th>Cost</th></tr></thead><tbody><tr><td>Section 5 rankings, all five conditions (no information, demographics, 12/25/50 names), both bands; Figure 4, Table 16, Supplement (Tables 20–22)</td><td>1,798 (ranks 81–100), 1,751 (ranks 1–20)</td><td>17,745 (50 pilot + 17,695 batch)</td><td>$2.03</td></tr></tbody></table></div>
+<p>Because Haiku used the same users, candidate orders and prompts as Tables 9–11, its no-information and account-name rankings also cover the LLM columns of Tables 9–11.</p>
+<h2>What was not run (estimated cost)</h2>
+<p>Estimates use the measured cost per call: GPT-6 Luna $0.00026, GPT-4o $0.0015 per description, Claude Haiku 5.5 $0.00011 (Batch API).</p>
+<div class='scroll'><table><thead><tr><th>Not run</th><th>GPT (Luna rankings, GPT-4o descriptions)</th><th>Claude Haiku 5.5</th></tr></thead><tbody><tr><td>Table 3 on all 11,153 users (now 700)</td><td>~31K calls, ~$8</td><td>~34K calls, ~$4</td></tr><tr><td>Table 3 with Claude at the current 700 users (included in the row above)</td><td>— (done with GPT)</td><td>~2.2K calls, ~$0.25</td></tr><tr><td>Tables 9–11 on all 3,798 eligible users (now 1,798)</td><td>~16K calls, ~$4</td><td>~16K calls, ~$1.8</td></tr><tr><td>Section 5 on all 3,798 eligible users</td><td>~2K descriptions + ~4K rankings, ~$4</td><td>~4K calls (demographics condition), ~$0.5</td></tr><tr><td>Section 4 (candidate order test) with Claude</td><td>— (done with GPT)</td><td>~2.4K calls, ~$0.3</td></tr><tr><td>Everything above together</td><td><b>~$16</b></td><td><b>~$6.5</b></td></tr><tr><td>Section 5 with Claude Sonnet 5.5 instead of Haiku (all five conditions, current users, thinking on)</td><td>—</td><td>~17.7K calls, ~$75</td></tr></tbody></table></div>
+</main></body></html>

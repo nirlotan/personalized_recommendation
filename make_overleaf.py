@@ -337,6 +337,9 @@ class Converter:
             subtitle = rf"\\[4pt]\large {inline(eyebrow).strip()}" if eyebrow else ""
             return [rf"\title{{{inline(el).strip()}{subtitle}}}", r"\date{}", r"\maketitle"]
         if el.name == "h2":
+            num = el.find(class_="num")
+            if num and not num.get_text(strip=True).isdigit():  # e.g. the supplement, "S" on the page
+                return [rf"\section*{{{num.get_text(strip=True)}\quad {heading_text(el)}}}"]
             return [rf"\section{{{heading_text(el)}}}"]
         if el.name == "h3":
             return [rf"\subsection*{{{heading_text(el)}}}"]

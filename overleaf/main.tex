@@ -417,10 +417,36 @@ One user from each of 4 categories: the user whose list of account names (the in
 
 {\small The descriptions are stereotype-based guesses about real people, shown here identified only by category. They should not be read as findings about which groups like which entities.}
 
+\section*{S\quad Supplementary \textperiodcentered{} Ranking with Claude Haiku 5.5}
+All results of the Claude Haiku 5.5 rankings of Section 5: the same 1,798 users (ranks 81--100) and 1,751 users (ranks 1--20), candidate orders, GPT-4o descriptions and prompts as GPT-6 Luna.
+
+Claude Haiku 5.5 received the exact chat messages dspy renders for each signature (system and user message), through the Anthropic API with adaptive thinking at effort \emph{low} and the Message Batches API: 17,745 calls costing \$2.03. The answer's \texttt{ranked\_ids} field is scored as for GPT-6 Luna: candidates it leaves out count as misses. The overall figures are in Table 16 and Figure 4.
+
+\subsection*{Table 20 \textperiodcentered{} Supplementary \textperiodcentered{} Claude Haiku 5.5 ranking per category, ranks 1--20}
+\begin{center}\begin{adjustbox}{max width=\linewidth}
+\input{tables/table_21}
+\end{adjustbox}\end{center}
+
+{\small MAP per category with the candidates in each user's random order; Overall is the mean over categories. Bold marks the best method in each row. The last row gives GPT-6 Luna's overall MAP in the same conditions (Table 16).}
+
+\subsection*{Table 21 \textperiodcentered{} Supplementary \textperiodcentered{} Claude Haiku 5.5 ranking per category, ranks 81--100}
+\begin{center}\begin{adjustbox}{max width=\linewidth}
+\input{tables/table_22}
+\end{adjustbox}\end{center}
+
+{\small As above, for the candidates at ranks 81--100.}
+
+\subsection*{Table 22 \textperiodcentered{} Supplementary \textperiodcentered{} Completeness of the rankings, Claude Haiku 5.5 and GPT-6 Luna}
+\begin{center}\begin{adjustbox}{max width=\linewidth}
+\input{tables/table_23}
+\end{adjustbox}\end{center}
+
+{\small Share of answers whose \texttt{ranked\_ids} contain every candidate, at least 95\% of them, or no usable ranking at all, per model, band and condition.}
+
 \section{Open items}
 \noindent\textsc{scale}\par
 \subsubsection*{LLM experiments on all users}
-The LLM results use samples of 50 users per category (200 for ranks 81--100), which keeps overall MAP within about $\pm$0.01. A full-population run takes about 45K calls. The same command runs it with larger samples, and cached responses are reused.
+The LLM results still use samples: 50 users per category for Table 3 (700 of the 11,153 users), and 200 per category for Table 9--Table 11, Section 5 and the supplement (1,798 of the 3,798 users who follow a ranks 81--100 candidate; TV stations have only 198). Overall MAP is then within about $\pm$0.01. Running every remaining user would take about 73K more calls, about \$19 at this page's measured cost per call: Table 3 \textasciitilde{}31K calls (\textasciitilde{}\$8), Table 9--Table 11 \textasciitilde{}16K (\textasciitilde{}\$4), Section 5 \textasciitilde{}6K (\textasciitilde{}\$4, with the GPT-4o descriptions), Claude Haiku 5.5 \textasciitilde{}20K (\textasciitilde{}\$2). The same scripts run larger samples, and cached responses are reused.
 
 \noindent\textsc{next}\par
 \subsubsection*{Description-based tail candidates}
