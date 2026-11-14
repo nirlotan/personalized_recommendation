@@ -1,0 +1,18 @@
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+ &  & \multicolumn{2}{c}{Non-personalized} & \multicolumn{3}{c}{SocialVec} & \multicolumn{4}{c}{GPT-6 Luna} \\
+Category & Users & Random & Popularity & All entities & k = 12 & k = 25 & Baseline & k = 12 & k = 25 & k = 50 \\
+\midrule
+Musical artists & 187 & 0.461 & 0.566 & 0.670 & 0.600 & 0.598 & 0.565 & 0.616 & 0.617 & \textbf{0.680} \\
+News outlets & 197 & 0.525 & 0.630 & 0.703 & 0.682 & 0.680 & 0.639 & \textbf{0.749} & 0.746 & 0.747 \\
+Comedians & 199 & 0.523 & 0.613 & 0.677 & 0.690 & 0.693 & 0.626 & 0.730 & \textbf{0.733} & 0.732 \\
+Politicians & 199 & 0.567 & 0.663 & 0.709 & 0.706 & 0.703 & 0.714 & 0.830 & \textbf{0.848} & 0.847 \\
+TV stations & 196 & 0.388 & 0.572 & 0.653 & 0.662 & 0.682 & 0.593 & 0.689 & 0.704 & \textbf{0.721} \\
+Actors & 187 & 0.436 & 0.481 & \textbf{0.617} & 0.561 & 0.563 & 0.532 & 0.561 & 0.561 & 0.610 \\
+TV shows & 194 & 0.292 & 0.452 & 0.625 & 0.585 & 0.601 & 0.540 & 0.653 & \textbf{0.673} & 0.652 \\
+Sports teams & 194 & 0.406 & 0.423 & 0.608 & 0.470 & 0.479 & 0.451 & 0.487 & 0.503 & \textbf{0.672} \\
+Journalists & 198 & 0.535 & 0.578 & 0.676 & 0.710 & 0.716 & 0.659 & 0.724 & \textbf{0.725} & 0.725 \\
+\midrule
+Overall & 1,751 & 0.459 & 0.553 & 0.660 & 0.630 & 0.635 & 0.591 & 0.671 & 0.679 & \textbf{0.710} \\
+\bottomrule
+\end{tabular}

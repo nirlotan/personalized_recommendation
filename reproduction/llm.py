@@ -179,7 +179,10 @@ def parse_ranking(ranked) -> Optional[list]:
             match = re.search(r"\[[\d\s,'\"]+\]", ranked)
             if match is None:
                 return None
-            ranked = ast.literal_eval(match.group(0))
+            try:
+                ranked = ast.literal_eval(match.group(0))
+            except (ValueError, SyntaxError):  # a malformed number such as "58 0097412": keep the numbers as written
+                ranked = re.findall(r"\d+", match.group(0))
     return ranked if isinstance(ranked, list) and ranked else None
 
 
@@ -225,15 +228,8 @@ def coverage(ranked, candidate_ids: List[int]) -> float:
     return len(set(ranked_ids(ranked)) & set(candidate_ids)) / len(candidate_ids)
 
 
-def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, extra_instructions: str = "", **lm_kwargs):
-    """
-    LLM rankers built with the authors' dspy signatures.
-
-    `model` is any litellm model name (e.g. "openai/gpt-6-luna"); extra keyword
-    arguments (api_key, reasoning_effort, ...) go to `dspy.LM`. A ready-made dspy
-    LM can be passed as `lm` instead. `extra_instructions` is appended to both
-    signatures' instructions.
-    """
+def ranker_signatures(extra_instructions: str = ""):
+    """The authors' two dspy signatures: (with followed accounts, without user information)."""
     import dspy
 
     class TwitterRecommendation(dspy.Signature):
@@ -258,12 +254,34 @@ def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, extra_instructions: 
         potential_accounts = dspy.InputField(desc="JSON list of potential accounts to recommend with twitter_user_id and names")
         ranked_ids = dspy.OutputField(desc="list with the account twitter_user_id sorted by priority as a ranked key")
 
-    lm = lm or dspy.LM(model, **lm_kwargs)
     if extra_instructions:
         TwitterRecommendation = TwitterRecommendation.with_instructions(
             TwitterRecommendation.instructions + "\n" + extra_instructions)
         TwitterDefaultRecommendation = TwitterDefaultRecommendation.with_instructions(
             TwitterDefaultRecommendation.instructions + "\n" + extra_instructions)
+    return TwitterRecommendation, TwitterDefaultRecommendation
+
+
+def ranker_messages(kind: str, **inputs) -> List[Dict[str, str]]:
+    """The chat messages dspy sends for a ranking call ('personal' or 'default'), without calling a model."""
+    import dspy
+    personal, default = ranker_signatures()
+    return dspy.ChatAdapter().format(personal if kind == "personal" else default, demos=[], inputs=inputs)
+
+
+def make_dspy_rankers(model: str = "azure/gpt-4o", lm=None, extra_instructions: str = "", **lm_kwargs):
+    """
+    LLM rankers built with the authors' dspy signatures.
+
+    `model` is any litellm model name (e.g. "openai/gpt-6-luna"); extra keyword
+    arguments (api_key, reasoning_effort, ...) go to `dspy.LM`. A ready-made dspy
+    LM can be passed as `lm` instead. `extra_instructions` is appended to both
+    signatures' instructions.
+    """
+    import dspy
+
+    TwitterRecommendation, TwitterDefaultRecommendation = ranker_signatures(extra_instructions)
+    lm = lm or dspy.LM(model, **lm_kwargs)
     personal = dspy.Predict(TwitterRecommendation)
     default = dspy.Predict(TwitterDefaultRecommendation)
 

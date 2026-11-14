@@ -17,10 +17,11 @@ from .config import CATEGORY_LABELS, SE1_SAMPLE_SIZES, SE2_SAMPLE_SIZES
 from .paper_results import RADAR_TRAITS
 
 
-def plot_figure1(fig1: pd.DataFrame, path: Path) -> None:
+def plot_figure1(fig1: pd.DataFrame, path: Path, closed_world: bool = True) -> None:
     """
     One panel per category (plus 'Overall'): SE1 and SE2 sampling curves against the
     popularity, SE1-All and SE2-All reference lines. SE1 uses the paper's (legacy) profiles.
+    closed_world=False leaves out the SE2 (closed-world) curve and reference line.
     """
     panels = list(fig1.index)
     cols = 5
@@ -35,11 +36,13 @@ def plot_figure1(fig1: pd.DataFrame, path: Path) -> None:
         row = fig1.loc[panel]
         ax.axhline(row["popularity"], color="slategray", linestyle=(0, (5, 5)), label="Popularity")
         ax.axhline(row["se1_all_legacy"], color="darkgreen", linestyle="--", label="SE1: All")
-        ax.axhline(row["se2_all"], color="brown", linestyle=":", label="SE2: All")
+        if closed_world:
+            ax.axhline(row["se2_all"], color="brown", linestyle=":", label="SE2: All")
         ax.plot(se1_x, [row[f"se1_legacy_k{k}"] for k in se1_sizes] + [row["se1_all_legacy"]],
                 marker="P", color="chocolate", label="SE1: Sampling")
-        ax.plot(se2_x, [row[f"se2_k{k}"] for k in SE2_SAMPLE_SIZES],
-                marker="v", color="tab:blue", label="SE2: Sampling")
+        if closed_world:
+            ax.plot(se2_x, [row[f"se2_k{k}"] for k in SE2_SAMPLE_SIZES],
+                    marker="v", color="tab:blue", label="SE2: Sampling")
         ax.set_title(CATEGORY_LABELS.get(panel, panel), fontweight="bold")
         ax.set_xlim(se1_x[0], se1_x[-1])
         ax.tick_params(axis="x", labelsize=8)

@@ -70,9 +70,13 @@ def main():
     p.add_argument("--source", default="original", choices=["original", "extended"],
                    help="original sheets ranked by follower count, or the extended lists "
                         "(data/popular_accounts_extended.xlsx) in their SocialVec popularity order")
+    p.add_argument("--exclude-extended", action="store_true",
+                   help="with --source original, also remove the category's extended-list entities from the profiles")
     args = p.parse_args()
 
     suffix = "_extended" if args.source == "extended" else ""
+    if args.exclude_extended and args.source == "original":
+        suffix += "_excl_extended"
     out = RESULTS_DIR / f"popularity_band_{args.start}_{args.end}{suffix}"
     out.mkdir(parents=True, exist_ok=True)
 
@@ -84,7 +88,8 @@ def main():
         per_user, bands = run_band_experiment(users, load_extended_sheets(), head, SocialVec("2020"), args.start, args.end,
                                               by="rank_in_category", also_exclude=original)
     else:
-        per_user, bands = run_band_experiment(users, original, head, SocialVec("2020"), args.start, args.end)
+        per_user, bands = run_band_experiment(users, original, head, SocialVec("2020"), args.start, args.end,
+                                              also_exclude=load_extended_sheets() if args.exclude_extended else None)
     per_user.to_csv(out / "per_user_ap.csv.gz", index=False)
     bands.to_csv(out / "band_entities.csv", index=False)
 

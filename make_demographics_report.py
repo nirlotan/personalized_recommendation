@@ -25,6 +25,7 @@ from reproduction.data import load_categories, load_users
 from reproduction.demographics import classify_users
 from reproduction.embeddings import SocialVec, load_metadata
 from reproduction.llm import names_of, ranked_ids, user_samples
+from reproduction.llm_demographics import ATTRIBUTE_VALUES, TOPICS, stated_values
 from reproduction.page_style import CSS, JS
 from run_llm_experiments import band_sample
 
@@ -60,10 +61,6 @@ ATTR = {
     "ethnicity": r"\b(?:white|black|caucasian|african[- ]american|hispanic|latin[oax]\w*|asian)\b",
     "education": r"(?:college|university|degree|high[- ]school|higher[- ]education|graduate|bachelor|primary school|educated)",
 }
-# Topics or interests named in a description, which the prompt forbids (it leaks more than demographics)
-TOPICS = (r"\b(?:politic\w*|sport\w*|music\w*|entertainment|news|pop culture|conservative|liberal|progressive|republican|"
-          r"democrat\w*|business|military|gaming|comedy|celebrit\w*|interest\w*|fan|fans|enthusiast\w*|hip[- ]hop|media)\b")
-
 n_attr = sum(m["description"].str.contains(p, case=False, regex=True).astype(int) for p in ATTR.values())
 m["status"] = np.select([n_attr == 4, n_attr == 0], ["complete", "declined"], "partial")
 m["leak"] = m["description"].str.contains(TOPICS, case=False, regex=True)
@@ -106,34 +103,6 @@ traits = classify_users(sample.loc[m.index], SocialVec("2020c"))
 
 # Descriptive statistics of the stated attributes (results.html shows these counts, never the descriptions).
 # Each description gets the first value it states for an attribute; hedges such as "30s or 40s" also count as giving more than one.
-_RANGE = r"\s*(?:-|to|–)\s*\d{2}"
-ATTRIBUTE_VALUES = {
-    "Gender": [("Female", r"\b(?:female|woman|women)\b"), ("Male", r"\b(?:male|man|men)\b")],
-    "Age": [("Under 30", rf"\b(?:teen\w*|young adults?|20s|twenties|[12]\d{_RANGE})\b"),
-            ("30s", rf"\b(?:30s|thirties|3\d{_RANGE})\b"),
-            ("40s", rf"\b(?:40s|forties|4\d{_RANGE})\b"),
-            ("Middle-aged", r"\bmiddle[- ]aged\b"),
-            ("50 or older", rf"\b(?:[5-9]0s|older|seniors?|[5-9]\d{_RANGE})\b")],
-    "Ethnicity": [("Caucasian / White", r"\b(?:caucasian|white)\b"), ("African American / Black", r"\b(?:african[- ]american|black)\b"),
-                  ("Hispanic / Latino", r"\b(?:hispanic|latin[oax]\w*)\b"), ("Asian", r"\basian\b"),
-                  ("Mixed / diverse", r"\b(?:mixed|diverse|multi[- ]?ethnic|multiracial)\b")],
-    "Education": [("High school", r"\bhigh[- ]school\b"),
-                  ("Some higher education", r"\b(?:some college|some higher education|at least some (?:higher education|college))\b"),
-                  ("College / university degree", r"\b(?:bachelor\w*|college degree|university degree|undergraduate)\b"),
-                  ("Graduate degree", r"\b(?:graduate degree|postgraduate|master\w*|advanced degree|doctora\w*|phd)\b"),
-                  ("Higher education, level not stated", r"\b(?:higher education|college|university|degree)\b")],
-}
-UNSPECIFIC = "Higher education, level not stated"  # used only when no specific level is stated
-
-
-def stated_values(text, attr):
-    """The values a description states for an attribute, in order of first mention."""
-    hits = sorted((mt.start(), value) for value, pat in ATTRIBUTE_VALUES[attr] if (mt := re.search(pat, text, re.I)))
-    values = [v for _, v in hits]
-    specific = [v for v in values if v != UNSPECIFIC]
-    return specific or values
-
-
 attributes = pd.DataFrame({attr: m["description"].map(lambda t, a=attr: (stated_values(t, a) or ["Not stated"])[0])
                            for attr in ATTRIBUTE_VALUES}, index=m.index)
 attributes_multiple = {attr: int(m["description"].map(lambda t, a=attr: len(stated_values(t, a)) > 1).sum()) for attr in ATTRIBUTE_VALUES}
