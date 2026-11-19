@@ -105,22 +105,65 @@ The experiments use a carefully constructed dataset:
 
 ```
 personalized_recommendation/
-├── main.tex                          # Research paper (LaTeX)
-├── README.md                         # This file
-├── requirements.txt                  # Python dependencies
-└── recommendation_evaluation/
-    ├── recommendation_p2.ipynb       # Main experimental notebook
-    └── recommendation.ipynb          # Additional experiments
+├── run_reproduction.py          # Reproduces the paper's tables and figures
+├── run_popularity_band.py       # Extension: ranking entities ranked 81-100 by popularity
+├── run_llm_experiments.py       # LLM experiments: Table 3 rerun, candidate order, ranks 81-100
+├── make_results_page.py         # Builds results/results.html
+├── reproduction/                # Reproduction code
+│   ├── data.py                  #   categories, users, closed-world splits
+│   ├── embeddings.py            #   SocialVec loading and user projection
+│   ├── ranking.py               #   cosine / popularity ranking, average precision
+│   ├── experiments.py           #   Table 2, Figure 1, Table 4
+│   ├── demographics.py          #   Figure 2 (socio-demographic classifiers)
+│   ├── llm.py                   #   Table 3: LLM ranking with the authors' prompts
+│   ├── popularity_bands.py      #   extension: less popular candidates
+│   ├── paper_results.py         #   published numbers, for comparison
+│   ├── plots.py, report.py
+├── results/                     # Generated outputs; REPORT.md compares them with the paper
+├── data/                        # Experimental dataset
+├── legacy_code/                 # Original notebooks
+├── paper/                       # The paper (arXiv:2603.10148)
+├── requirements.txt
+└── requirements-llm.txt         # Extra dependencies for the LLM experiments
 ```
 
-## 🔧 Requirements
+## 🔁 Reproducing the paper
 
-Key dependencies (see [requirements.txt](requirements.txt)):
-- `socialvec` - Pre-trained social embeddings
-- `pandas`, `numpy` - Data manipulation
-- `scipy` - Cosine similarity calculations
-- `tqdm` - Progress tracking
-- `matplotlib` - Visualizations
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt      # on Linux/macOS: .venv/bin/pip
+.venv/Scripts/python run_reproduction.py
+```
+
+The first run downloads the SocialVec embeddings (~300 MB) into `models/`. A full run takes
+about two minutes and writes the tables, figures and per-user scores to `results/`.
+[results/REPORT.md](results/REPORT.md) puts every reproduced number next to the paper's.
+
+An extension ranks less popular candidates (ranks 81-100 by follower count instead of the top 20);
+see [results/POPULARITY_BAND_REPORT.md](results/POPULARITY_BAND_REPORT.md):
+
+```bash
+.venv/Scripts/python run_popularity_band.py --start 81 --end 100
+```
+
+The LLM experiments use the authors' dspy prompts on stratified user samples:
+- the Table 3 rerun
+- a test of whether the order of the candidates matters
+- the LLM ranking of ranks 81–100
+
+The run was about 4,600 calls with GPT-6 Luna, costing $0.86. It reads the OpenAI key from `OPENAI_API_KEY`, `OPENAI_KEY` or
+`.env.local`, stops calling the model at `--budget` dollars, and caches every response, so interrupted
+runs resume and `--rescore` recomputes all scores without new calls. Results are in
+[results/LLM_REPORT.md](results/LLM_REPORT.md):
+
+```bash
+.venv/Scripts/pip install -r requirements-llm.txt
+.venv/Scripts/python run_llm_experiments.py --dry-run --out scratch/llm   # offline check, fake model
+.venv/Scripts/python run_llm_experiments.py --model gpt-6-luna --effort low --budget 1.5
+```
+
+[results/results.html](results/results.html) presents all results on one page. Rebuild it with
+`.venv/Scripts/python make_results_page.py`.
 
 
 ## 🔒 Ethics & Privacy

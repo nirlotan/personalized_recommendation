@@ -1,0 +1,19 @@
+person_rule,category,accounts,original_found_in_wikidata,original_recovered,top100_overlap_with_original
+first,TV hosts,304,22,14,4
+first,Comedians,411,93,89,36
+first,Musical artists,3073,94,78,52
+first,Politicians,751,89,88,56
+first,Actors,2178,98,85,32
+first,Journalists,1264,95,83,20
+priority,TV hosts,539,22,15,1
+priority,Comedians,546,93,90,28
+priority,Musical artists,3457,94,89,53
+priority,Politicians,758,89,88,55
+priority,Actors,1553,98,56,32
+priority,Journalists,1128,95,71,24
+all,TV hosts,539,22,15,1
+all,Comedians,598,93,92,26
+all,Musical artists,3621,94,92,52
+all,Politicians,772,89,88,55
+all,Actors,2790,98,92,21
+all,Journalists,1456,95,88,16

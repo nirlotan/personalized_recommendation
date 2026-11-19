@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demographic LLM Ranking</title><style>
+:root{color-scheme:light;
+ --page:#f9f9f7;--surface:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink-2:#52514e;--muted:#898781;
+ --grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;
+ --good:#006300;--bad:#b42f2f;--accent-wash:#eef4fc;--warn-wash:#fdf3ea;--chip:#f0efec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--card:#151514;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;
+ --good:#0ca30c;--bad:#e66767;--accent-wash:#14202f;--warn-wash:#2a1d14;--chip:#262624}}
+:root[data-theme="dark"]{color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--card:#151514;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;
+ --good:#0ca30c;--bad:#e66767;--accent-wash:#14202f;--warn-wash:#2a1d14;--chip:#262624}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header.hero{padding:56px 0 28px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(28px,4.4vw,42px);line-height:1.15;margin:0 0 14px;letter-spacing:-.01em;font-weight:650}
+.lede{font-size:18px;color:var(--ink-2);max-width:760px;margin:0}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0}
+nav.toc a{font-size:14px;color:var(--ink-2);text-decoration:none;padding:5px 12px;border-radius:999px;background:var(--chip)}
+nav.toc a:hover{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:34px 0 8px}
+.tile{background:var(--card);border-radius:14px;padding:18px 18px 16px;box-shadow:0 0 0 1px var(--ring)}
+.tile .label{font-size:13px;color:var(--ink-2)}
+.tile .value{font-size:32px;font-weight:620;margin:4px 0 2px;letter-spacing:-.01em}
+.tile .sub{font-size:13px;color:var(--muted)}
+section{padding:44px 0 8px}
+h2{font-size:26px;margin:0 0 6px;letter-spacing:-.005em;font-weight:640}
+h2 .num{color:var(--muted);font-weight:500;margin-right:8px}
+h3{font-size:18px;margin:34px 0 8px;font-weight:620}
+p{max-width:780px}
+.intro{color:var(--ink-2);margin-top:0}
+.card{background:var(--card);border-radius:16px;padding:20px 20px 14px;box-shadow:0 0 0 1px var(--ring);margin:16px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2);margin:0 0 8px}
+.key{display:inline-flex;align-items:center;gap:7px}
+.key i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.key i.dot{width:10px;height:10px;border-radius:50%}
+.key i.dia{width:9px;height:9px;transform:rotate(45deg);border:2px solid var(--ink);border-radius:1px;background:transparent}
+.key i.tick{width:2px;height:14px;background:var(--ink-2)}
+.key i.sq{width:12px;height:12px;border-radius:3px}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid{stroke:var(--grid);stroke-width:1}
+.chart .sep{stroke:var(--axis);stroke-width:1}
+.chart .tick{fill:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.chart .axis-title,.chart .col-head{fill:var(--muted);font-size:12px}
+.chart .cat{fill:var(--ink);font-size:13px}
+.chart .delta{fill:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+.chart .delta.neg{fill:var(--bad)}
+.chart .ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.chart .ref-label{fill:var(--muted);font-size:12px}
+.chart .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .line.s1{stroke:var(--s1)}.chart .line.s2{stroke:var(--s2)}.chart .line.s3{stroke:var(--s3)}
+.chart .dot{stroke:var(--card);stroke-width:2}
+.chart .dot.s1{fill:var(--s1)}.chart .dot.s2{fill:var(--s2)}.chart .dot.s3{fill:var(--s3)}
+.chart .paper-mark{fill:none;stroke:var(--ink);stroke-width:1.6}
+.chart .bar.s1{fill:var(--s1)}.chart .bar.s2{fill:var(--s2)}.chart .bar.s3{fill:var(--s3)}.chart .bar.muted-bar{fill:var(--axis)}
+.chart .rand{stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
+.chart .hit{fill:transparent;cursor:default}
+.chart .hit:hover{fill:rgba(127,127,127,.10)}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panels>.panel{min-width:0}
+.panel h4{margin:0 0 4px;font-size:15px;font-weight:620}
+.panel .note{font-size:13px;color:var(--muted);margin:0 0 6px}
+@media (max-width:820px){.panels{grid-template-columns:1fr}}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0}
+table.data{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+table.data th,table.data td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid)}
+table.data thead th{font-size:12px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--axis);vertical-align:bottom}
+table.data tr.super th{border-bottom:none;text-align:center;color:var(--muted);font-weight:500;padding-bottom:0}
+table.data tbody th,table.data thead tr:last-child th:first-child{text-align:left}
+table.data tbody th{font-weight:500}
+table.data tr.total th,table.data tr.total td{font-weight:650;border-top:1px solid var(--axis);border-bottom:none}
+table.data .grp{border-left:1px solid var(--axis)}
+table.data td.neg{color:var(--bad)}
+table.data td.below{text-decoration:underline dotted;text-underline-offset:3px;color:var(--bad)}
+table.data td.p{color:var(--ink-2)}
+table.data td.muted{color:var(--muted)}
+table.data .paper{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+table.data.compact td,table.data.compact th{padding:6px 10px}
+table.data td.names{white-space:normal;text-align:left;min-width:420px;color:var(--ink-2)}
+table.data td.nowrap{white-space:nowrap}
+.caption{font-size:13px;color:var(--muted);margin:6px 0 0;max-width:none}
+.heats{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+figure.heat{margin:0}
+figure.heat figcaption{font-size:14px;font-weight:600;margin:0 0 8px}
+figure.heat figcaption small{display:block;font-weight:400;color:var(--muted)}
+table.heatmap{border-collapse:separate;border-spacing:2px;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+table.heatmap td{padding:7px 0;text-align:center;border-radius:4px}
+table.heatmap th{font-size:12px;font-weight:500;color:var(--muted);padding:2px 4px}
+.callouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.callout{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 0 0 1px var(--ring)}
+.callout h4{margin:0 0 6px;font-size:15px}
+.callout p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.callout .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--ink-2);margin-bottom:8px}
+.highlights{list-style:none;padding:0;margin:16px 0;display:grid;gap:10px;max-width:820px}
+.highlights li{padding:12px 16px 12px 16px;background:var(--accent-wash);border-radius:12px;font-size:15px}
+.highlights li.warn{background:var(--warn-wash)}
+details{margin:10px 0}
+summary{cursor:pointer;color:var(--ink-2);font-size:14px}
+img.figure{width:100%;height:auto;border-radius:12px;background:#fff;display:block;margin-top:10px}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--chip);padding:1px 6px;border-radius:6px}
+pre{background:var(--card);box-shadow:0 0 0 1px var(--ring);border-radius:12px;padding:14px 16px;overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.status.ok{color:var(--good)}.status.no{color:var(--bad)}.status.part{color:var(--ink-2)}
+footer{padding:48px 0 64px;color:var(--muted);font-size:13px}
+#tip{position:fixed;pointer-events:none;z-index:10;background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--ring),0 6px 24px rgba(0,0,0,.12);
+ border-radius:10px;padding:8px 11px;font-size:13px;line-height:1.45;opacity:0;transition:opacity .12s;max-width:260px}
+
+table.data td.hl{background:var(--accent-wash)}
+table.data tr.hl-row th,table.data tr.hl-row td{background:var(--accent-wash);font-weight:650}
+.example h4{margin:0 0 12px;font-size:16px}
+.ex-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.ex-grid{grid-template-columns:1fr}}
+.step{font-size:13px;font-weight:600;color:var(--ink-2);margin:14px 0 6px;display:flex;gap:8px;align-items:center}
+.step span{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--chip);align-items:center;justify-content:center;font-size:12px}
+.quote{margin:0;padding:10px 14px;border-left:3px solid var(--s1);background:var(--accent-wash);border-radius:0 10px 10px 0;max-width:none}
+.quote.small{font-size:13.5px;color:var(--ink-2);border-left-color:var(--axis);background:transparent}
+ol.ranking{columns:2;column-gap:24px;margin:0;padding-left:26px;font-size:14px}
+ol.ranking li{padding:1px 0;break-inside:avoid}
+ol.ranking li.hit-item{font-weight:650;color:var(--good)}
+.ap{font-size:15px;margin:0 0 10px}
+table.mini{width:auto;min-width:240px}
+pre.prompt{white-space:pre-wrap;font-size:12.5px}
+.method p{max-width:800px}
+</style></head>
+<body><div id="tip" role="tooltip"></div>
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Extension · Social Knowledge for Cross-Domain User Preference Modeling</p>
+  <h1>Can demographics alone personalize an LLM's recommendations?</h1>
+  <p class="lede">GPT-4o infers a user's gender, age, ethnicity and education from the names of accounts they follow, and
+  GPT-6 Luna then ranks less popular entities given only that inferred description. I compare this with ranking from the
+  account names themselves, with social embeddings, and with non-personalized baselines, on the same 270 users, first with
+  the candidates in follower-count order (Section 2) and then shuffled (Section 4).</p>
+  <div class="tiles">
+    <div class="tile"><div class="label">Shuffled candidates: demographics vs. no information</div><div class="value">0.355 vs. 0.276</div><div class="sub">MAP, p &lt; 0.001</div></div>
+    <div class="tile"><div class="label">Shuffled, demographics-only descriptions</div><div class="value">0.328 vs. 0.275</div><div class="sub">210 users whose description names no interests</div></div>
+    <div class="tile"><div class="label">Descriptions that also name interests</div><div class="value">60 / 270</div><div class="sub">against the instruction to describe demographics only</div></div>
+    <div class="tile"><div class="label">Shuffled: 12 account names</div><div class="value">0.397</div><div class="sub">above the demographic description (p = 0.034)</div></div>
+  </div>
+</header>
+
+<section class="method">
+  <h2><span class="num">1</span>Method</h2>
+  <p><b>Task and data.</b> We use the less-popular-entity setting of the popularity-band extension. In each of nine categories
+  (musical artists, news outlets, comedians, politicians, TV stations, actors, TV shows, sports teams and journalists),
+  the candidates are the entities ranked 81–100 by Twitter follower count among the category's typed entities. Only
+  entities with a SocialVec embedding are kept, leaving 18–20 per category. The users are the same stratified random sample used
+  for the LLM experiments on this band: 30 users per category (270 in total), drawn with a fixed seed from the users
+  sampled for that category who follow at least one candidate. The candidates a user follows are the relevant answers.</p>
+
+  <p><b>Stage 1: demographic inference (GPT-4o).</b> For each user, GPT-4o (default sampling settings) receives the names of the
+  accounts listed in that user's k = 50 prompt. These are 50 accounts drawn at random from everything the user follows, after
+  removing every listed entity of the target category, keeping only accounts with a known display name
+  (28.7 names on average; minimum 3). The model is asked for a
+  one- or two-sentence description stating the user's most likely gender, age, ethnicity and level of education. It is
+  instructed to always guess from stereotypes about the typical audience of the accounts, never to state that the attributes
+  cannot be determined, and not to mention interests or accounts, so that the description carries demographic information
+  only. The prompt, in the dspy signature format of the original experiments:</p>
+  <pre class="prompt">Given the names of accounts that a Twitter user follows, write a short, concise description of the user that states their
+most likely gender, age, ethnicity, and level of education (primary school, high school, higher education, etc.).
+Deduce these attributes only from the names of the accounts they follow.
+You must always guess the most likely value of all four attributes, based on stereotypes about the typical audience of
+these accounts, even when the evidence is weak. Never answer that the attributes cannot be determined or that the
+evidence is insufficient.
+Describe only these four attributes: do not mention the user's interests or hobbies, and do not name any of the accounts.
+
+Input  followed_accounts: Names of accounts the user follows
+Output description: One or two sentences stating the user's most likely gender, age, ethnicity, and level of education</pre>
+
+  <p><b>Stage 2: ranking from the description (GPT-6 Luna).</b> The ranking prompt is the authors' personalized ranking prompt,
+  with the list of followed accounts replaced by the Stage 1 description. The candidates are given as a JSON list of ids and
+  display names, and the model must return a full ranking of the ids. GPT-6 Luna runs at reasoning effort <i>low</i>, as in the
+  other LLM experiments:</p>
+  <pre class="prompt">given the below Twitter user, for whom we provide a short demographic description, and a list of possible accounts to
+recommend for the user to follow, create a prioritized recommendation list.
+You must rank the entire list provided to you.
+Try to deduce what you think the user might like based on their demographic description.
+Return ONLY a valid list object with the ranked account twitter_user_id sorted by relevance (highest to lowest). Do not
+include name or reasoning.
+
+Inputs user_description, potential_accounts (JSON list of twitter_user_id and names)
+Output ranked_ids</pre>
+
+  <p><b>Candidate order.</b> Section 2 lists the candidates sorted by follower count, as in the original experiments. Because an
+  LLM partly copies the order it is given, Section 4 repeats Stage 2 with the candidates in one random order per user, shared by
+  every condition of that user.</p>
+
+  <p><b>Evaluation.</b> Each ranking is scored by average precision over the candidates the user follows, using the legacy
+  scoring rule (relevant candidates missing from the response are skipped). MAP is the mean over users within a category,
+  and overall MAP is the unweighted mean over the nine categories. All other methods are evaluated on the same users and
+  candidates:
+  <ul>
+    <li><i>Non-personalized baselines:</i> the expected AP of a random ranking; follower-count popularity; and the LLM with no user information.</li>
+    <li><i>LLM with account names:</i> the LLM given the names of 12, 25 or 50 followed accounts.</li>
+    <li><i>SocialVec:</i> cosine similarity to the average embedding of the same 12 or 25 accounts, or of all the user's followed entities.</li>
+  </ul>
+  Differences are tested with two-sided paired Wilcoxon signed-rank tests on per-user AP.</p>
+
+  <p><b>Description content.</b> A description is <i>complete</i> if it states a value for all four attributes, <i>declined</i> if
+  it states none, and <i>partial</i> otherwise. Since the prompt forbids mentioning interests, descriptions that name topics or
+  interests (for example politics, sports, music or news) are flagged as <i>naming interests</i>: they carry information beyond
+  demographics. Stated values are also parsed into the binary classes of SocialVec's trait classifiers and compared with those
+  classifiers' predictions from the user's full embedding.</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Results with candidates in follower-count order</h2>
+  <p class="intro">GPT-4o's descriptions give 0.352 MAP, compared with 0.276 for the LLM
+  without user information and 0.295 for popularity. The gain is largest for descriptions that break the prompt by
+  naming the user's interests (Section 3). Naming 12 followed accounts gives 0.402. In every table, the LLM without user
+  information gets the candidates in a random order per user; with the candidates in follower-count order it scores
+  0.304, because it partly copies the
+  presented order (Section 4). The rankings that use user information barely depend on the order, so they are compared with the
+  shuffled baseline.</p>
+  <div class="card"><svg viewBox="0 0 760 340" class="chart" role="img" aria-label="Overall MAP by method, candidates in follower-count order">
+<line class="grid" x1="250.0" x2="250.0" y1="10" y2="316"/><text class="tick" x="250.0" y="332" text-anchor="middle">0.0</text>
+<line class="grid" x1="331.8" x2="331.8" y1="10" y2="316"/><text class="tick" x="331.8" y="332" text-anchor="middle">0.1</text>
+<line class="grid" x1="413.6" x2="413.6" y1="10" y2="316"/><text class="tick" x="413.6" y="332" text-anchor="middle">0.2</text>
+<line class="grid" x1="495.5" x2="495.5" y1="10" y2="316"/><text class="tick" x="495.5" y="332" text-anchor="middle">0.3</text>
+<line class="grid" x1="577.3" x2="577.3" y1="10" y2="316"/><text class="tick" x="577.3" y="332" text-anchor="middle">0.4</text>
+<line class="grid" x1="659.1" x2="659.1" y1="10" y2="316"/><text class="tick" x="659.1" y="332" text-anchor="middle">0.5</text>
+<text class="cat" x="240" y="27" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M250,16 h210.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-210.2 z"/><text class="delta" x="472.2" y="27">0.262</text><rect class="hit" x="250" y="14" width="214.2" height="18" data-tip="Random ranking (expected), candidates in follower-count order<br>MAP <b>0.262</b>"/>
+<text class="cat" x="240" y="57" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M250,46 h237.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-237.3 z"/><text class="delta" x="499.3" y="57">0.295</text><rect class="hit" x="250" y="44" width="241.3" height="18" data-tip="Popularity (follower count), candidates in follower-count order<br>MAP <b>0.295</b>"/>
+<text class="cat" x="240" y="87" text-anchor="end">LLM, no user information (shuffled)</text><path class="bar muted-bar" d="M250,76 h222.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-222.1 z"/><text class="delta" x="484.1" y="87">0.276</text><rect class="hit" x="250" y="74" width="226.1" height="18" data-tip="LLM, no user information (shuffled), candidates in follower-count order<br>MAP <b>0.276</b>"/>
+<text class="cat" x="240" y="117" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M250,106 h283.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-283.7 z"/><text class="delta" x="545.7" y="117" font-weight="650">0.352</text><rect class="hit" x="250" y="104" width="287.7" height="18" data-tip="LLM, demographics by GPT-4o, candidates in follower-count order<br>MAP <b>0.352</b>"/>
+<text class="cat" x="240" y="147" text-anchor="end">SocialVec, 12 accounts</text><path class="bar muted-bar" d="M250,136 h292.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-292.6 z"/><text class="delta" x="554.6" y="147">0.362</text><rect class="hit" x="250" y="134" width="296.6" height="18" data-tip="SocialVec, 12 accounts, candidates in follower-count order<br>MAP <b>0.362</b>"/>
+<text class="cat" x="240" y="177" text-anchor="end">LLM, 12 account names</text><path class="bar muted-bar" d="M250,166 h324.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-324.8 z"/><text class="delta" x="586.8" y="177">0.402</text><rect class="hit" x="250" y="164" width="328.8" height="18" data-tip="LLM, 12 account names, candidates in follower-count order<br>MAP <b>0.402</b>"/>
+<text class="cat" x="240" y="207" text-anchor="end">SocialVec, 25 accounts</text><path class="bar muted-bar" d="M250,196 h294.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-294.4 z"/><text class="delta" x="556.4" y="207">0.365</text><rect class="hit" x="250" y="194" width="298.4" height="18" data-tip="SocialVec, 25 accounts, candidates in follower-count order<br>MAP <b>0.365</b>"/>
+<text class="cat" x="240" y="237" text-anchor="end">LLM, 25 account names</text><path class="bar muted-bar" d="M250,226 h340.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-340.8 z"/><text class="delta" x="602.8" y="237">0.421</text><rect class="hit" x="250" y="224" width="344.8" height="18" data-tip="LLM, 25 account names, candidates in follower-count order<br>MAP <b>0.421</b>"/>
+<text class="cat" x="240" y="267" text-anchor="end">LLM, 50 accounts</text><path class="bar muted-bar" d="M250,256 h405.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-405.7 z"/><text class="delta" x="667.7" y="267">0.501</text><rect class="hit" x="250" y="254" width="409.7" height="18" data-tip="LLM, 50 accounts, candidates in follower-count order<br>MAP <b>0.501</b>"/>
+<text class="cat" x="240" y="297" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M250,286 h364.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-364.9 z"/><text class="delta" x="626.9" y="297">0.451</text><rect class="hit" x="250" y="284" width="368.9" height="18" data-tip="SocialVec, all followed entities, candidates in follower-count order<br>MAP <b>0.451</b>"/>
+</svg>
+  <p class="caption">Overall MAP (mean over nine categories) on the same 270 users. The highlighted bar is this experiment.</p></div>
+
+  <h3>Per category</h3>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information (shuffled)</th><th>LLM, demographics by GPT-4o</th><th>SocialVec, 12 accounts</th><th>LLM, 12 account names</th><th>SocialVec, 25 accounts</th><th>LLM, 25 account names</th><th>LLM, 50 accounts</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Musical artists</th><td class=''>0.252</td><td class=''>0.453</td><td class=''>0.278</td><td class='hl'>0.398</td><td class=''>0.489</td><td class=''>0.395</td><td class=''>0.498</td><td class=''>0.369</td><td class=''>0.489</td><td class=''><b>0.611</b></td></tr><tr><th>News outlets</th><td class=''>0.253</td><td class=''>0.267</td><td class=''>0.294</td><td class='hl'>0.318</td><td class=''>0.331</td><td class=''>0.532</td><td class=''>0.353</td><td class=''><b>0.546</b></td><td class=''>0.533</td><td class=''>0.396</td></tr><tr><th>Comedians</th><td class=''>0.217</td><td class=''>0.290</td><td class=''>0.164</td><td class='hl'>0.220</td><td class=''>0.222</td><td class=''>0.290</td><td class=''>0.243</td><td class=''>0.272</td><td class=''><b>0.351</b></td><td class=''>0.281</td></tr><tr><th>Politicians</th><td class=''>0.386</td><td class=''>0.328</td><td class=''>0.401</td><td class='hl'>0.452</td><td class=''>0.413</td><td class=''>0.484</td><td class=''>0.412</td><td class=''><b>0.546</b></td><td class=''>0.519</td><td class=''>0.463</td></tr><tr><th>TV stations</th><td class=''>0.191</td><td class=''>0.149</td><td class=''>0.171</td><td class='hl'>0.290</td><td class=''>0.338</td><td class=''>0.353</td><td class=''>0.334</td><td class=''>0.463</td><td class=''><b>0.666</b></td><td class=''>0.444</td></tr><tr><th>Actors</th><td class=''>0.268</td><td class=''>0.320</td><td class=''>0.238</td><td class='hl'>0.369</td><td class=''>0.464</td><td class=''>0.353</td><td class=''>0.441</td><td class=''>0.403</td><td class=''>0.487</td><td class=''><b>0.518</b></td></tr><tr><th>TV shows</th><td class=''>0.213</td><td class=''>0.276</td><td class=''>0.331</td><td class='hl'>0.436</td><td class=''>0.371</td><td class=''>0.485</td><td class=''>0.374</td><td class=''>0.456</td><td class=''><b>0.570</b></td><td class=''>0.407</td></tr><tr><th>Sports teams</th><td class=''>0.252</td><td class=''>0.269</td><td class=''>0.252</td><td class='hl'>0.324</td><td class=''>0.292</td><td class=''>0.302</td><td class=''>0.284</td><td class=''>0.315</td><td class=''>0.426</td><td class=''><b>0.516</b></td></tr><tr><th>Journalists</th><td class=''>0.324</td><td class=''>0.303</td><td class=''>0.357</td><td class='hl'>0.357</td><td class=''>0.343</td><td class=''>0.424</td><td class=''>0.343</td><td class=''>0.423</td><td class=''><b>0.467</b></td><td class=''>0.423</td></tr><tr class='total'><th>Overall</th><td class=''>0.262</td><td class=''>0.295</td><td class=''>0.276</td><td class='hl'>0.352</td><td class=''>0.362</td><td class=''>0.402</td><td class=''>0.365</td><td class=''>0.421</td><td class=''><b>0.501</b></td><td class=''>0.451</td></tr></tbody></table></div>
+  <p class="caption">MAP per category; bold marks the best method in each row. With 30 users per category, per-category MAP has a
+  standard error of about 0.05.</p></div>
+
+  <h3>Statistical tests</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Demographics by GPT-4o vs.</th><th>Δ MAP</th><th>p (Wilcoxon)</th></tr></thead>
+  <tbody><tr><th>Popularity (follower count)</th><td>+0.057</td><td>&lt; 0.001</td></tr><tr><th>LLM, no user information (shuffled)</th><td>+0.075</td><td>&lt; 0.001</td></tr><tr><th>SocialVec, 12 accounts</th><td>−0.011</td><td>0.397</td></tr><tr><th>LLM, 12 account names</th><td>−0.050</td><td>0.009</td></tr><tr><th>SocialVec, 25 accounts</th><td>−0.013</td><td>0.334</td></tr><tr><th>LLM, 25 account names</th><td>−0.070</td><td>&lt; 0.001</td></tr><tr><th>LLM, 50 accounts</th><td>−0.149</td><td>&lt; 0.001</td></tr><tr><th>SocialVec, all followed entities</th><td>−0.099</td><td>&lt; 0.001</td></tr></tbody></table></div>
+  <p class="caption">Δ is the overall MAP of the demographic ranking minus that of the other method.</p></div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>What the descriptions contain</h2>
+  <p class="intro">GPT-4o described every user: 268 descriptions state all four attributes,
+  2 only some (in wording the parser misses, such as "twenties" or "diverse ethnicity") and
+  0 none. But 60 of the 270 (22%) also name the user's interests, despite the
+  instruction, for example "…with a higher education level, likely due to the interest in diverse media and sports analysts,
+  personalities, and NFL-related accounts".</p>
+
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Users</th><th>n</th><th>LLM, demographics by GPT-4o</th>
+  <th>LLM, no information</th><th>p</th></tr></thead><tbody><tr><th>All users</th><td>270</td><td class='hl'>0.352</td><td>0.276</td><td>&lt; 0.001</td></tr><tr><th>Description also names interests</th><td>60</td><td class='hl'>0.508</td><td>0.280</td><td>&lt; 0.001</td></tr><tr><th>Description is demographics only</th><td>210</td><td class='hl'>0.307</td><td>0.275</td><td>0.020</td></tr></tbody></table></div>
+  <p class="caption">MAP over the users in each row, pooled across categories. The demographic ranking lists the candidates by
+  follower count; the baseline gets them shuffled.</p></div>
+
+  <p><b>Leaked interests give most of the gain, but demographics alone also help.</b> For the 60 users whose description names
+  interests, the ranking reaches 0.508, far above the no-information baseline (0.280, p &lt; 0.001). For the remaining
+  210 users, whose descriptions are demographics only, the score is 0.307 against 0.275 (p = 0.020): a smaller
+  but significant gain. Against the baseline with sorted candidates, the demographics-only descriptions had looked no better
+  (0.307 vs. 0.301, p = 0.783).</p>
+
+  <h3>Do the guesses agree with SocialVec's trait classifiers?</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>Attribute</th><th>Users with a parsed guess</th>
+  <th>Agreement with SocialVec</th><th>Majority-class rate</th><th>GPT-4o guesses</th></tr></thead><tbody><tr><th>Gender (female / male)</th><td>270</td><td>72%</td><td>64%</td><td class='muted'>Male 160, Female 110</td></tr><tr><th>Ethnicity (Caucasian / African American)</th><td>267</td><td>97%</td><td>92%</td><td class='muted'>Caucasian 244, AfrAmerican 23</td></tr><tr><th>Education (degree / high school)</th><td>270</td><td>79%</td><td>77%</td><td class='muted'>Degree 264, HighSchool 6</td></tr><tr><th>Age (over / under 25)</th><td>241</td><td>97%</td><td>95%</td><td class='muted'>Over25 237, Under25 4</td></tr></tbody></table></div>
+  <p class="caption">The stated value is mapped to the classifier's binary classes (descriptions stating another value, or an
+  ambiguous one such as "20s" for age, are left out). The majority-class rate is the agreement a constant guess of SocialVec's
+  most frequent class would achieve. Treat this as a rough check: the parsing is rule-based, and SocialVec's classifiers are
+  themselves only estimates.</p></div>
+  <p>GPT-4o's guesses lean heavily toward the most common class: 264 of its education guesses are Degree, 237 of its age guesses are Over25, 244 of its ethnicity guesses are Caucasian. Agreement with SocialVec is therefore close to the majority-class rate, except for gender (72% vs. 64%).</p>
+</section>
+
+<section>
+  <h2><span class="num">4</span>Shuffled candidates</h2>
+  <p class="intro">With the candidates sorted by follower count, an LLM that partly follows the order it is given gets a
+  popularity ranking for free, which can hide what a description adds. Here every user's candidates are put in one random order,
+  used for all of that user's rankings: with no user information, from GPT-4o's description, and from the names of 12, 25 or 50
+  followed accounts (the prompts of Table 9 in <code>results/results.html</code>). Differences between them therefore come from the
+  user information alone. All 270 users are included.</p>
+
+  <div class="card"><svg viewBox="0 0 760 280" class="chart" role="img" aria-label="Overall MAP by method, shuffled candidates">
+<line class="grid" x1="250.0" x2="250.0" y1="10" y2="256"/><text class="tick" x="250.0" y="272" text-anchor="middle">0.0</text>
+<line class="grid" x1="325.0" x2="325.0" y1="10" y2="256"/><text class="tick" x="325.0" y="272" text-anchor="middle">0.1</text>
+<line class="grid" x1="400.0" x2="400.0" y1="10" y2="256"/><text class="tick" x="400.0" y="272" text-anchor="middle">0.2</text>
+<line class="grid" x1="475.0" x2="475.0" y1="10" y2="256"/><text class="tick" x="475.0" y="272" text-anchor="middle">0.3</text>
+<line class="grid" x1="550.0" x2="550.0" y1="10" y2="256"/><text class="tick" x="550.0" y="272" text-anchor="middle">0.4</text>
+<line class="grid" x1="625.0" x2="625.0" y1="10" y2="256"/><text class="tick" x="625.0" y="272" text-anchor="middle">0.5</text>
+<line class="grid" x1="700.0" x2="700.0" y1="10" y2="256"/><text class="tick" x="700.0" y="272" text-anchor="middle">0.6</text>
+<text class="cat" x="240" y="27" text-anchor="end">Random ranking (expected)</text><path class="bar muted-bar" d="M250,16 h192.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-192.3 z"/><text class="delta" x="454.3" y="27">0.262</text><rect class="hit" x="250" y="14" width="196.3" height="18" data-tip="Random ranking (expected), shuffled candidates<br>MAP <b>0.262</b>"/>
+<text class="cat" x="240" y="57" text-anchor="end">Popularity (follower count)</text><path class="bar muted-bar" d="M250,46 h217.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-217.2 z"/><text class="delta" x="479.2" y="57">0.295</text><rect class="hit" x="250" y="44" width="221.2" height="18" data-tip="Popularity (follower count), shuffled candidates<br>MAP <b>0.295</b>"/>
+<text class="cat" x="240" y="87" text-anchor="end">LLM, no user information</text><path class="bar muted-bar" d="M250,76 h203.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-203.3 z"/><text class="delta" x="465.3" y="87">0.276</text><rect class="hit" x="250" y="74" width="207.3" height="18" data-tip="LLM, no user information, shuffled candidates<br>MAP <b>0.276</b>"/>
+<text class="cat" x="240" y="117" text-anchor="end" font-weight="650">LLM, demographics by GPT-4o</text><path class="bar s2" d="M250,106 h262.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-262.3 z"/><text class="delta" x="524.3" y="117" font-weight="650">0.355</text><rect class="hit" x="250" y="104" width="266.3" height="18" data-tip="LLM, demographics by GPT-4o, shuffled candidates<br>MAP <b>0.355</b>"/>
+<text class="cat" x="240" y="147" text-anchor="end" font-weight="650">LLM, 12 followed account names</text><path class="bar s3" d="M250,136 h293.5 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-293.5 z"/><text class="delta" x="555.5" y="147" font-weight="650">0.397</text><rect class="hit" x="250" y="134" width="297.5" height="18" data-tip="LLM, 12 followed account names, shuffled candidates<br>MAP <b>0.397</b>"/>
+<text class="cat" x="240" y="177" text-anchor="end" font-weight="650">LLM, 25 followed account names</text><path class="bar s3" d="M250,166 h294.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-294.3 z"/><text class="delta" x="556.3" y="177" font-weight="650">0.398</text><rect class="hit" x="250" y="164" width="298.3" height="18" data-tip="LLM, 25 followed account names, shuffled candidates<br>MAP <b>0.398</b>"/>
+<text class="cat" x="240" y="207" text-anchor="end" font-weight="650">LLM, 50 followed account names</text><path class="bar s3" d="M250,196 h360.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-360.2 z"/><text class="delta" x="622.2" y="207" font-weight="650">0.486</text><rect class="hit" x="250" y="194" width="364.2" height="18" data-tip="LLM, 50 followed account names, shuffled candidates<br>MAP <b>0.486</b>"/>
+<text class="cat" x="240" y="237" text-anchor="end">SocialVec, all followed entities</text><path class="bar muted-bar" d="M250,226 h334.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-334.2 z"/><text class="delta" x="596.2" y="237">0.451</text><rect class="hit" x="250" y="224" width="338.2" height="18" data-tip="SocialVec, all followed entities, shuffled candidates<br>MAP <b>0.451</b>"/>
+</svg>
+  <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Highlighted bars: LLM rankings from
+  GPT-4o's demographic description (orange) and from the names of followed accounts (green).</p></div>
+
+  <p><b>Findings.</b>
+  <ul>
+    <li><b>Shuffling removes the order advantage of the no-information ranking.</b> It drops from 0.304
+    (popularity-sorted candidates) to 0.276 (p = 0.003). The ranking from GPT-4o's
+    descriptions barely changes (0.352 → 0.355, p = 0.69), and neither
+    do the name-based rankings (0.402 → 0.397, 0.421 → 0.398
+    and 0.501 → 0.486 for 12, 25 and 50 names, p ≥ 0.15).</li>
+    <li><b>With a fair baseline, demographic descriptions help.</b> GPT-4o's descriptions score 0.355 against
+    0.276 without user information (p &lt; 0.001).</li>
+    <li><b>The gain does not depend on leaked interests.</b> Demographics-only descriptions also beat the no-information ranking
+    (0.328 vs. 0.275, p &lt; 0.001), as they do in Section 3.</li>
+    <li><b>Account names give larger gains than demographics.</b> Ranking from 12 followed account names scores 0.397,
+    above GPT-4o's descriptions (p = 0.034). 25 names add nothing over 12 (p = 0.77); 50 names do
+    (0.486, p &lt; 0.001).</li>
+    <li><b>Social embeddings vs. the LLM.</b> SocialVec, using all of the user's followed entities, scores 0.451.
+    <ul>
+      <li><i>Demographics:</i> GPT-4o's descriptions stay below it (p &lt; 0.001).</li>
+      <li><i>50 names:</i> the LLM with 50 account names scores above it (p = 0.021).</li>
+      <li><i>Same accounts:</i> SocialVec using only the same 12 or 25 accounts scores 0.362 and
+      0.365, below the LLM's 0.397 and 0.398
+      (p = 0.027 and p = 0.022; means over users).</li>
+    </ul></li>
+  </ul></p>
+
+  <h3>By description type</h3>
+  <div class="card"><div class="scroll"><table class="data compact"><thead><tr><th>GPT-4o description</th><th>Users</th>
+  <th>Ranking from the description</th><th>LLM, no user information</th><th>Δ</th><th>p (Wilcoxon)</th></tr></thead>
+  <tbody><tr><th>Demographics only</th><td>210</td><td class='hl'>0.328</td><td>0.275</td><td>+0.053</td><td>&lt; 0.001</td></tr><tr><th>Also names interests</th><td>60</td><td class='hl'>0.449</td><td>0.280</td><td>+0.169</td><td>&lt; 0.001</td></tr></tbody></table></div>
+  <p class="caption">MAP over the users of each row, pooled across categories. Both rankings in a row used the same shuffled
+  candidates.</p></div>
+
+  <h3>Per category</h3>
+  <div class="card"><div class='scroll'><table class='data compact'><thead><tr><th>Category</th><th>Users</th><th>Random ranking (expected)</th><th>Popularity (follower count)</th><th>LLM, no user information</th><th>LLM, demographics by GPT-4o</th><th>LLM, 12 followed account names</th><th>LLM, 25 followed account names</th><th>LLM, 50 followed account names</th><th>SocialVec, all followed entities</th></tr></thead><tbody><tr><th>Actors</th><td>30</td><td class=''>0.268</td><td class=''>0.320</td><td class=''>0.238</td><td class='hl'>0.316</td><td class='hl'>0.361</td><td class='hl'>0.390</td><td class='hl'>0.448</td><td class=''><b>0.518</b></td></tr><tr><th>Comedians</th><td>30</td><td class=''>0.217</td><td class=''>0.290</td><td class=''>0.164</td><td class='hl'>0.200</td><td class='hl'>0.259</td><td class='hl'>0.256</td><td class='hl'><b>0.293</b></td><td class=''>0.281</td></tr><tr><th>Journalists</th><td>30</td><td class=''>0.324</td><td class=''>0.303</td><td class=''>0.357</td><td class='hl'>0.381</td><td class='hl'>0.431</td><td class='hl'>0.415</td><td class='hl'><b>0.465</b></td><td class=''>0.423</td></tr><tr><th>Musical artists</th><td>30</td><td class=''>0.252</td><td class=''>0.453</td><td class=''>0.278</td><td class='hl'>0.427</td><td class='hl'>0.351</td><td class='hl'>0.348</td><td class='hl'>0.473</td><td class=''><b>0.611</b></td></tr><tr><th>Politicians</th><td>30</td><td class=''>0.386</td><td class=''>0.328</td><td class=''>0.401</td><td class='hl'>0.490</td><td class='hl'>0.511</td><td class='hl'>0.495</td><td class='hl'><b>0.542</b></td><td class=''>0.463</td></tr><tr><th>Sports teams</th><td>30</td><td class=''>0.252</td><td class=''>0.269</td><td class=''>0.252</td><td class='hl'>0.300</td><td class='hl'>0.292</td><td class='hl'>0.283</td><td class='hl'>0.471</td><td class=''><b>0.516</b></td></tr><tr><th>TV shows</th><td>30</td><td class=''>0.213</td><td class=''>0.276</td><td class=''>0.331</td><td class='hl'>0.467</td><td class='hl'>0.538</td><td class='hl'>0.526</td><td class='hl'><b>0.545</b></td><td class=''>0.407</td></tr><tr><th>TV stations</th><td>30</td><td class=''>0.191</td><td class=''>0.149</td><td class=''>0.171</td><td class='hl'>0.290</td><td class='hl'>0.327</td><td class='hl'>0.341</td><td class='hl'><b>0.606</b></td><td class=''>0.444</td></tr><tr><th>News outlets</th><td>30</td><td class=''>0.253</td><td class=''>0.267</td><td class=''>0.294</td><td class='hl'>0.324</td><td class='hl'>0.499</td><td class='hl'>0.526</td><td class='hl'><b>0.528</b></td><td class=''>0.396</td></tr></tbody></table></div>
+  <p class="caption">MAP per category with shuffled candidates; bold marks the best method in each row. Ranking completeness: at least
+  89% of the responses of every condition listed all candidates (legacy scoring skips missing ones).</p></div>
+</section>
+
+<section>
+  <h2><span class="num">5</span>Examples</h2>
+  <p class="intro">The cases are chosen by rule rather than by hand: the highest and the lowest AP among complete,
+  demographics-only descriptions for users who follow at least two candidates, and a description that names interests with
+  typical AP. Rankings are those with candidates in follower-count order. Users are identified by internal row only.</p>
+  
+    <div class="example card">
+      <h4>A high-AP case · user row 8053 · Sports teams</h4>
+      <div class="ex-grid">
+        <div>
+          <p class="step"><span>1</span>Accounts given to GPT-4o (10 names)</p>
+          <p class="quote small">Ninjas in Pyjamas, Intel Gaming, Mark Rober, Maikel Bill, Jack Etienne, HenryG, Moonzy, James Spratt, Nogla, preston</p>
+          <p class="step"><span>2</span>Description by GPT-4o (all four attributes guessed)</p>
+          <p class="quote">The user is most likely a male in his 20s, likely Caucasian, and has pursued at least some higher education.</p>
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
+          <ol class="ranking"><li class='hit-item'>Team Liquid ✓</li><li class='hit-item'>Evil Geniuses ✓</li><li class='hit-item'>CLG ✓</li><li class='hit-item'>Luminosity Gaming ✓</li><li class='hit-item'>Complexity Gaming ✓</li><li class=''>Florida Gators</li><li class=''>Yankees PR Dept.</li><li class=''>Tampa Bay Rays</li><li class=''>Oakland A&#x27;s</li><li class=''>Seattle Mariners</li><li class=''>USA Hockey</li><li class=''>New York Islanders</li><li class=''>Vegas Golden Knights</li><li class=''>Florida Panthers</li><li class=''>Columbus Blue Jackets</li><li class=''>Miami Marlins</li><li class=''>Star Trek</li><li class=''>New York City FC</li><li class=''>UNC Tar Heels</li><li class=''>TRENT?</li></ol>
+          
+        </div>
+        <div>
+          <p class="step"><span>4</span>Score</p>
+          <p class="ap">AP = (1/1 + 2/2 + 3/3 + 4/4 + 5/5) / 5 = <b>1.000</b></p>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.353</td></tr><tr><th>Popularity</th><td>0.459</td></tr><tr><th>LLM, no information</th><td>1.000</td></tr><tr class=hl-row><th>LLM, demographics by GPT-4o</th><td>1.000</td></tr><tr><th>LLM, 12 names</th><td>0.710</td></tr><tr><th>SocialVec, same 12</th><td>0.193</td></tr><tr><th>SocialVec, all entities</th><td>1.000</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="example card">
+      <h4>A low-AP case · user row 3006 · Actors</h4>
+      <div class="ex-grid">
+        <div>
+          <p class="step"><span>1</span>Accounts given to GPT-4o (33 names)</p>
+          <p class="quote small">Nathan Ruser, Mark MacKinnon, Pete Holmes, Neil Young, Adam Parkhomenko, Brett McGurk, Lawrence Freedman, Tyler Rogoway, Rob Lee, U.S. Air Force, Danny DeVito, Patsy Widakuswara, The Comedy Store, Donald Driver, Richard Lewis, Michael Tracey, ADL, Elbridge Colby, Mutual UFO Network, Russel L. Honore&#x27;, World Health Organization (WHO), Bill Burr, Senator Roland Gutierrez, Euromaidan Press, Vice President Mike Pence Archived, Tristan Snell, Conan O&#x27;Brien, Major General (ret) Paul Eaton, Aaron Jones 3️⃣3️⃣, Bank of America, Aaron Rodgers, John W. Dean, Norman Ornstein</p>
+          <p class="step"><span>2</span>Description by GPT-4o (all four attributes guessed)</p>
+          <p class="quote">The user is most likely a male in his 30s or 40s, likely Caucasian, with a higher education level.</p>
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
+          <ol class="ranking"><li class=''>Pedro Pascal</li><li class=''>Sacha Baron Cohen</li><li class=''>Chris Meloni</li><li class=''>MichaelRapaport</li><li class=''>Bradley Whitford</li><li class=''>Halle Berry</li><li class=''>Adam Baldwin</li><li class=''>yvette nicole brown</li><li class=''>Patricia Arquette</li><li class=''>tara strong</li><li class=''>carl reiner</li><li class=''>Dean Cain</li><li class=''>Jon Voight</li><li class=''>Tom Arnold</li><li class=''>Ellen Barkin</li><li class=''>kristen johnston</li><li class='hit-item'>Ken Olin ✓</li><li class='hit-item'>Rosanna Arquette🌎✌🏼 ✓</li><li class=''>Kristy Swanson</li><li class=''>Morgan Fairchild</li></ol>
+          
+        </div>
+        <div>
+          <p class="step"><span>4</span>Score</p>
+          <p class="ap">AP = (1/17 + 2/18) / 2 = <b>0.085</b></p>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.223</td></tr><tr><th>Popularity</th><td>0.082</td></tr><tr><th>LLM, no information</th><td>0.122</td></tr><tr class=hl-row><th>LLM, demographics by GPT-4o</th><td>0.085</td></tr><tr><th>LLM, 12 names</th><td>0.104</td></tr><tr><th>SocialVec, same 12</th><td>0.079</td></tr><tr><th>SocialVec, all entities</th><td>0.667</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="example card">
+      <h4>A description that also names interests · user row 4219 · Politicians</h4>
+      <div class="ex-grid">
+        <div>
+          <p class="step"><span>1</span>Accounts given to GPT-4o (25 names)</p>
+          <p class="quote small">Amy Güth, Raúl E. Esparza, kayla kumari upadhyaya, Juliet Funt, jonny sun, Dr. Dorothy Kim, Molly Lambert 🦔, Eighth Blackbird, Tom Zohar, Andrew Chappelle, Elizabeth Tsurkov, Annoying Actor Friend, Rebecca Traister, quinta brunson, Teju Cole, McNally Jackson, E S T H E R, Maya Phillips, donika kelly, San Francisco Opera, Lilith Fund, AbortionCareNetwork, Poetry Foundation, Caitlin Moran, Letters of Note</p>
+          <p class="step"><span>2</span>Description by GPT-4o (all four attributes guessed; also names interests)</p>
+          <p class="quote">The user is most likely a woman in her 30s or 40s of Caucasian or mixed ethnicity with a higher education level, possibly possessing a strong interest in literature, arts, and social issues.</p>
+          <p class="step"><span>3</span>GPT-6 Luna's ranking from the description only (✓ = followed by the user)</p>
+          <ol class="ranking"><li class='hit-item'>Sherrilyn Ifill ✓</li><li class=''>Rep. Pramila Jayapal</li><li class=''>Rep. Jamie Raskin</li><li class=''>Jen Psaki</li><li class=''>Brian Schatz</li><li class=''>Jon Ossoff</li><li class=''>Karine Jean-Pierre</li><li class=''>Hakeem Jeffries</li><li class=''>Captain Mark Kelly</li><li class=''>John Dean</li><li class='hit-item'>Cori Bush ✓</li><li class='hit-item'>John Fetterman ✓</li><li class=''>Josh Shapiro</li><li class='hit-item'>Jaime Harrison ✓</li><li class=''>Ronald Klain</li><li class=''>Raja Krishnamoorthi</li><li class=''>Nikki Fried</li><li class=''>Thomas Massie</li><li class=''>Josh Hawley</li><li class=''>Sen. Marsha Blackburn</li></ol>
+          
+        </div>
+        <div>
+          <p class="step"><span>4</span>Score</p>
+          <p class="ap">AP = (1/1 + 2/11 + 3/12 + 4/14) / 4 = <b>0.429</b></p>
+          <table class="data compact mini"><tbody><tr><th>Random (expected)</th><td>0.309</td></tr><tr><th>Popularity</th><td>0.248</td></tr><tr><th>LLM, no information</th><td>0.260</td></tr><tr class=hl-row><th>LLM, demographics by GPT-4o</th><td>0.429</td></tr><tr><th>LLM, 12 names</th><td>0.193</td></tr><tr><th>SocialVec, same 12</th><td>0.229</td></tr><tr><th>SocialVec, all entities</th><td>0.296</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+</section>
+
+<section>
+  <h2><span class="num">6</span>Discussion and limitations</h2>
+  <ul class="highlights">
+    <li><b>The model does not always follow the instruction.</b> GPT-4o described every user, but in 22% of
+    cases it also named the user's interests. The clean condition is the demographics-only subset. A stricter test would filter or
+    rewrite descriptions to a fixed format (e.g. four labelled fields), or supply the attributes from SocialVec's classifiers
+    directly.</li>
+    <li><b>The candidate order matters for this comparison.</b> With popularity-sorted candidates, the no-information ranking
+    partly copies the presented order, and demographics-only descriptions looked no better than it. With shuffled candidates, they
+    give a significant gain. Comparisons with a non-personalized LLM ranking should therefore use randomized candidate orders.</li>
+    <li><b>Demographics are a coarse summary of taste.</b> Ranking from four attributes scores below ranking from 12 account names
+    and below SocialVec's full-profile embedding. The account names carry information beyond the demographic groups they imply.</li>
+    <li><b>Stereotype-based inference.</b> The method asks a model to apply stereotypes about gender, age, ethnicity and
+    education. The resulting descriptions are guesses about real people. They are stored outside the repository, and this page
+    identifies users by internal row only. Conclusions about which groups like which entities should not be drawn from them.</li>
+    <li><b>Scale and noise.</b> 30 users per category, one description and one ranking per user. LLM outputs are not
+    deterministic: repeated identical prompts change a user's AP by about 0.06 on average (see the candidate-order experiment).
+    Stage 1 with GPT-4o cost $0.39 for 270 descriptions.</li>
+  </ul>
+</section>
+
+<footer><p>Regenerate with <code>python run_llm_demographics.py --describe-model gpt-4o</code> and
+<code>python run_llm_demographics_bands.py</code> (model calls; cached responses are reused), then
+<code>python make_demographics_report.py</code>. Per-user scores are in <code>results/llm/demographics_per_user_gpt-4o.csv.gz</code>
+and <code>results/llm/demographics_bands_per_user.csv.gz</code>; descriptions and usernames are in <code>data/llm_demographics/</code>,
+which is not tracked by git.</p></footer>
+</div>
+<script>
+const tip=document.getElementById('tip');
+function show(el,e){tip.innerHTML=el.dataset.tip;tip.style.opacity=1;
+  const x=Math.min(e.clientX+14,window.innerWidth-tip.offsetWidth-8);tip.style.left=x+'px';tip.style.top=(e.clientY+14)+'px';}
+document.querySelectorAll('[data-tip]').forEach(el=>{
+  el.addEventListener('mouseenter',e=>show(el,e));
+  el.addEventListener('mousemove',e=>show(el,e));
+  el.addEventListener('mouseleave',()=>{tip.style.opacity=0;});
+});
+</script>
+</body></html>

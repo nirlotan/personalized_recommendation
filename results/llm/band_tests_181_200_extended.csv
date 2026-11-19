@@ -1,0 +1,10 @@
+,0
+socialvec vs popularity,1.575676512232203e-26
+socialvec_k12 vs popularity,4.72421101020772e-08
+socialvec_k25 vs popularity,1.437238060962603e-07
+llm_baseline vs popularity,0.006441127298670273
+llm_k12 vs popularity,1.329495133316686e-16
+llm_k25 vs popularity,2.8334705312507924e-15
+llm_k50 vs popularity,1.9471072187117822e-30
+llm_k12 vs socialvec_k12,9.627784014991482e-05
+llm_k25 vs socialvec_k25,0.0005369761851355231

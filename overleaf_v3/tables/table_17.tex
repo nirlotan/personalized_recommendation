@@ -1,0 +1,24 @@
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{GPT-6 Luna, all users} & \multicolumn{2}{c}{Claude Haiku 5.5, all users} & \multicolumn{2}{c}{GPT-6 Luna, \textless{} 2,000 follows, $\geq$ 30 entities} \\
+Method & Ranks 1--20 & Ranks 81--100 & Ranks 1--20 & Ranks 81--100 & Ranks 1--20 & Ranks 81--100 \\
+\midrule
+Users & 1,751 & 1,798 & 1,751 & 1,798 & 537 & 544 \\
+Random ranking (expected) & 0.459 & 0.258 & 0.459 & 0.258 & 0.475 & 0.248 \\
+Popularity (follower count) & 0.553 & 0.297 & 0.553 & 0.297 & 0.601 & 0.287 \\
+LLM, no user information & 0.591 & 0.284 & 0.556 & 0.273 & 0.648 & 0.283 \\
+LLM, demographics by GPT-4o & 0.619 & 0.340 & 0.577 & 0.329 & 0.661 & 0.349 \\
+LLM, 12 followed account names & 0.671 & 0.392 & 0.619 & 0.356 & 0.691 & 0.361 \\
+LLM, 25 followed account names & 0.679 & 0.394 & 0.626 & 0.358 & 0.704 & 0.370 \\
+LLM, 50 followed account names & 0.710 & 0.480 & 0.655 & 0.414 & 0.736 & 0.473 \\
+SocialVec, all followed entities & 0.660 & 0.417 & 0.660 & 0.418 & 0.688 & 0.417 \\
+p, demographics vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.135 & \textless{} 0.001 \\
+p, 12 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 25 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 50 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 12 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.198 \\
+p, 25 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.025 \\
+p, 50 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 50 names vs. SocialVec & \textless{} 0.001 & \textless{} 0.001 & = 0.994 & = 0.749 & \textless{} 0.001 & \textless{} 0.001 \\
+\bottomrule
+\end{tabular}
