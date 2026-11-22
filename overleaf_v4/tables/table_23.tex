@@ -1,0 +1,11 @@
+\begin{tabular}{lrrrrrrrrrrrr}
+\toprule
+ &  &  & \multicolumn{2}{c}{Closed set} & \multicolumn{3}{c}{Full follow list (k = 50 prompt)} & \multicolumn{2}{c}{Source: full list $-$ closed set} & \multicolumn{3}{c}{Size} \\
+Model & Band & Users & 12 & 25 & 12 & 25 & 50 & at 12 & at 25 & 12 $\rightarrow$ 25, closed set & 12 $\rightarrow$ 25, full list & 25 $\rightarrow$ 50, full list \\
+\midrule
+GPT-6 Luna & Ranks 1--20 & 1,696 & 0.668 & 0.676 & 0.697 & 0.703 & 0.708 & +0.028\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.027\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.008\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.006\newline {\textcolor{gray}{p = 0.036}} & +0.005\newline {\textcolor{gray}{p = 0.007}} \\
+GPT-6 Luna & Ranks 81--100 & 1,742 & 0.392 & 0.393 & 0.461 & 0.477 & 0.479 & +0.070\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.084\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.001\newline {\textcolor{gray}{p = 0.523}} & +0.016\newline {\textcolor{gray}{p = 0.002}} & +0.002\newline {\textcolor{gray}{p = 0.531}} \\
+Claude Haiku 5.5 & Ranks 1--20 & 1,696 & 0.617 & 0.624 & 0.638 & 0.648 & 0.652 & +0.021\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.024\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.007\newline {\textcolor{gray}{p = 0.039}} & +0.010\newline {\textcolor{gray}{p = 0.059}} & +0.004\newline {\textcolor{gray}{p = 0.100}} \\
+Claude Haiku 5.5 & Ranks 81--100 & 1,742 & 0.356 & 0.356 & 0.389 & 0.412 & 0.415 & +0.033\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.055\newline {\textcolor{gray}{p \textless{} 0.001}} & +0.000\newline {\textcolor{gray}{p = 0.980}} & +0.022\newline {\textcolor{gray}{p = 0.003}} & +0.003\newline {\textcolor{gray}{p = 0.334}} \\
+\bottomrule
+\end{tabular}

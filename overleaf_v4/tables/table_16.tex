@@ -1,0 +1,33 @@
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{GPT-6 Luna, all users} & \multicolumn{2}{c}{Claude Haiku 5.5, all users} & \multicolumn{2}{c}{GPT-6 Luna, \textless{} 2,000 follows, $\geq$ 30 entities} \\
+Method & Ranks 1--20 & Ranks 81--100 & Ranks 1--20 & Ranks 81--100 & Ranks 1--20 & Ranks 81--100 \\
+\midrule
+Users & 1,696 & 1,742 & 1,696 & 1,742 & 526 & 533 \\
+Random ranking (expected) & 0.456 & 0.257 & 0.456 & 0.257 & 0.474 & 0.247 \\
+Popularity (follower count) & 0.550 & 0.295 & 0.550 & 0.295 & 0.600 & 0.287 \\
+LLM, no user information & 0.588 & 0.282 & 0.553 & 0.274 & 0.647 & 0.283 \\
+LLM, demographics by GPT-4o & 0.616 & 0.339 & 0.573 & 0.329 & 0.659 & 0.350 \\
+LLM, 12 followed account names & 0.668 & 0.392 & 0.617 & 0.356 & 0.689 & 0.361 \\
+LLM, 25 followed account names & 0.676 & 0.393 & 0.624 & 0.356 & 0.703 & 0.369 \\
+LLM, 12 names from the 50-name list & 0.697 & 0.461 & 0.638 & 0.389 & 0.715 & 0.442 \\
+LLM, 25 names from the 50-name list & 0.703 & 0.477 & 0.648 & 0.412 & 0.722 & 0.468 \\
+LLM, 50 followed account names & 0.708 & 0.479 & 0.652 & 0.415 & 0.735 & 0.473 \\
+SocialVec, all followed entities & 0.658 & 0.418 & 0.658 & 0.418 & 0.686 & 0.417 \\
+p, demographics vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.209 & \textless{} 0.001 \\
+p, 12 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 25 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 12 of the 50 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 25 of the 50 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 50 names vs. no information & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 12 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.225 \\
+p, 25 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.040 \\
+p, 12 of the 50 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 25 of the 50 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 50 names vs. demographics & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 50 names vs. SocialVec & \textless{} 0.001 & \textless{} 0.001 & = 0.962 & = 0.861 & \textless{} 0.001 & \textless{} 0.001 \\
+p, 12 of the 50 names vs. 12 names & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.005 & \textless{} 0.001 \\
+p, 25 of the 50 names vs. 25 names & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & \textless{} 0.001 & = 0.240 & \textless{} 0.001 \\
+p, 50 names vs. 25 of the 50 & = 0.007 & = 0.531 & = 0.100 & = 0.334 & = 0.002 & = 0.306 \\
+\bottomrule
+\end{tabular}

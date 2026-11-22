@@ -332,6 +332,7 @@ CHARTS = {
 class Converter:
     def __init__(self):
         self.n_tables = 0
+        self.table_names = set()
         self.n_images = 0
 
     def blocks(self, el):
@@ -389,7 +390,16 @@ class Converter:
         if el.name == "table":
             drop_paper_columns(el)
             self.n_tables += 1
-            name = f"table_{self.n_tables:02d}"
+            # name the file after the page's table number (the nearest "Table N ·" heading above it), else table_extra_N
+            name = None
+            for h in el.find_all_previous(["h3", "h4", "summary"], limit=3):
+                m = re.match(r"\s*Table (\d+) ·", h.get_text())
+                if m and f"table_{int(m.group(1)):02d}" not in self.table_names:
+                    name = f"table_{int(m.group(1)):02d}"
+                    break
+            if name is None:
+                name = f"table_extra_{self.n_tables:02d}"
+            self.table_names.add(name)
             (TAB / f"{name}.tex").write_text(table_tex(el), encoding="utf-8")
             return [r"\begin{center}\begin{adjustbox}{max width=\linewidth}", rf"\input{{tables/{name}}}",
                     r"\end{adjustbox}\end{center}", ""]

@@ -332,5 +332,61 @@
     "output_tokens": 3627334,
     "cost_usd": 2.0142,
     "calls": 17695
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 3549,
+    "input_tokens": 4893083,
+    "output_tokens": 956329,
+    "cost_usd": 0.4837
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 3549,
+    "cost_usd": 0.7,
+    "budget_usd": 1.5,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 0.7
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 3549
+    }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 3549,
+    "input_tokens": 4544524,
+    "output_tokens": 1083480,
+    "cost_usd": 0.4981
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 3549,
+    "cost_usd": 0.6809,
+    "budget_usd": 1.5,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 0.6809
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 3549
+    }
   }
 ]

@@ -10,7 +10,7 @@ GPT-4o describes each user's gender, age, ethnicity and education from the names
 accounts in the user's k = 50 prompt, with the instruction to state exactly one value per
 attribute (llm_demographics.SINGLE_VALUE). GPT-6 Luna then ranks the candidates of ranks 1-20
 and 81-100 in one random order per user and band, from no user information, the description,
-or 12/25/50 followed account names (the protocol of run_llm_demographics_bands.py; the no-information
+or 12/25/50 followed account names, or 25 names drawn from the k = 50 list and 12 of those 25 (the protocol of run_llm_demographics_bands.py; the no-information
 and account-name calls are those of run_shuffled_personal.py, reused from the cache).
 
     python run_llm_demographics_v2.py --budget 3.5
@@ -21,13 +21,14 @@ data/llm_demographics/.
 
 import argparse
 import json
+import random
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from reproduction.config import CATEGORY_LABELS, DATA_DIR, PAPER_CATEGORY_ORDER, RESULTS_DIR
+from reproduction.config import CATEGORY_LABELS, DATA_DIR, PAPER_CATEGORY_ORDER, RESULTS_DIR, SEED
 from reproduction.data import load_categories, load_users
 from reproduction.embeddings import load_metadata
 from reproduction.popularity_bands import load_category_sheets, load_extended_sheets
@@ -46,6 +47,18 @@ DESCRIBE_VERSION = "v4"  # the single-value description prompt
 BANDS = {"1-20": ((1, 20, "original"), "popularity_band_1_20"),
          "81-100": ((81, 100, "original"), "popularity_band_81_100")}
 N_EXAMPLES = 4
+
+
+def k25_from_50(k50_ids, row):
+    """25 accounts drawn at random from the named accounts of the user's k = 50 prompt (all of them if 25 or fewer),
+    in the order drawn; the same draw in both bands."""
+    ids = list(k50_ids)
+    return random.Random(f"{SEED}:k25of50:{row}").sample(ids, 25) if len(ids) > 25 else ids
+
+
+def k12_from_50(k50_ids, row):
+    """The first 12 of the user's 25-from-50 draw: 12 random names of the k = 50 list, nested in the 25."""
+    return k25_from_50(k50_ids, row)[:12]
 
 
 def select_users(users, categories):
@@ -75,11 +88,15 @@ def main():
     p.add_argument("--describe-model", default="gpt-4o")
     p.add_argument("--budget", type=float, default=3.5, help="stop calling the models at this cost (USD)")
     p.add_argument("--workers", type=int, default=16)
+    p.add_argument("--exclude", help="CSV of user rows to leave out (make_excluded_users.py); writes only "
+                                     "demographics_v2_summary_excluded.json, from cached calls")
     args = p.parse_args()
 
     categories = load_categories()
     users = load_users(categories)
     sample = select_users(users, categories)
+    if args.exclude:
+        sample = sample.drop(index=set(pd.read_csv(args.exclude)["user"]) & set(sample.index))
     metadata = load_metadata()
     names = dict(zip(metadata["twitter_id"].astype(str), metadata["name"]))
     _, exclude, _ = band_setup(users, categories, DEFAULT_BAND)
@@ -122,6 +139,11 @@ def main():
             for k in (12, 25, 50):
                 names_k = names_of(prompt[f"llm_k{k}"], names)
                 out[f"k{k}"] = rank_cache.call(f"{tag}|k{k}|{row}", lambda f=names_k: rank_personal(f, text))
+            # 25 accounts drawn from the k = 50 list: separates the size of the list from where it is drawn
+            names_s = names_of(k25_from_50(prompt["llm_k50"], row), names)
+            out["k25of50"] = rank_cache.call(f"{tag}|k25of50|{row}", lambda f=names_s: rank_personal(f, text))
+            names_12 = names_of(k12_from_50(prompt["llm_k50"], row), names)
+            out["k12of50"] = rank_cache.call(f"{tag}|k12of50|{row}", lambda f=names_12: rank_personal(f, text))
             return job, out
 
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -138,10 +160,18 @@ def main():
             info_path.write_text(json.dumps(runs, indent=2))
         print(f"{cap.calls} model calls, ${cap.spent:.4f}", {k: round(v, 4) for k, v in cap.spent_by_model.items()})
 
-    # descriptions (private) and per-user scores
+    # a failed call (e.g. an expired API key) is returned as an empty ranking but not cached: write nothing then
+    missing = [key for (label, row, *_ ) , _ in results for key in
+               [f"{PROMPT_VERSION}|{label}|{c}|{row}" for c in ("baseline", "k12", "k25", "k50", "k25of50", "k12of50")]
+               + [f"{DESCRIBE_VERSION}|{label}|gpt-4o|{row}"] if rank_cache.get(key) is None]
+    if missing:
+        raise SystemExit(f"{len(missing)} ranking calls failed (first: {missing[0]}); no results written, rerun to retry them")
+
+    # descriptions (private) and per-user scores (all users only)
     PRIVATE.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame({"row": sample.index, "topic": sample["topic"].values, "followed_accounts": followed.values,
-                  "description": [descriptions[r] for r in sample.index]}).to_csv(PRIVATE / "descriptions_gpt-4o_v2.csv", index=False)
+    if not args.exclude:
+        pd.DataFrame({"row": sample.index, "topic": sample["topic"].values, "followed_accounts": followed.values,
+                      "description": [descriptions[r] for r in sample.index]}).to_csv(PRIVATE / "descriptions_gpt-4o_v2.csv", index=False)
     rows = []
     for (label, row, topic, cands, order, relevant, _), out in results:
         r = {"user": row, "topic": topic, "band": label, "n_relevant": len(relevant), "n_candidates": len(order)}
@@ -157,11 +187,12 @@ def main():
                       & (other["exclusion"] == "exclude_category")][["user", "random", "popularity", "socialvec"]]
         merged.append(res[res["band"] == label].merge(other, on="user", how="left"))
     res = pd.concat(merged, ignore_index=True)
-    res.to_csv(OUT / "demographics_v2_per_user.csv.gz", index=False)
+    if not args.exclude:
+        res.to_csv(OUT / "demographics_v2_per_user.csv.gz", index=False)
 
     # summary for the results page: MAP, tests, user statistics, stated attributes, examples
     desc = pd.Series(descriptions).reindex(sample.index)
-    methods = ["random", "popularity", "ap_baseline", "ap_gpt-4o", "ap_k12", "ap_k25", "ap_k50", "socialvec"]
+    methods = ["random", "popularity", "ap_baseline", "ap_gpt-4o", "ap_k12", "ap_k25", "ap_k12of50", "ap_k25of50", "ap_k50", "socialvec"]
     filtered_rows = set(sample.index[passes_filter(sample)])
 
     def band_summary(b):
@@ -170,7 +201,9 @@ def main():
                 "tests": {name: p_value(b[x], b[y]) for name, x, y in [
                     ("4o_vs_baseline", "ap_gpt-4o", "ap_baseline"), ("baseline_vs_popularity", "ap_baseline", "popularity"),
                     ("4o_vs_socialvec", "ap_gpt-4o", "socialvec"), ("k12_vs_4o", "ap_k12", "ap_gpt-4o"),
-                    ("k50_vs_socialvec", "ap_k50", "socialvec")]}}
+                    ("k50_vs_socialvec", "ap_k50", "socialvec"), ("k25of50_vs_k25", "ap_k25of50", "ap_k25"),
+                    ("k50_vs_k25of50", "ap_k50", "ap_k25of50"), ("k12of50_vs_k12", "ap_k12of50", "ap_k12"),
+                    ("k25of50_vs_k12of50", "ap_k25of50", "ap_k12of50")]}}
 
     shuffled = {label: band_summary(res[res["band"] == label]) for label in BANDS}
     shuffled_filtered = {label: band_summary(res[(res["band"] == label) & res["user"].isin(filtered_rows)]) for label in BANDS}
@@ -204,7 +237,10 @@ def main():
             [c for c in PAPER_CATEGORY_ORDER if c in set(sample["topic"])]).to_dict(),
         "user_stats": {"follows": stats(follows(sample)),
                        "category_entities": stats(sample["experiment_accounts"].apply(len)),
-                       "names_given": stats(followed_ids.apply(len))},
+                       "names_given": stats(followed_ids.apply(len)),
+                       "names_given_le_25": round(float((followed_ids.apply(len) <= 25).mean()), 4),
+                       "names_k12of50": stats(pd.Series({r: len(k12_from_50(followed_ids[r], r)) for r in sample.index})),
+                       "names_k25of50": stats(pd.Series({r: len(k25_from_50(followed_ids[r], r)) for r in sample.index}))},
         "leak_4o": int(desc.str.contains(TOPICS, case=False, regex=True).sum()),
         "shuffled": shuffled,
         "shuffled_filtered": shuffled_filtered,
@@ -216,7 +252,7 @@ def main():
         "examples": examples,
         "stage2_example": stage2,
     }
-    (OUT / "demographics_v2_summary.json").write_text(json.dumps(summary, indent=2, default=float))
+    (OUT / ("demographics_v2_summary_excluded.json" if args.exclude else "demographics_v2_summary.json")).write_text(json.dumps(summary, indent=2, default=float))
     for label, s in shuffled.items():
         print(label, s["users"], s["map"])
     print({a: v["multiple"] for a, v in summary["attributes"].items()}, "leak:", summary["leak_4o"])
