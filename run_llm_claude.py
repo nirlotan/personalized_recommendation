@@ -4,7 +4,7 @@ The Section 5 rankings (results_v2.html) repeated with a Claude model as the ran
 Same users, candidate orders and inputs as run_llm_demographics_v2.py: for every user and band
 (ranks 1-20 and 81-100) the candidates in the user's random order, ranked from no user information,
 from GPT-4o's demographic description, or from the names of 12, 25 or 50 followed accounts
-(or of 25 accounts drawn from the k = 50 list, and the first 12 of those 25). The
+(or of 25 accounts drawn from the k = 50 list, the first 12 and 6 of those 25, or the first 6 of the k = 12 names). The
 prompts are the exact chat messages dspy renders for the authors' signatures (system + user), sent
 through the Anthropic SDK; the answer's ranked_ids field is scored like the GPT-6 Luna runs.
 
@@ -30,13 +30,13 @@ from reproduction.llm import (ResponseCache, candidates_json, llm_average_precis
                               user_samples)
 from reproduction.llm_demographics import make_demographic_programs
 from run_llm_demographics_bands import shuffled_order
-from run_llm_demographics_v2 import BANDS, PRIVATE, k12_from_50, k25_from_50, select_users
+from run_llm_demographics_v2 import BANDS, PRIVATE, k6_closed, k6_from_50, k12_from_50, k25_from_50, select_users
 from run_llm_experiments import band_setup
 
 OUT = RESULTS_DIR / "llm"
 MODEL = "claude-haiku-5-5"
 PRICE = {"claude-haiku-5-5": (0.10, 0.50)}  # USD per million input / output tokens (prompts under 100K tokens)
-CONDITIONS = ["baseline", "gpt-4o", "k12", "k25", "k50", "k25of50", "k12of50"]
+CONDITIONS = ["baseline", "gpt-4o", "k12", "k25", "k50", "k25of50", "k12of50", "k6", "k6of50"]
 MAX_TOKENS = 8000  # thinking counts toward max_tokens
 
 
@@ -78,6 +78,12 @@ def build_jobs(users, categories, names, descriptions):
                     msgs = ranker_messages("default", potential_accounts=text)
                 elif cond == "k25of50":
                     msgs = ranker_messages("personal", followed_accounts=names_of(k25_from_50(prompts.at[row, "llm_k50"], row), names),
+                                           potential_accounts=text)
+                elif cond == "k6":
+                    msgs = ranker_messages("personal", followed_accounts=names_of(k6_closed(prompts.at[row, "llm_k12"]), names),
+                                           potential_accounts=text)
+                elif cond == "k6of50":
+                    msgs = ranker_messages("personal", followed_accounts=names_of(k6_from_50(prompts.at[row, "llm_k50"], row), names),
                                            potential_accounts=text)
                 elif cond == "k12of50":
                     msgs = ranker_messages("personal", followed_accounts=names_of(k12_from_50(prompts.at[row, "llm_k50"], row), names),

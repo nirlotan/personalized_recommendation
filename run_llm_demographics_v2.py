@@ -10,7 +10,7 @@ GPT-4o describes each user's gender, age, ethnicity and education from the names
 accounts in the user's k = 50 prompt, with the instruction to state exactly one value per
 attribute (llm_demographics.SINGLE_VALUE). GPT-6 Luna then ranks the candidates of ranks 1-20
 and 81-100 in one random order per user and band, from no user information, the description,
-or 12/25/50 followed account names, or 25 names drawn from the k = 50 list and 12 of those 25 (the protocol of run_llm_demographics_bands.py; the no-information
+or 12/25/50 followed account names, or 25 names drawn from the k = 50 list, 12 of those 25 and 6 of those 12, or the first 6 of the k = 12 names (the protocol of run_llm_demographics_bands.py; the no-information
 and account-name calls are those of run_shuffled_personal.py, reused from the cache).
 
     python run_llm_demographics_v2.py --budget 3.5
@@ -59,6 +59,16 @@ def k25_from_50(k50_ids, row):
 def k12_from_50(k50_ids, row):
     """The first 12 of the user's 25-from-50 draw: 12 random names of the k = 50 list, nested in the 25."""
     return k25_from_50(k50_ids, row)[:12]
+
+
+def k6_from_50(k50_ids, row):
+    """The first 6 of the user's 12-from-50 draw (nested in the 12 and the 25)."""
+    return k25_from_50(k50_ids, row)[:6]
+
+
+def k6_closed(k12_ids):
+    """The first 6 names of the user's closed-set k = 12 list (nested in the 12, which are nested in the 25)."""
+    return list(k12_ids)[:6]
 
 
 def select_users(users, categories):
@@ -144,6 +154,10 @@ def main():
             out["k25of50"] = rank_cache.call(f"{tag}|k25of50|{row}", lambda f=names_s: rank_personal(f, text))
             names_12 = names_of(k12_from_50(prompt["llm_k50"], row), names)
             out["k12of50"] = rank_cache.call(f"{tag}|k12of50|{row}", lambda f=names_12: rank_personal(f, text))
+            names_6 = names_of(k6_closed(prompt["llm_k12"]), names)
+            out["k6"] = rank_cache.call(f"{tag}|k6|{row}", lambda f=names_6: rank_personal(f, text))
+            names_6f = names_of(k6_from_50(prompt["llm_k50"], row), names)
+            out["k6of50"] = rank_cache.call(f"{tag}|k6of50|{row}", lambda f=names_6f: rank_personal(f, text))
             return job, out
 
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -162,7 +176,7 @@ def main():
 
     # a failed call (e.g. an expired API key) is returned as an empty ranking but not cached: write nothing then
     missing = [key for (label, row, *_ ) , _ in results for key in
-               [f"{PROMPT_VERSION}|{label}|{c}|{row}" for c in ("baseline", "k12", "k25", "k50", "k25of50", "k12of50")]
+               [f"{PROMPT_VERSION}|{label}|{c}|{row}" for c in ("baseline", "k12", "k25", "k50", "k25of50", "k12of50", "k6", "k6of50")]
                + [f"{DESCRIBE_VERSION}|{label}|gpt-4o|{row}"] if rank_cache.get(key) is None]
     if missing:
         raise SystemExit(f"{len(missing)} ranking calls failed (first: {missing[0]}); no results written, rerun to retry them")
@@ -192,7 +206,7 @@ def main():
 
     # summary for the results page: MAP, tests, user statistics, stated attributes, examples
     desc = pd.Series(descriptions).reindex(sample.index)
-    methods = ["random", "popularity", "ap_baseline", "ap_gpt-4o", "ap_k12", "ap_k25", "ap_k12of50", "ap_k25of50", "ap_k50", "socialvec"]
+    methods = ["random", "popularity", "ap_baseline", "ap_gpt-4o", "ap_k6", "ap_k12", "ap_k25", "ap_k6of50", "ap_k12of50", "ap_k25of50", "ap_k50", "socialvec"]
     filtered_rows = set(sample.index[passes_filter(sample)])
 
     def band_summary(b):
@@ -203,7 +217,7 @@ def main():
                     ("4o_vs_socialvec", "ap_gpt-4o", "socialvec"), ("k12_vs_4o", "ap_k12", "ap_gpt-4o"),
                     ("k50_vs_socialvec", "ap_k50", "socialvec"), ("k25of50_vs_k25", "ap_k25of50", "ap_k25"),
                     ("k50_vs_k25of50", "ap_k50", "ap_k25of50"), ("k12of50_vs_k12", "ap_k12of50", "ap_k12"),
-                    ("k25of50_vs_k12of50", "ap_k25of50", "ap_k12of50")]}}
+                    ("k25of50_vs_k12of50", "ap_k25of50", "ap_k12of50"), ("k6of50_vs_k6", "ap_k6of50", "ap_k6")]}}
 
     shuffled = {label: band_summary(res[res["band"] == label]) for label in BANDS}
     shuffled_filtered = {label: band_summary(res[(res["band"] == label) & res["user"].isin(filtered_rows)]) for label in BANDS}
@@ -239,6 +253,7 @@ def main():
                        "category_entities": stats(sample["experiment_accounts"].apply(len)),
                        "names_given": stats(followed_ids.apply(len)),
                        "names_given_le_25": round(float((followed_ids.apply(len) <= 25).mean()), 4),
+                       "names_k6of50": stats(pd.Series({r: len(k6_from_50(followed_ids[r], r)) for r in sample.index})),
                        "names_k12of50": stats(pd.Series({r: len(k12_from_50(followed_ids[r], r)) for r in sample.index})),
                        "names_k25of50": stats(pd.Series({r: len(k25_from_50(followed_ids[r], r)) for r in sample.index}))},
         "leak_4o": int(desc.str.contains(TOPICS, case=False, regex=True).sum()),

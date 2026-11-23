@@ -188,13 +188,13 @@ For a like-for-like comparison, the \emph{SocialVec k = 12} and \emph{k = 25} co
 
 \textbf{Organizations and likely bots.} The profiles of these users (bio, follower, tweet and like counts and account age, as collected) were screened: 21 are organizations (an organization keyword search of bios and handles, every match read by hand) and 3 more possibly are; 11 post more than 144 tweets a day on average over the account's life; and 21 show at least two weaker bot signals (more than 72 tweets a day, following 4,900 or more accounts, followers under 5\% of follows, a handle ending in six or more digits with an empty bio, no likes, an account under 90 days old). No profile looked like a clear bot, so the 56 are a cautious upper bound. They are left out of Table 9--Table 11 and Section 5.
 
-The \emph{k = 12 of 50} and \emph{k = 25 of 50} columns draw 12 and 25 names from the user's k = 50 list instead of the closed set (see Table 23 in Section 5).
+The \emph{k = 6 of 50}, \emph{k = 12 of 50} and \emph{k = 25 of 50} columns draw 6, 12 and 25 names from the user's k = 50 list instead of the closed set; \emph{k = 6} lists the first 6 names of the closed-set k = 12 prompt (see Table 23 in Section 5).
 
 \begin{center}\begin{adjustbox}{max width=\linewidth}
 \input{tables/table_09}
 \end{adjustbox}\end{center}
 
-{\small Bold marks the best method in each row. With about 190 users per category, per-category MAP has a standard error of about 0.02. The first 30 users of each category are those of the earlier 30-user version of this table. Every condition of a user gets the candidates in the same random order (the baseline, demographics and k = 12, 25, 12 of 50, 25 of 50, 50), as in Section 5. \emph{Demographics} is the ranking from GPT-4o's demographic description alone (Section 5, same users and candidate orders).}
+{\small Bold marks the best method in each row. With about 190 users per category, per-category MAP has a standard error of about 0.02. The first 30 users of each category are those of the earlier 30-user version of this table. Every condition of a user gets the candidates in the same random order (the baseline, demographics and every k), as in Section 5. \emph{Demographics} is the ranking from GPT-4o's demographic description alone (Section 5, same users and candidate orders).}
 
 \subsection*{Table 10 \textperiodcentered{} LLM and SocialVec ranking, ranks 1--20 vs. 81--100 (same users)}
 The protocol of Table 9 repeated on the 20 most popular candidates of each category, for the 1,696 users of Table 9 who follow at least one of them. Unlike Table 3, every listed entity of the target category is removed from the prompts here too, so the two bands differ only in their candidates. Among the most popular candidates, popularity is a strong ranking (0.550), and the LLM without user information beats it (0.588). Given the same accounts, the LLM is ahead of SocialVec in both bands: 0.668 vs. 0.626 with 12 accounts at ranks 1--20 (p \textless{} 0.001; ahead in 9 of 9 categories).
@@ -243,12 +243,12 @@ Because the order matters for the baseline, every ranking on this page that is c
 
 {\small All random orders come from fixed seeds, so every run can be reproduced.}
 
-{\small 74,139 model calls in total across all LLM experiments (including those in the backup page), costing \$17.70.}
+{\small 88,335 model calls in total across all LLM experiments (including those in the backup page), costing \$19.93.}
 
 \section{Can demographics alone personalize the LLM?}
 The second version of this experiment, on the users of Table 9--Table 11 and with a one-value-per-attribute instruction. The first version (270 users) is in results.html and the demographics report.
 
-GPT-4o first guessed each user's gender, age, ethnicity and education from the names of accounts they follow, and was told to rely on stereotypes rather than decline and to state exactly one value per attribute. GPT-6 Luna then ranked the candidates given only that description, both for the most popular candidates of each category (ranks 1--20, as in Table 3) and for ranks 81--100; Claude Haiku 5.5 repeated every ranking (same users, candidate orders, descriptions and prompts) as a second, low-cost ranking model. Every ranking lists the candidates in one random order per user, shared by all of that user's conditions. For comparison, the same shuffled candidates were also ranked from the names of 12, 25 or 50 followed accounts, and from 12 or 25 names drawn from the 50.
+GPT-4o first guessed each user's gender, age, ethnicity and education from the names of accounts they follow, and was told to rely on stereotypes rather than decline and to state exactly one value per attribute. GPT-6 Luna then ranked the candidates given only that description, both for the most popular candidates of each category (ranks 1--20, as in Table 3) and for ranks 81--100; Claude Haiku 5.5 repeated every ranking (same users, candidate orders, descriptions and prompts) as a second, low-cost ranking model. Every ranking lists the candidates in one random order per user, shared by all of that user's conditions. For comparison, the same shuffled candidates were also ranked from the names of 6, 12, 25 or 50 followed accounts, and from 6, 12 or 25 names drawn from the 50.
 
 \subsection*{Table 15 \textperiodcentered{} The users of the demographics experiment}
 The 1,742 users of Table 9 (200 random users per category who follow at least one ranks 81--100 candidate; TV stations have only 198; without the 56 organizations and likely bots described there), so that every count matches Table 9--Table 11: all of them are evaluated at ranks 81--100, and the 1,696 who follow at least one top-20 candidate at ranks 1--20. Table 16 also reports the 533 users who follow fewer than 2,000 accounts in all (fewer likely bots) and at least 30 of the experiment's category entities (enough evidence for an informed guess).
@@ -382,7 +382,7 @@ The user follows 6 of the 20 candidates; AP = 0.457.
 \includegraphics[width=\linewidth,height=0.5\textheight,keepaspectratio]{figures/figure4_ranks_81_100_claude_haiku_5_5.pdf}
 \end{center}
 
-{\small Overall MAP (mean over categories) with the candidates in random order. Each band uses the users of Table 15 who follow at least one of its candidates. Markers are paired Wilcoxon tests over users: * vs. the LLM with no user information, \textdagger{} vs. the demographics condition (*/\textdagger{} p \textless{} 0.05, **/\textdagger{}\textdagger{} p \textless{} 0.01, ***/\textdagger{}\textdagger{}\textdagger{} p \textless{} 0.001, n.s. not significant). All 44 comparisons are significant at p \textless{} 0.001, so they stay significant after a Bonferroni correction. The p values are in Table 16.}
+{\small Overall MAP (mean over categories) with the candidates in random order. Each band uses the users of Table 15 who follow at least one of its candidates. Markers are paired Wilcoxon tests over users: * vs. the LLM with no user information, \textdagger{} vs. the demographics condition (*/\textdagger{} p \textless{} 0.05, **/\textdagger{}\textdagger{} p \textless{} 0.01, ***/\textdagger{}\textdagger{}\textdagger{} p \textless{} 0.001, n.s. not significant). All but 1 of the 60 comparisons are significant at p \textless{} 0.001; the exception is Claude Haiku 5.5 at ranks 81--100, 6 names vs. demographics (p = 0.014). The p values are in Table 16.}
 
 \subsubsection*{Table 16 \textperiodcentered{} Overall MAP of demographics-only and name-based ranking, ranks 1--20 and 81--100}
 \begin{center}\begin{adjustbox}{max width=\linewidth}
@@ -392,21 +392,28 @@ The user follows 6 of the 20 candidates; AP = 0.457.
 {\small Overall MAP is the mean over categories; p values are paired Wilcoxon tests over users. The all-users columns are the users of Table 9 (ranks 81--100) and Table 11 (ranks 1--20), with the same random candidate orders, so their no-information, account-name and SocialVec scores are those tables' values.}
 
 \subsection*{Where the account names come from vs. how many there are}
-The 12 and 25 names come from the user's closed set (the entities of the other categories' lists the user follows), while the 50 come from everything the user follows. Going from 25 to 50 names therefore changes two things at once: the number of accounts and where they come from. To separate the two, both models also ranked the candidates, in the same candidate order, from 25 names drawn at random (fixed seed) from the names of the user's k = 50 prompt, and from the first 12 of those 25, so that the 12 are nested in the 25 as in the closed set. The prompts list 11.7 and 21.7 names on average from the closed set, and 11.9 and 22.5 from the full follow list (27.9 with k = 50), so each pair of conditions differs in one factor.
+The 12 and 25 names come from the user's closed set (the entities of the other categories' lists the user follows), while the 50 come from everything the user follows. Going from 25 to 50 names therefore changes two things at once: the number of accounts and where they come from. To separate the two, both models also ranked the candidates, in the same candidate order, from names of the full follow list: 25 drawn at random (fixed seed) from the names of the user's k = 50 prompt, the first 12 of those 25 and the first 6 of those 12. A sixth closed-set condition lists the first 6 names of the closed-set k = 12 prompt. Each smaller list is nested in the larger one from the same source. The prompts list 6.0, 11.7 and 21.7 names on average from the closed set, and 6.0, 11.9 and 22.5 from the full follow list (27.9 with k = 50), so each pair of conditions differs in one factor.
 
 \begin{itemize}
-  \item \textbf{Where the names come from matters at every size.} At ranks 81--100, names from the full follow list beat closed-set names with 12 names (GPT-6 Luna 0.461 vs. 0.392, Claude Haiku 5.5 0.389 vs. 0.356) and with 25 (0.477 vs. 0.393 and 0.412 vs. 0.356); at ranks 1--20 the gap is smaller (+0.021 to +0.028). All eight differences are significant (p \textless{} 0.001).
-  \item \textbf{How many names matters less.} From the closed set, 25 names add only +0.000 to +0.008 MAP over 12 (the k = 25 list of 33\% of users has fewer than 25 names, as they follow fewer closed-set entities). From the full follow list they add +0.006 to +0.022, most at ranks 81--100 (GPT-6 Luna +0.016, Claude Haiku 5.5 +0.022, p = 0.002 and = 0.003). Going on to 50 names adds +0.002 to +0.005.
+  \item \textbf{Where the names come from matters at every size.} At ranks 81--100, names from the full follow list beat closed-set names by +0.051, +0.070 and +0.084 with 6, 12 and 25 names for GPT-6 Luna, and by +0.031, +0.033 and +0.055 for Claude Haiku 5.5: the gap grows with the number of names. At ranks 1--20 it is smaller (+0.009 to +0.028). All these differences are significant except Claude Haiku 5.5 at ranks 1--20 with 6 names (p = 0.053).
+  \item \textbf{More closed-set names add little; more names from the full list help up to 25.} From the closed set, 6 $\rightarrow$ 12 names adds +0.003 to +0.016 MAP and 12 $\rightarrow$ 25 adds +0.000 to +0.008 (the k = 25 list of 33\% of users has fewer than 25 names, as they follow fewer closed-set entities). From the full list, 6 $\rightarrow$ 12 adds +0.010 to +0.032, 12 $\rightarrow$ 25 adds +0.006 to +0.022, and 25 $\rightarrow$ 50 only +0.002 to +0.005.
   \item \textbf{So the jump from 25 to 50 names is mostly the change of source:} 97\% of GPT-6 Luna's gain at ranks 81--100 (0.393 $\rightarrow$ 0.479) and 95\% of Claude Haiku 5.5's; 83\% and 84\% at ranks 1--20.
 \end{itemize}
-For the 38\% of users whose k = 50 prompt lists 25 names or fewer (accounts without a known name are dropped), the 25 names from the 50 are the k = 50 list itself, which is one reason the last size step is small.
+For the 38\% of users whose k = 50 prompt lists 25 names or fewer (accounts without a known name are dropped), the 25 names from the 50 are the k = 50 list itself, which is one reason the last step is small.
 
 \subsubsection*{Table 23 \textperiodcentered{} Account names by source and number}
 \begin{center}\begin{adjustbox}{max width=\linewidth}
 \input{tables/table_23}
 \end{adjustbox}\end{center}
 
-{\small Overall MAP (mean over categories). Closed set: the entities of the other categories' lists the user follows (the k = 12 and k = 25 prompts). Full follow list: names drawn from the user's k = 50 prompt (25 at random, 12 of those 25, or all of them). The source columns compare the two sources at the same number of names, the size columns the same source at different numbers, with paired Wilcoxon p values over users.}
+{\small Overall MAP (mean over categories). Closed set: the entities of the other categories' lists the user follows (the k = 12 and k = 25 prompts; 6 is the first 6 of the 12). Full follow list: names drawn from the user's k = 50 prompt (25 at random, the first 12 and 6 of those 25, or all of them).}
+
+\subsubsection*{Table 24 \textperiodcentered{} Steps between the account-name conditions}
+\begin{center}\begin{adjustbox}{max width=\linewidth}
+\input{tables/table_24}
+\end{adjustbox}\end{center}
+
+{\small The difference in overall MAP between two conditions of Table 23, with the paired Wilcoxon p value over users. Source: the same number of names from the full follow list vs. the closed set. Number of names: the same source, more names.}
 
 \subsection*{What GPT-4o stated about the users}
 Each description is parsed with fixed rules for the value it states for each attribute. With the one-value instruction, 84 attribute values across the 1742 descriptions still name more than one value (174 across 270 in the first version); those count under the first value stated. "Middle-aged" is kept as stated, without assigning it an age range.
@@ -447,7 +454,7 @@ One user from each of 4 categories: the user whose list of account names (the in
 \section*{S\quad Supplementary \textperiodcentered{} Ranking with Claude Haiku 5.5}
 All results of the Claude Haiku 5.5 rankings of Section 5: the same 1,742 users (ranks 81--100) and 1,696 users (ranks 1--20), candidate orders, GPT-4o descriptions and prompts as GPT-6 Luna.
 
-Claude Haiku 5.5 received the exact chat messages dspy renders for each signature (system and user message), through the Anthropic API with adaptive thinking at effort \emph{low} and the Message Batches API: 24,843 calls costing \$3.01. The answer's \texttt{ranked\_ids} field is scored as for GPT-6 Luna: candidates it leaves out count as misses. The overall figures are in Table 16 and Figure 4.
+Claude Haiku 5.5 received the exact chat messages dspy renders for each signature (system and user message), through the Anthropic API with adaptive thinking at effort \emph{low} and the Message Batches API: 31,941 calls costing \$3.91. The answer's \texttt{ranked\_ids} field is scored as for GPT-6 Luna: candidates it leaves out count as misses. The overall figures are in Table 16 and Figure 4.
 
 \subsection*{Table 20 \textperiodcentered{} Supplementary \textperiodcentered{} Claude Haiku 5.5 ranking per category, ranks 1--20}
 \begin{center}\begin{adjustbox}{max width=\linewidth}

@@ -388,5 +388,33 @@
     "calls_by_model": {
       "openai/gpt-6-luna": 3549
     }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 7098,
+    "input_tokens": 8663570,
+    "output_tokens": 1877735,
+    "cost_usd": 0.9026
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 7098,
+    "cost_usd": 1.3258,
+    "budget_usd": 2.0,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 1.3258
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 7098
+    }
   }
 ]

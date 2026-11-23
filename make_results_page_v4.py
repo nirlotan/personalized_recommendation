@@ -207,6 +207,7 @@ MAIN_TABLES = {
     "haiku_81_100": "Supplementary · Claude Haiku 5.5 ranking per category, ranks 81–100",
     "haiku_complete": "Supplementary · Completeness of the rankings, Claude Haiku 5.5 and GPT-6 Luna",
     "k25_decomp": "Account names by source and number",
+    "k_steps": "Steps between the account-name conditions",
 }
 BACKUP_TABLES = {
     "bands_overview": "Overall MAP by popularity band",
@@ -470,9 +471,9 @@ def band_llm_html(table=None):
         cells = "".join(f"<td{' class=grp' if c in group_start else ''}>{'<b>' if r[c] == best else ''}{r[c]:.3f}{'</b>' if r[c] == best else ''}</td>" for c in cols)
         rows.append(f"<tr{cls}><th>{esc(CATEGORY_LABELS.get(cat, 'Overall'))}</th><td>{r['users']:,.0f}</td>{cells}</tr>")
     return ("<div class='scroll'><table class='data'><thead><tr class='super'><th></th><th></th><th colspan='2'>Non-personalized</th>"
-            f"<th colspan='3' class='grp'>SocialVec</th><th colspan='7' class='grp'>{esc(model_name)}</th></tr>"
+            f"<th colspan='3' class='grp'>SocialVec</th><th colspan='9' class='grp'>{esc(model_name)}</th></tr>"
             "<tr><th>Category</th><th>Users</th><th>Random</th><th>Popularity</th>"
-            "<th class='grp'>All entities</th><th>k = 12</th><th>k = 25</th><th class='grp'>Baseline</th><th>Demo&shy;graphics</th><th>k = 12</th><th>k = 25</th><th>k = 12 of 50</th><th>k = 25 of 50</th><th>k = 50</th></tr></thead>"
+            "<th class='grp'>All entities</th><th>k = 12</th><th>k = 25</th><th class='grp'>Baseline</th><th>Demo&shy;graphics</th><th>k = 6</th><th>k = 12</th><th>k = 25</th><th>k = 6 of 50</th><th>k = 12 of 50</th><th>k = 25 of 50</th><th>k = 50</th></tr></thead>"
             f"<tbody>{''.join(rows)}</tbody></table></div>")
 
 
@@ -560,11 +561,11 @@ _band_users = _band_users[~_band_users["user"].isin(EXCLUDED)]
 _band_users["llm_baseline"] = _band_users["llm_baseline_shuffled"]  # one random candidate order per user, shared by all conditions
 for _k in (12, 25, 50):
     _band_users[f"llm_k{_k}"] = _band_users[f"llm_k{_k}_shuffled"]  # run_shuffled_personal.py
-_demo_pu = pd.read_csv(LLM / "demographics_v2_per_user.csv.gz", usecols=["user", "band", "ap_gpt-4o", "ap_k12of50", "ap_k25of50"]).rename(
-    columns={"ap_gpt-4o": "llm_demo", "ap_k12of50": "llm_k12of50", "ap_k25of50": "llm_k25of50"})
+_demo_pu = pd.read_csv(LLM / "demographics_v2_per_user.csv.gz", usecols=["user", "band", "ap_gpt-4o", "ap_k6", "ap_k6of50", "ap_k12of50", "ap_k25of50"]).rename(
+    columns={"ap_gpt-4o": "llm_demo", "ap_k6": "llm_k6", "ap_k6of50": "llm_k6of50", "ap_k12of50": "llm_k12of50", "ap_k25of50": "llm_k25of50"})
 _band_users = _band_users.merge(_demo_pu[_demo_pu["band"] == "81-100"].drop(columns="band"), on="user", how="left")
 assert _band_users["llm_demo"].notna().all()
-BAND_LLM_COLS = ["llm_baseline", "llm_demo", "llm_k12", "llm_k25", "llm_k12of50", "llm_k25of50", "llm_k50"]
+BAND_LLM_COLS = ["llm_baseline", "llm_demo", "llm_k6", "llm_k12", "llm_k25", "llm_k6of50", "llm_k12of50", "llm_k25of50", "llm_k50"]
 band_llm = by_category(_band_users, ["random", "popularity", "socialvec", "socialvec_k12", "socialvec_k25"] + BAND_LLM_COLS)
 band_tests = {f"llm_k{k} vs socialvec_k{k}": wilcoxon(_band_users[f"llm_k{k}"] - _band_users[f"socialvec_k{k}"]).pvalue for k in (12, 25)}
 band_llm_n = {k: _band_users[f"n_k{k}_accounts"].mean() for k in (12, 25)}
@@ -600,6 +601,8 @@ BAND_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popular
                 ("socialvec", "SocialVec, all followed entities"), ("socialvec_k12", "SocialVec, the 12 accounts of the LLM prompt"),
                 ("socialvec_k25", "SocialVec, the 25 accounts of the LLM prompt"), ("llm_baseline", "LLM, no user information"), ("llm_demo", "LLM, demographics by GPT-4o"),
                 ("llm_k12", "LLM, 12 followed accounts"), ("llm_k25", "LLM, 25 followed accounts"),
+                ("llm_k6", "LLM, 6 followed accounts (first 6 of the 12)"),
+                ("llm_k6of50", "LLM, 6 accounts drawn from the 50-account list"),
                 ("llm_k12of50", "LLM, 12 accounts drawn from the 50-account list"),
                 ("llm_k25of50", "LLM, 25 accounts drawn from the 50-account list"), ("llm_k50", "LLM, 50 followed accounts")]
 
@@ -809,12 +812,14 @@ demo = json.loads((LLM / "demographics_v2_summary_excluded.json").read_text())  
 dsh = {b: demo["shuffled"][b] for b in ("1-20", "81-100")}
 DEMO_METHODS = [("random", "Random ranking (expected)"), ("popularity", "Popularity (follower count)"),
                 ("ap_baseline", "LLM, no user information"),
-                ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("ap_k12", "LLM, 12 followed account names"),
-                ("ap_k25", "LLM, 25 followed account names"), ("ap_k12of50", "LLM, 12 names from the 50-name list"),
+                ("ap_gpt-4o", "LLM, demographics by GPT-4o"), ("ap_k6", "LLM, 6 followed account names"),
+                ("ap_k12", "LLM, 12 followed account names"),
+                ("ap_k25", "LLM, 25 followed account names"), ("ap_k6of50", "LLM, 6 names from the 50-name list"),
+                ("ap_k12of50", "LLM, 12 names from the 50-name list"),
                 ("ap_k25of50", "LLM, 25 names from the 50-name list"),
                 ("ap_k50", "LLM, 50 followed account names"),
                 ("socialvec", "SocialVec, all followed entities")]
-DEMO_COLORS = {"ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k12of50": "s3", "ap_k25of50": "s3", "ap_k50": "s3"}
+DEMO_COLORS = {"ap_gpt-4o": "s2", "ap_k12": "s3", "ap_k25": "s3", "ap_k6": "s3", "ap_k6of50": "s3", "ap_k12of50": "s3", "ap_k25of50": "s3", "ap_k50": "s3"}
 
 
 def method_chart(o, methods, colors, context, x1=0.6, marks=None):
@@ -861,8 +866,8 @@ _luna_users = pd.read_csv(LLM / "demographics_v2_per_user.csv.gz")
 _luna_users = _luna_users[~_luna_users["user"].isin(EXCLUDED)]
 _hk_runs = [r for r in json.loads((LLM / "run_info.json").read_text()) if r["model"] == "claude-haiku-5-5"]
 hk_calls, hk_cost = sum(r["calls"] for r in _hk_runs), sum(r["cost_usd"] for r in _hk_runs)
-HK_CONDS = [("ap_baseline", "No user information"), ("ap_gpt-4o", "Demographics by GPT-4o"), ("ap_k12", "12 account names"),
-            ("ap_k25", "25 account names"), ("ap_k12of50", "12 names from the 50"), ("ap_k25of50", "25 names from the 50"), ("ap_k50", "50 account names")]
+HK_CONDS = [("ap_baseline", "No user information"), ("ap_gpt-4o", "Demographics by GPT-4o"), ("ap_k6", "6 account names"),
+            ("ap_k12", "12 account names"), ("ap_k25", "25 account names"), ("ap_k6of50", "6 names from the 50"), ("ap_k12of50", "12 names from the 50"), ("ap_k25of50", "25 names from the 50"), ("ap_k50", "50 account names")]
 
 
 def haiku_category_table(band):
@@ -917,7 +922,8 @@ SIG_PAIRS = [("ap_gpt-4o", "ap_baseline"), ("ap_k12", "ap_baseline"), ("ap_k25",
              ("ap_k25of50", "ap_baseline"), ("ap_k50", "ap_baseline"), ("ap_k12", "ap_gpt-4o"), ("ap_k25", "ap_gpt-4o"),
              ("ap_k12of50", "ap_gpt-4o"), ("ap_k25of50", "ap_gpt-4o"), ("ap_k50", "ap_gpt-4o"), ("ap_k50", "socialvec"),
              ("ap_k12of50", "ap_k12"), ("ap_k25of50", "ap_k25"), ("ap_k25", "ap_k12"), ("ap_k25of50", "ap_k12of50"),
-             ("ap_k50", "ap_k25of50")]
+             ("ap_k50", "ap_k25of50"), ("ap_k6", "ap_baseline"), ("ap_k6of50", "ap_baseline"), ("ap_k6", "ap_gpt-4o"),
+             ("ap_k6of50", "ap_gpt-4o"), ("ap_k6of50", "ap_k6"), ("ap_k12", "ap_k6"), ("ap_k12of50", "ap_k6of50")]
 MARKED = [pair for pair in SIG_PAIRS if pair[1] in ("ap_baseline", "ap_gpt-4o")]  # the comparisons marked in Figure 4
 _luna_f = _luna_users[(_follows.reindex(_luna_users["user"]).values < demo["filter"]["max_follows"])
                       & (_entities.reindex(_luna_users["user"]).values >= demo["filter"]["min_entities"])]
@@ -942,13 +948,17 @@ def sig_marks(key, band):
     """Marker text per method: * vs. no information, † vs. demographics."""
     t = SIG[key][band]
     marks = {"ap_gpt-4o": stars(t[("ap_gpt-4o", "ap_baseline")])}
-    for k in ("ap_k12", "ap_k25", "ap_k12of50", "ap_k25of50", "ap_k50"):
+    for k in ("ap_k6", "ap_k12", "ap_k25", "ap_k6of50", "ap_k12of50", "ap_k25of50", "ap_k50"):
         marks[k] = f"{stars(t[(k, 'ap_baseline')])} {stars(t[(k, 'ap_gpt-4o')], '†')}"
     return marks
 
 
 sig_all = all(SIG[key][b][pair] < 0.001 for key in ("luna", "haiku") for b in ("1-20", "81-100") for pair in MARKED)
 n_marked = 4 * len(MARKED)
+SIG_LABEL = {"ap_baseline": "no information", "ap_gpt-4o": "demographics", "ap_k6": "6 names", "ap_k12": "12 names", "ap_k25": "25 names",
+             "ap_k6of50": "6 of the 50 names", "ap_k12of50": "12 of the 50 names", "ap_k25of50": "25 of the 50 names", "ap_k50": "50 names"}
+sig_exceptions = [f"{HAIKU if key == 'haiku' else model_name} at ranks {b.replace('-', '–')}, {SIG_LABEL[x]} vs. {SIG_LABEL[y]} (p {p_text(SIG[key][b][(x, y)])})"
+                  for key in ("luna", "haiku") for b in ("1-20", "81-100") for x, y in MARKED if SIG[key][b][(x, y)] >= 0.001]
 
 
 def demographics_chart(band, summary=None, model=None):
@@ -974,17 +984,22 @@ def demographics_table(bands=("1-20", "81-100")):
         rows.append(f"<tr><th>{esc(label)}</th>" + "".join(cell(i, f"{d[b]['map'][c]:.3f}") for i, (d, b) in enumerate(cols)) + "</tr>")
     sig_cols = [SIG[key][b] for key in ("luna", "haiku", "luna_f") for b in bands]
     for pair, label in [(("ap_gpt-4o", "ap_baseline"), "p, demographics vs. no information"),
+                        (("ap_k6", "ap_baseline"), "p, 6 names vs. no information"),
                         (("ap_k12", "ap_baseline"), "p, 12 names vs. no information"),
                         (("ap_k25", "ap_baseline"), "p, 25 names vs. no information"),
+                        (("ap_k6of50", "ap_baseline"), "p, 6 of the 50 names vs. no information"),
                         (("ap_k12of50", "ap_baseline"), "p, 12 of the 50 names vs. no information"),
                         (("ap_k25of50", "ap_baseline"), "p, 25 of the 50 names vs. no information"),
                         (("ap_k50", "ap_baseline"), "p, 50 names vs. no information"),
+                        (("ap_k6", "ap_gpt-4o"), "p, 6 names vs. demographics"),
                         (("ap_k12", "ap_gpt-4o"), "p, 12 names vs. demographics"),
                         (("ap_k25", "ap_gpt-4o"), "p, 25 names vs. demographics"),
+                        (("ap_k6of50", "ap_gpt-4o"), "p, 6 of the 50 names vs. demographics"),
                         (("ap_k12of50", "ap_gpt-4o"), "p, 12 of the 50 names vs. demographics"),
                         (("ap_k25of50", "ap_gpt-4o"), "p, 25 of the 50 names vs. demographics"),
                         (("ap_k50", "ap_gpt-4o"), "p, 50 names vs. demographics"),
                         (("ap_k50", "socialvec"), "p, 50 names vs. SocialVec"),
+                        (("ap_k6of50", "ap_k6"), "p, 6 of the 50 names vs. 6 names"),
                         (("ap_k12of50", "ap_k12"), "p, 12 of the 50 names vs. 12 names"),
                         (("ap_k25of50", "ap_k25"), "p, 25 of the 50 names vs. 25 names"),
                         (("ap_k50", "ap_k25of50"), "p, 50 names vs. 25 of the 50")]:
@@ -994,10 +1009,8 @@ def demographics_table(bands=("1-20", "81-100")):
 
 
 def k25_decomposition():
-    """Per model and band: MAP with 12 and 25 closed-set names, 12, 25 and 50 names from the k = 50 list, and the steps between them."""
-    cols = ["ap_k12", "ap_k25", "ap_k12of50", "ap_k25of50", "ap_k50"]
-    steps = {"source12": ("ap_k12of50", "ap_k12"), "source25": ("ap_k25of50", "ap_k25"), "size_closed": ("ap_k25", "ap_k12"),
-             "size_full": ("ap_k25of50", "ap_k12of50"), "size_50": ("ap_k50", "ap_k25of50")}
+    """Per model and band: MAP with 6, 12 and 25 closed-set names, 6, 12, 25 and 50 names from the k = 50 list, and the steps."""
+    cols = ["ap_k6", "ap_k12", "ap_k25", "ap_k6of50", "ap_k12of50", "ap_k25of50", "ap_k50"]
     out = []
     for model, users, key in [(model_name, _luna_users, "luna"), (HAIKU, _hk_users, "haiku")]:
         for band in ("1-20", "81-100"):
@@ -1005,32 +1018,54 @@ def k25_decomposition():
             m = g.groupby("topic")[cols].mean().mean()
             t = SIG[key][band]
             r = {"model": model, "band": band, "users": len(g), **{c[3:]: m[c] for c in cols}}
-            for name, (x, y) in steps.items():
+            for name, (x, y) in K_STEPS.items():
                 r[name], r[f"p_{name}"] = m[x] - m[y], t[(x, y)]
             r["share"] = r["source25"] / (r["source25"] + r["size_50"])
             out.append(r)
     return out
 
 
+# the steps of Table 24: (name, column header, (to, from))
+K_STEP_LIST = [("source6", "Source at 6", ("ap_k6of50", "ap_k6")), ("source12", "Source at 12", ("ap_k12of50", "ap_k12")),
+               ("source25", "Source at 25", ("ap_k25of50", "ap_k25")),
+               ("size6_closed", "6 → 12, closed set", ("ap_k12", "ap_k6")), ("size_closed", "12 → 25, closed set", ("ap_k25", "ap_k12")),
+               ("size6_full", "6 → 12, full list", ("ap_k12of50", "ap_k6of50")),
+               ("size_full", "12 → 25, full list", ("ap_k25of50", "ap_k12of50")), ("size_50", "25 → 50, full list", ("ap_k50", "ap_k25of50"))]
+K_STEPS = {name: pair for name, _, pair in K_STEP_LIST}
 k25d = k25_decomposition()
-closed_lt25 = (_band_users["n_k25_accounts"] < 25).mean()  # users whose closed-set k = 25 list is short
 
 
 def k25_decomposition_html():
-    def step(r, name):
-        return f"<td class='grp'>{r[name]:+.3f}<br><small class='muted'>p {p_text(r['p_' + name])}</small></td>"
+    """Table 23: MAP per source and number of names."""
     rows = "".join(
         f"<tr><th>{esc(r['model'])}</th><td>Ranks {r['band'].replace('-', '–')}</td><td>{r['users']:,}</td>"
-        f"<td class='grp'>{r['k12']:.3f}</td><td>{r['k25']:.3f}</td><td class='grp'>{r['k12of50']:.3f}</td><td>{r['k25of50']:.3f}</td>"
-        f"<td>{r['k50']:.3f}</td>" + "".join(step(r, n) for n in ("source12", "source25", "size_closed", "size_full", "size_50"))
-        + "</tr>" for r in k25d)
+        f"<td class='grp'>{r['k6']:.3f}</td><td>{r['k12']:.3f}</td><td>{r['k25']:.3f}</td>"
+        f"<td class='grp'>{r['k6of50']:.3f}</td><td>{r['k12of50']:.3f}</td><td>{r['k25of50']:.3f}</td><td>{r['k50']:.3f}</td></tr>"
+        for r in k25d)
     return ("<div class='scroll'><table class='data compact'><thead><tr class='super'><th></th><th></th><th></th>"
-            "<th colspan='2' class='grp'>Closed set</th><th colspan='3' class='grp'>Full follow list (k = 50 prompt)</th>"
-            "<th colspan='2' class='grp'>Source: full list − closed set</th><th colspan='3' class='grp'>Size</th></tr>"
-            "<tr><th>Model</th><th>Band</th><th>Users</th><th class='grp'>12</th><th>25</th><th class='grp'>12</th><th>25</th><th>50</th>"
-            "<th class='grp'>at 12</th><th class='grp'>at 25</th><th class='grp'>12 → 25, closed set</th>"
-            "<th class='grp'>12 → 25, full list</th><th class='grp'>25 → 50, full list</th></tr></thead>"
+            "<th colspan='3' class='grp'>Closed set</th><th colspan='4' class='grp'>Full follow list (k = 50 prompt)</th></tr>"
+            "<tr><th>Model</th><th>Band</th><th>Users</th><th class='grp'>6</th><th>12</th><th>25</th>"
+            "<th class='grp'>6</th><th>12</th><th>25</th><th>50</th></tr></thead>"
             f"<tbody>{rows}</tbody></table></div>")
+
+
+def k_steps_html():
+    """Table 24: the MAP difference and p value of each step."""
+    def step(r, name):
+        return f"<td class='grp'>{r[name]:+.3f}<br><small class='muted'>p {p_text(r['p_' + name])}</small></td>"
+    rows = "".join(f"<tr><th>{esc(r['model'])}</th><td>Ranks {r['band'].replace('-', '–')}</td>"
+                   + "".join(step(r, n) for n, _, _ in K_STEP_LIST) + "</tr>" for r in k25d)
+    return ("<div class='scroll'><table class='data compact'><thead><tr class='super'><th></th><th></th>"
+            "<th colspan='3' class='grp'>Source: full list − closed set</th><th colspan='5' class='grp'>Number of names</th></tr>"
+            "<tr><th>Model</th><th>Band</th>" + "".join(f"<th class='grp'>{esc(h)}</th>" for _, h, _ in K_STEP_LIST)
+            + f"</tr></thead><tbody>{rows}</tbody></table></div>")
+
+
+closed_lt25 = (_band_users["n_k25_accounts"] < 25).mean()  # users whose closed-set k = 25 list is short
+k_names = {"k6": _band_users["n_k12_accounts"].clip(upper=6).mean()}  # the first 6 of the closed-set k = 12 names
+_ns = [f"{r['model']} at ranks {r['band'].replace('-', '–')} with {n[6:]} names (p {p_text(r['p_' + n])})"
+       for r in k25d for n in ("source6", "source12", "source25") if r["p_" + n] >= 0.05]
+source_ns = (" All these differences are significant" + (f" except {'; '.join(_ns)}." if _ns else " (p &lt; 0.05)."))
 
 
 # The exact chat messages dspy sends for the two stages, with placeholders for the inputs
@@ -1499,11 +1534,12 @@ page = f"""<!doctype html>
   (more than 72 tweets a day, following 4,900 or more accounts, followers under 5% of follows, a handle ending in six or more digits
   with an empty bio, no likes, an account under 90 days old). No profile looked like a clear bot, so the {_band_n_before - len(_band_users)}
   are a cautious upper bound. They are left out of {tnum('band_llm')}–{tnum('top_llm')} and Section 5.</p>
-  <p>The <i>k = 12 of 50</i> and <i>k = 25 of 50</i> columns draw 12 and 25 names from the user's k = 50 list instead of the closed set (see
+  <p>The <i>k = 6 of 50</i>, <i>k = 12 of 50</i> and <i>k = 25 of 50</i> columns draw 6, 12 and 25 names from the user's k = 50 list
+  instead of the closed set; <i>k = 6</i> lists the first 6 names of the closed-set k = 12 prompt (see
   {tnum('k25_decomp')} in Section 5).</p>
   <div class="card">{band_llm_html()}
   <p class="caption">Bold marks the best method in each row. With about 190 users per category, per-category MAP has a standard error of
-  about 0.02. The first 30 users of each category are those of the earlier 30-user version of this table. Every condition of a user gets the candidates in the same random order (the baseline, demographics and k = 12, 25, 12 of 50, 25 of 50, 50), as in Section 5.
+  about 0.02. The first 30 users of each category are those of the earlier 30-user version of this table. Every condition of a user gets the candidates in the same random order (the baseline, demographics and every k), as in Section 5.
   <i>Demographics</i> is the ranking from GPT-4o's demographic description alone (Section 5, same users and candidate orders).</p></div>
 
   <h3>{ttitle('band_compare')}</h3>
@@ -1576,7 +1612,7 @@ page = f"""<!doctype html>
   that description, both for the most popular candidates of each category (ranks 1–20, as in {tnum('llm')}) and for ranks 81–100;
   {HAIKU} repeated every ranking (same users, candidate orders, descriptions and prompts) as a second, low-cost ranking model. Every
   ranking lists the candidates in one random order per user, shared by all of that user's conditions. For comparison, the same
-  shuffled candidates were also ranked from the names of 12, 25 or 50 followed accounts, and from 12 or 25 names drawn from the 50.</p>
+  shuffled candidates were also ranked from the names of 6, 12, 25 or 50 followed accounts, and from 6, 12 or 25 names drawn from the 50.</p>
 
   <h3>{ttitle('demo_users')}</h3>
   <p>The {demo['users']:,} users of {tnum('band_llm')} (200 random users per category who follow at least one ranks 81–100 candidate; TV
@@ -1648,7 +1684,7 @@ page = f"""<!doctype html>
     <p class="caption">Overall MAP (mean over categories) with the candidates in random order. Each band uses the users of
     {tnum('demo_users')} who follow at least one of its candidates. Markers are paired Wilcoxon tests over users:
     * vs. the LLM with no user information, † vs. the demographics condition (*/† p &lt; 0.05, **/†† p &lt; 0.01, ***/††† p &lt; 0.001,
-    n.s. not significant). {f'All {n_marked} comparisons are significant at p &lt; 0.001, so they stay significant after a Bonferroni correction.' if sig_all else ''}
+    n.s. not significant). {f'All {n_marked} comparisons are significant at p &lt; 0.001, so they stay significant after a Bonferroni correction.' if sig_all else f'All but {len(sig_exceptions)} of the {n_marked} comparisons are significant at p &lt; 0.001; the exception{"s are" if len(sig_exceptions) > 1 else " is"} ' + '; '.join(sig_exceptions) + '.'}
     The p values are in {tnum('demo_bands')}.</p>
   </div>
   <div class="card"><h4 style="margin:0 0 6px">{ttitle('demo_bands')}</h4>{demographics_table()}
@@ -1659,33 +1695,39 @@ page = f"""<!doctype html>
   <h3>Where the account names come from vs. how many there are</h3>
   <p>The 12 and 25 names come from the user's closed set (the entities of the other categories' lists the user follows), while the 50
   come from everything the user follows. Going from 25 to 50 names therefore changes two things at once: the number of accounts and
-  where they come from. To separate the two, both models also ranked the candidates, in the same candidate order, from 25 names drawn at
-  random (fixed seed) from the names of the user's k = 50 prompt, and from the first 12 of those 25, so that the 12 are nested in the
-  25 as in the closed set. The prompts list {band_llm_n[12]:.1f} and {demo_n_k25:.1f} names on average from the closed set, and
-  {demo['user_stats']['names_k12of50']['mean']:.1f} and {demo_n_k25of50:.1f} from the full follow list ({demo['user_stats']['names_given']['mean']:.1f}
-  with k = 50), so each pair of conditions differs in one factor.</p>
+  where they come from. To separate the two, both models also ranked the candidates, in the same candidate order, from names of the
+  full follow list: 25 drawn at random (fixed seed) from the names of the user's k = 50 prompt, the first 12 of those 25 and the first
+  6 of those 12. A sixth closed-set condition lists the first 6 names of the closed-set k = 12 prompt. Each smaller list is nested in
+  the larger one from the same source. The prompts list {k_names['k6']:.1f}, {band_llm_n[12]:.1f} and {demo_n_k25:.1f} names on average
+  from the closed set, and {demo['user_stats']['names_k6of50']['mean']:.1f}, {demo['user_stats']['names_k12of50']['mean']:.1f} and
+  {demo_n_k25of50:.1f} from the full follow list ({demo['user_stats']['names_given']['mean']:.1f} with k = 50), so each pair of conditions
+  differs in one factor.</p>
   <ul class="highlights">
-    <li><b>Where the names come from matters at every size.</b> At ranks 81–100, names from the full follow list beat closed-set names
-    with 12 names ({model_name} {k25d[1]['k12of50']:.3f} vs. {k25d[1]['k12']:.3f}, {HAIKU} {k25d[3]['k12of50']:.3f} vs. {k25d[3]['k12']:.3f})
-    and with 25 ({k25d[1]['k25of50']:.3f} vs. {k25d[1]['k25']:.3f} and {k25d[3]['k25of50']:.3f} vs. {k25d[3]['k25']:.3f}); at ranks 1–20 the
-    gap is smaller ({min(min(r['source12'], r['source25']) for r in k25d[0::2]):+.3f} to {max(max(r['source12'], r['source25']) for r in k25d[0::2]):+.3f}).
-    {'All eight differences are significant (p &lt; 0.001).' if all(r[f'p_{n}'] < 0.001 for r in k25d for n in ('source12', 'source25')) else ''}</li>
-    <li><b>How many names matters less.</b> From the closed set, 25 names add only {min(r['size_closed'] for r in k25d):+.3f} to
-    {max(r['size_closed'] for r in k25d):+.3f} MAP over 12 (the k = 25 list of {closed_lt25:.0%} of users has fewer than 25 names, as they follow fewer
-    closed-set entities). From the full follow list they add {min(r['size_full'] for r in k25d):+.3f} to {max(r['size_full'] for r in k25d):+.3f},
-    most at ranks 81–100 ({model_name} {k25d[1]['size_full']:+.3f}, {HAIKU} {k25d[3]['size_full']:+.3f}, p {p_text(k25d[1]['p_size_full'])} and
-    {p_text(k25d[3]['p_size_full'])}). Going on to 50 names adds {min(r['size_50'] for r in k25d):+.3f} to {max(r['size_50'] for r in k25d):+.3f}.</li>
+    <li><b>Where the names come from matters at every size.</b> At ranks 81–100, names from the full follow list beat closed-set names by
+    {k25d[1]['source6']:+.3f}, {k25d[1]['source12']:+.3f} and {k25d[1]['source25']:+.3f} with 6, 12 and 25 names for {model_name}, and by
+    {k25d[3]['source6']:+.3f}, {k25d[3]['source12']:+.3f} and {k25d[3]['source25']:+.3f} for {HAIKU}: the gap grows with the number of names.
+    At ranks 1–20 it is smaller ({min(r[n] for r in k25d[0::2] for n in ('source6', 'source12', 'source25')):+.3f} to
+    {max(r[n] for r in k25d[0::2] for n in ('source6', 'source12', 'source25')):+.3f}).{source_ns}</li>
+    <li><b>More closed-set names add little; more names from the full list help up to 25.</b> From the closed set, 6 → 12 names
+    adds {min(r['size6_closed'] for r in k25d):+.3f} to {max(r['size6_closed'] for r in k25d):+.3f} MAP and 12 → 25 adds
+    {min(r['size_closed'] for r in k25d):+.3f} to {max(r['size_closed'] for r in k25d):+.3f} (the k = 25 list of {closed_lt25:.0%} of users
+    has fewer than 25 names, as they follow fewer closed-set entities). From the full list, 6 → 12 adds
+    {min(r['size6_full'] for r in k25d):+.3f} to {max(r['size6_full'] for r in k25d):+.3f}, 12 → 25 adds
+    {min(r['size_full'] for r in k25d):+.3f} to {max(r['size_full'] for r in k25d):+.3f}, and 25 → 50 only
+    {min(r['size_50'] for r in k25d):+.3f} to {max(r['size_50'] for r in k25d):+.3f}.</li>
     <li><b>So the jump from 25 to 50 names is mostly the change of source:</b> {k25d[1]['share']:.0%} of {model_name}'s gain at ranks
     81–100 ({k25d[1]['k25']:.3f} → {k25d[1]['k50']:.3f}) and {k25d[3]['share']:.0%} of {HAIKU}'s; {k25d[0]['share']:.0%} and
     {k25d[2]['share']:.0%} at ranks 1–20.</li>
   </ul>
   <p>For the {demo['user_stats']['names_given_le_25']:.0%} of users whose k = 50 prompt lists 25 names or fewer (accounts without a known
-  name are dropped), the 25 names from the 50 are the k = 50 list itself, which is one reason the last size step is small.</p>
+  name are dropped), the 25 names from the 50 are the k = 50 list itself, which is one reason the last step is small.</p>
   <div class="card"><h4 style="margin:0 0 6px">{ttitle('k25_decomp')}</h4>{k25_decomposition_html()}
   <p class="caption">Overall MAP (mean over categories). Closed set: the entities of the other categories' lists the user follows (the
-  k = 12 and k = 25 prompts). Full follow list: names drawn from the user's k = 50 prompt (25 at random, 12 of those 25, or all of them).
-  The source columns compare the two sources at the same number of names, the size columns the same source at different numbers, with
-  paired Wilcoxon p values over users.</p></div>
+  k = 12 and k = 25 prompts; 6 is the first 6 of the 12). Full follow list: names drawn from the user's k = 50 prompt (25 at random, the
+  first 12 and 6 of those 25, or all of them).</p></div>
+  <div class="card"><h4 style="margin:0 0 6px">{ttitle('k_steps')}</h4>{k_steps_html()}
+  <p class="caption">The difference in overall MAP between two conditions of {tnum('k25_decomp')}, with the paired Wilcoxon p value over
+  users. Source: the same number of names from the full follow list vs. the closed set. Number of names: the same source, more names.</p></div>
 
   <h3>What GPT-4o stated about the users</h3>
   <p>Each description is parsed with fixed rules for the value it states for each attribute. With the one-value instruction,
