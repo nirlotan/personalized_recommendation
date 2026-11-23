@@ -1,0 +1,405 @@
+{
+  "users": 270,
+  "leak_4o": 60,
+  "sorted_map": {
+    "random": 0.2618,
+    "popularity": 0.2949,
+    "llm_baseline": 0.2763,
+    "llm_demographics": 0.3516,
+    "socialvec_k12": 0.3625,
+    "llm_k12": 0.4019,
+    "socialvec_k25": 0.3647,
+    "llm_k25": 0.4214,
+    "llm_k50": 0.5008,
+    "socialvec": 0.4509
+  },
+  "shuffled": {
+    "1-20": {
+      "users": 264,
+      "map": {
+        "random": 0.4676,
+        "popularity": 0.5554,
+        "ap_baseline": 0.592,
+        "ap_gpt-4o": 0.6431,
+        "ap_k12": 0.6713,
+        "ap_k25": 0.6846,
+        "ap_k50": 0.7149,
+        "socialvec": 0.6715
+      },
+      "tests": {
+        "4o_vs_baseline": 3.083465072902806e-05,
+        "baseline_vs_popularity": 0.00045425497655355457,
+        "baseline_vs_random": 1.7507814706566349e-22,
+        "4o_vs_socialvec": 0.09974290748030963,
+        "k12_vs_baseline": 1.9001176933345195e-11,
+        "k12_vs_4o": 0.04036828780870188,
+        "k25_vs_k12": 0.0161314351960721,
+        "k50_vs_k12": 0.0001846429114648693,
+        "k50_vs_socialvec": 1.2197687041938864e-05
+      },
+      "clean_4o": {
+        "label": "Demographics only",
+        "users": 205,
+        "map": 0.6333400260829449,
+        "baseline": 0.5958909468546142,
+        "p": 0.003341717618816819
+      }
+    },
+    "81-100": {
+      "users": 270,
+      "map": {
+        "random": 0.2618,
+        "popularity": 0.2949,
+        "ap_baseline": 0.2763,
+        "ap_gpt-4o": 0.3551,
+        "ap_k12": 0.3966,
+        "ap_k25": 0.3978,
+        "ap_k50": 0.4856,
+        "socialvec": 0.4509
+      },
+      "tests": {
+        "4o_vs_baseline": 3.829678212338025e-08,
+        "baseline_vs_popularity": 0.4833882914975485,
+        "baseline_vs_random": 0.02785254673085312,
+        "4o_vs_socialvec": 8.247964538275621e-05,
+        "k12_vs_baseline": 6.088040027432751e-12,
+        "k12_vs_4o": 0.0339308576064232,
+        "k25_vs_k12": 0.7743193693830428,
+        "k50_vs_k12": 4.942434062915603e-06,
+        "k50_vs_socialvec": 0.021374590491602997
+      },
+      "clean_4o": {
+        "label": "Demographics only",
+        "users": 210,
+        "map": 0.3282562185251115,
+        "baseline": 0.27535812359487516,
+        "p": 0.00020937392301961232
+      }
+    },
+    "181-200": {
+      "users": 155,
+      "map": {
+        "random": 0.2345,
+        "popularity": 0.2163,
+        "ap_baseline": 0.3126,
+        "ap_gpt-4o": 0.4263,
+        "ap_k12": 0.4463,
+        "ap_k25": 0.4504,
+        "ap_k50": 0.535,
+        "socialvec": 0.456
+      },
+      "tests": {
+        "4o_vs_baseline": 2.6312268067922526e-05,
+        "baseline_vs_popularity": 1.5356211480466813e-06,
+        "baseline_vs_random": 0.011241912784328621,
+        "4o_vs_socialvec": 0.41065613676552004,
+        "k12_vs_baseline": 5.021171146643977e-07,
+        "k12_vs_4o": 0.19752971352602178,
+        "k25_vs_k12": 0.31285775566689156,
+        "k50_vs_k12": 0.00012018747798765637,
+        "k50_vs_socialvec": 0.0021239075519963947
+      },
+      "clean_4o": {
+        "label": "Demographics only",
+        "users": 124,
+        "map": 0.42189925675201073,
+        "baseline": 0.31697374891391705,
+        "p": 0.0001863318582951356
+      }
+    }
+  },
+  "order_effect": {
+    "baseline": {
+      "shuffled": 0.27634078474292145,
+      "sorted": 0.30359632553090254,
+      "p": 0.0025064201125787754
+    },
+    "4o": {
+      "shuffled": 0.35510086367452914,
+      "sorted": 0.3516140468809472,
+      "p": 0.6943662945499041
+    },
+    "k12": {
+      "shuffled": 0.3966155418760916,
+      "sorted": 0.4018916732778301,
+      "p": 0.5178841762278228
+    },
+    "k25": {
+      "shuffled": 0.39775847413676313,
+      "sorted": 0.4214248178365922,
+      "p": 0.14691014095274668
+    },
+    "k50": {
+      "shuffled": 0.4855613398535737,
+      "sorted": 0.5007531807798303,
+      "p": 0.3494039106632425
+    }
+  },
+  "names_vs_socialvec_81_100": {
+    "12": {
+      "llm": 0.3966155418760916,
+      "socialvec": 0.36248140367171,
+      "p": 0.026789852390414634
+    },
+    "25": {
+      "llm": 0.39775847413676313,
+      "socialvec": 0.36474510959622936,
+      "p": 0.021895300115188945
+    }
+  },
+  "attributes": {
+    "Gender": {
+      "values": [
+        "Female",
+        "Male",
+        "Not stated"
+      ],
+      "counts": {
+        "Male": 160,
+        "Female": 110
+      },
+      "multiple": 0,
+      "by_category": {
+        "Actor": {
+          "Male": 16,
+          "Female": 14
+        },
+        "Comedian": {
+          "Female": 17,
+          "Male": 13
+        },
+        "Journalist": {
+          "Female": 17,
+          "Male": 13
+        },
+        "MusicalArtist": {
+          "Female": 15,
+          "Male": 15
+        },
+        "Politician": {
+          "Female": 16,
+          "Male": 14
+        },
+        "SportsTeam": {
+          "Male": 29,
+          "Female": 1
+        },
+        "TelevisionShow": {
+          "Male": 21,
+          "Female": 9
+        },
+        "TelevisionStation": {
+          "Male": 18,
+          "Female": 12
+        },
+        "news": {
+          "Male": 21,
+          "Female": 9
+        }
+      }
+    },
+    "Age": {
+      "values": [
+        "Under 30",
+        "30s",
+        "40s",
+        "Middle-aged",
+        "50 or older",
+        "Not stated"
+      ],
+      "counts": {
+        "30s": 112,
+        "Middle-aged": 73,
+        "Under 30": 67,
+        "40s": 17,
+        "50 or older": 1
+      },
+      "multiple": 135,
+      "by_category": {
+        "Actor": {
+          "Middle-aged": 12,
+          "30s": 9,
+          "Under 30": 8,
+          "40s": 1
+        },
+        "Comedian": {
+          "30s": 16,
+          "Middle-aged": 6,
+          "40s": 4,
+          "Under 30": 4
+        },
+        "Journalist": {
+          "30s": 16,
+          "Middle-aged": 7,
+          "40s": 5,
+          "50 or older": 1,
+          "Under 30": 1
+        },
+        "MusicalArtist": {
+          "Under 30": 14,
+          "30s": 10,
+          "Middle-aged": 4,
+          "40s": 2
+        },
+        "Politician": {
+          "30s": 13,
+          "Middle-aged": 11,
+          "Under 30": 4,
+          "40s": 2
+        },
+        "SportsTeam": {
+          "Under 30": 19,
+          "30s": 9,
+          "Middle-aged": 2
+        },
+        "TelevisionShow": {
+          "30s": 13,
+          "Middle-aged": 10,
+          "Under 30": 5,
+          "40s": 2
+        },
+        "TelevisionStation": {
+          "30s": 13,
+          "Under 30": 10,
+          "Middle-aged": 7
+        },
+        "news": {
+          "Middle-aged": 14,
+          "30s": 13,
+          "Under 30": 2,
+          "40s": 1
+        }
+      }
+    },
+    "Ethnicity": {
+      "values": [
+        "Caucasian / White",
+        "African American / Black",
+        "Hispanic / Latino",
+        "Asian",
+        "Mixed / diverse",
+        "Not stated"
+      ],
+      "counts": {
+        "Caucasian / White": 242,
+        "African American / Black": 23,
+        "Mixed / diverse": 2,
+        "Hispanic / Latino": 2,
+        "Asian": 1
+      },
+      "multiple": 33,
+      "by_category": {
+        "Actor": {
+          "Caucasian / White": 29,
+          "African American / Black": 1
+        },
+        "Comedian": {
+          "Caucasian / White": 29,
+          "African American / Black": 1
+        },
+        "Journalist": {
+          "Caucasian / White": 30
+        },
+        "MusicalArtist": {
+          "Caucasian / White": 19,
+          "African American / Black": 9,
+          "Mixed / diverse": 2
+        },
+        "Politician": {
+          "Caucasian / White": 28,
+          "Asian": 1,
+          "African American / Black": 1
+        },
+        "SportsTeam": {
+          "Caucasian / White": 27,
+          "African American / Black": 2,
+          "Hispanic / Latino": 1
+        },
+        "TelevisionShow": {
+          "Caucasian / White": 26,
+          "African American / Black": 3,
+          "Hispanic / Latino": 1
+        },
+        "TelevisionStation": {
+          "Caucasian / White": 26,
+          "African American / Black": 4
+        },
+        "news": {
+          "Caucasian / White": 28,
+          "African American / Black": 2
+        }
+      }
+    },
+    "Education": {
+      "values": [
+        "High school",
+        "Some higher education",
+        "College / university degree",
+        "Graduate degree",
+        "Higher education, level not stated",
+        "Not stated"
+      ],
+      "counts": {
+        "Higher education, level not stated": 222,
+        "College / university degree": 19,
+        "High school": 15,
+        "Some higher education": 7,
+        "Graduate degree": 7
+      },
+      "multiple": 6,
+      "by_category": {
+        "Actor": {
+          "Higher education, level not stated": 23,
+          "Some higher education": 3,
+          "High school": 2,
+          "College / university degree": 1,
+          "Graduate degree": 1
+        },
+        "Comedian": {
+          "Higher education, level not stated": 26,
+          "College / university degree": 2,
+          "Graduate degree": 1,
+          "High school": 1
+        },
+        "Journalist": {
+          "Higher education, level not stated": 24,
+          "College / university degree": 4,
+          "Graduate degree": 2
+        },
+        "MusicalArtist": {
+          "Higher education, level not stated": 23,
+          "College / university degree": 4,
+          "High school": 2,
+          "Some higher education": 1
+        },
+        "Politician": {
+          "Higher education, level not stated": 28,
+          "College / university degree": 2
+        },
+        "SportsTeam": {
+          "Higher education, level not stated": 22,
+          "High school": 6,
+          "Some higher education": 1,
+          "Graduate degree": 1
+        },
+        "TelevisionShow": {
+          "Higher education, level not stated": 24,
+          "College / university degree": 2,
+          "Some higher education": 2,
+          "High school": 1,
+          "Graduate degree": 1
+        },
+        "TelevisionStation": {
+          "Higher education, level not stated": 25,
+          "High school": 3,
+          "College / university degree": 2
+        },
+        "news": {
+          "Higher education, level not stated": 27,
+          "College / university degree": 2,
+          "Graduate degree": 1
+        }
+      }
+    }
+  }
+}

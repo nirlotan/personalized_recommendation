@@ -1,0 +1,420 @@
+[
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "main",
+      "order",
+      "band"
+    ],
+    "calls": 4613,
+    "cost_usd": 0.863,
+    "budget_usd": 1.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-debug"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0003,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-debug"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0002,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-debug"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0002,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics"
+    ],
+    "calls": 538,
+    "cost_usd": 0.0797,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics_gpt-4o"
+    ],
+    "calls": 540,
+    "cost_usd": 0.4412,
+    "budget_usd": 0.75,
+    "cost_by_model": {
+      "openai/gpt-4o": 0.3929,
+      "openai/gpt-6-luna": 0.0482
+    },
+    "calls_by_model": {
+      "openai/gpt-4o": 270,
+      "openai/gpt-6-luna": 270
+    }
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band"
+    ],
+    "band": [
+      181,
+      200,
+      "extended"
+    ],
+    "calls": 910,
+    "cost_usd": 0.1834,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1275,
+    "cost_usd": 0.2205,
+    "budget_usd": 0.6
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1275,
+    "cost_usd": 0.2592,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 10,
+    "cost_usd": 0.0235,
+    "budget_usd": 0.2
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 8,
+    "cost_usd": 0.0193,
+    "budget_usd": 0.3
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 547,
+    "cost_usd": 1.6061,
+    "budget_usd": 3.0
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0046,
+    "budget_usd": 0.1
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 280,
+    "cost_usd": 0.9364,
+    "budget_usd": 1.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200"
+    ],
+    "calls": 2,
+    "cost_usd": 0.0028,
+    "budget_usd": 0.1
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200-explain"
+    ],
+    "calls": 6,
+    "cost_usd": 0.0174,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "parts": [
+      "candidates-200-explain"
+    ],
+    "calls": 7,
+    "cost_usd": 0.0292,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-shuffled-baseline"
+    ],
+    "band": [
+      181,
+      200,
+      "extended"
+    ],
+    "calls": 100,
+    "cost_usd": 0.0171,
+    "budget_usd": 0.2
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-more-users"
+    ],
+    "band": [
+      81,
+      100,
+      "original"
+    ],
+    "users_per_category": 200,
+    "calls": 6112,
+    "cost_usd": 1.1921,
+    "budget_usd": 1.8
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-bands"
+    ],
+    "calls": 1320,
+    "cost_usd": 0.2284,
+    "budget_usd": 0.5
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "band-more-users"
+    ],
+    "band": [
+      1,
+      20,
+      "original"
+    ],
+    "users_per_category": 200,
+    "calls": 6753,
+    "cost_usd": 1.1956,
+    "budget_usd": 1.8
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 4003,
+    "cost_usd": 1.339,
+    "budget_usd": 2.5,
+    "cost_by_model": {
+      "openai/gpt-4o": 0.6784,
+      "openai/gpt-6-luna": 0.6606
+    },
+    "calls_by_model": {
+      "openai/gpt-4o": 437,
+      "openai/gpt-6-luna": 3566
+    }
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 177,
+    "cost_usd": 0.06,
+    "budget_usd": 0.5,
+    "cost_by_model": {
+      "openai/gpt-4o": 0.0301,
+      "openai/gpt-6-luna": 0.0299
+    },
+    "calls_by_model": {
+      "openai/gpt-4o": 19,
+      "openai/gpt-6-luna": 158
+    }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-pilot"
+    ],
+    "input_tokens": 63370,
+    "output_tokens": 12781,
+    "cost_usd": 0.0127,
+    "calls": 50
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "parts": [
+      "shuffled-personal",
+      "main",
+      "band"
+    ],
+    "calls": 9155,
+    "cost_usd": 1.7703,
+    "budget_usd": 3.0
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 4559,
+    "cost_usd": 2.8183,
+    "budget_usd": 3.5,
+    "cost_by_model": {
+      "openai/gpt-4o": 2.3136,
+      "openai/gpt-6-luna": 0.5048
+    },
+    "calls_by_model": {
+      "openai/gpt-4o": 1534,
+      "openai/gpt-6-luna": 3025
+    }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "input_tokens": 22148215,
+    "output_tokens": 3627334,
+    "cost_usd": 2.0142,
+    "calls": 17695
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 3549,
+    "input_tokens": 4893083,
+    "output_tokens": 956329,
+    "cost_usd": 0.4837
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 3549,
+    "cost_usd": 0.7,
+    "budget_usd": 1.5,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 0.7
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 3549
+    }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 3549,
+    "input_tokens": 4544524,
+    "output_tokens": 1083480,
+    "cost_usd": 0.4981
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 3549,
+    "cost_usd": 0.6809,
+    "budget_usd": 1.5,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 0.6809
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 3549
+    }
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "reasoning_effort": "low",
+    "parts": [
+      "demographics-v2-claude-batch"
+    ],
+    "calls": 7098,
+    "input_tokens": 8663570,
+    "output_tokens": 1877735,
+    "cost_usd": 0.9026
+  },
+  {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "describe_model": "gpt-4o",
+    "parts": [
+      "demographics-v2"
+    ],
+    "calls": 7098,
+    "cost_usd": 1.3258,
+    "budget_usd": 2.0,
+    "cost_by_model": {
+      "openai/gpt-6-luna": 1.3258
+    },
+    "calls_by_model": {
+      "openai/gpt-6-luna": 7098
+    }
+  }
+]

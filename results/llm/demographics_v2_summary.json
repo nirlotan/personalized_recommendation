@@ -1,0 +1,1184 @@
+{
+  "filter": {
+    "max_follows": 2000,
+    "min_entities": 30,
+    "users": 544
+  },
+  "users": 1798,
+  "users_by_category": {
+    "MusicalArtist": 200,
+    "news": 200,
+    "Comedian": 200,
+    "Politician": 200,
+    "TelevisionStation": 198,
+    "Actor": 200,
+    "TelevisionShow": 200,
+    "SportsTeam": 200,
+    "Journalist": 200
+  },
+  "user_stats": {
+    "follows": {
+      "min": 68,
+      "mean": 2256.2,
+      "median": 1950.5,
+      "max": 5000
+    },
+    "category_entities": {
+      "min": 11,
+      "mean": 48.4,
+      "median": 44.0,
+      "max": 170
+    },
+    "names_given": {
+      "min": 3,
+      "mean": 27.9,
+      "median": 29.0,
+      "max": 50
+    },
+    "names_given_le_25": 0.381,
+    "names_k6of50": {
+      "min": 3,
+      "mean": 6.0,
+      "median": 6.0,
+      "max": 6
+    },
+    "names_k12of50": {
+      "min": 3,
+      "mean": 11.8,
+      "median": 12.0,
+      "max": 12
+    },
+    "names_k25of50": {
+      "min": 3,
+      "mean": 22.5,
+      "median": 25.0,
+      "max": 25
+    }
+  },
+  "leak_4o": 19,
+  "shuffled": {
+    "1-20": {
+      "users": 1751,
+      "users_by_category": {
+        "Actor": 187,
+        "Comedian": 199,
+        "Journalist": 198,
+        "MusicalArtist": 187,
+        "Politician": 199,
+        "SportsTeam": 194,
+        "TelevisionShow": 194,
+        "TelevisionStation": 196,
+        "news": 197
+      },
+      "map": {
+        "random": 0.4592,
+        "popularity": 0.5531,
+        "ap_baseline": 0.5909,
+        "ap_gpt-4o": 0.6194,
+        "ap_k6": 0.6547,
+        "ap_k12": 0.671,
+        "ap_k25": 0.6789,
+        "ap_k6of50": 0.677,
+        "ap_k12of50": 0.6978,
+        "ap_k25of50": 0.7045,
+        "ap_k50": 0.7095,
+        "socialvec": 0.6597
+      },
+      "tests": {
+        "4o_vs_baseline": 4.32392823127845e-08,
+        "baseline_vs_popularity": 2.4195068952149629e-23,
+        "4o_vs_socialvec": 1.1064576970969176e-09,
+        "k12_vs_4o": 1.2626122400593526e-23,
+        "k50_vs_socialvec": 6.345004234323241e-28,
+        "k25of50_vs_k25": 0.0013231834787921827,
+        "k50_vs_k25of50": 0.011151709890628862,
+        "k12of50_vs_k12": 1.2652385720015702e-05,
+        "k25of50_vs_k12of50": 0.012818996664351505,
+        "k6of50_vs_k6": 0.000762387152670547
+      }
+    },
+    "81-100": {
+      "users": 1798,
+      "users_by_category": {
+        "Actor": 200,
+        "Comedian": 200,
+        "Journalist": 200,
+        "MusicalArtist": 200,
+        "Politician": 200,
+        "SportsTeam": 200,
+        "TelevisionShow": 200,
+        "TelevisionStation": 198,
+        "news": 200
+      },
+      "map": {
+        "random": 0.2581,
+        "popularity": 0.2966,
+        "ap_baseline": 0.2838,
+        "ap_gpt-4o": 0.34,
+        "ap_k6": 0.3791,
+        "ap_k12": 0.3915,
+        "ap_k25": 0.3941,
+        "ap_k6of50": 0.4299,
+        "ap_k12of50": 0.4607,
+        "ap_k25of50": 0.4777,
+        "ap_k50": 0.4798,
+        "socialvec": 0.4175
+      },
+      "tests": {
+        "4o_vs_baseline": 3.102580568139768e-29,
+        "baseline_vs_popularity": 0.3495214491947005,
+        "4o_vs_socialvec": 5.570670200864242e-22,
+        "k12_vs_4o": 2.394426620785849e-12,
+        "k50_vs_socialvec": 1.5175690602942947e-17,
+        "k25of50_vs_k25": 2.1119703929719465e-28,
+        "k50_vs_k25of50": 0.566808562028811,
+        "k12of50_vs_k12": 2.136073647044909e-20,
+        "k25of50_vs_k12of50": 0.00038033389213057157,
+        "k6of50_vs_k6": 8.222243751618683e-14
+      }
+    }
+  },
+  "shuffled_filtered": {
+    "1-20": {
+      "users": 537,
+      "users_by_category": {
+        "Actor": 74,
+        "Comedian": 65,
+        "Journalist": 74,
+        "MusicalArtist": 59,
+        "Politician": 72,
+        "SportsTeam": 47,
+        "TelevisionShow": 42,
+        "TelevisionStation": 37,
+        "news": 67
+      },
+      "map": {
+        "random": 0.4754,
+        "popularity": 0.6005,
+        "ap_baseline": 0.6484,
+        "ap_gpt-4o": 0.6607,
+        "ap_k6": 0.6757,
+        "ap_k12": 0.6905,
+        "ap_k25": 0.7038,
+        "ap_k6of50": 0.7075,
+        "ap_k12of50": 0.7156,
+        "ap_k25of50": 0.7228,
+        "ap_k50": 0.7356,
+        "socialvec": 0.6875
+      },
+      "tests": {
+        "4o_vs_baseline": 0.13558233474288692,
+        "baseline_vs_popularity": 2.3441556086178134e-11,
+        "4o_vs_socialvec": 0.004026833229895274,
+        "k12_vs_4o": 5.097132659401319e-06,
+        "k50_vs_socialvec": 2.527350829594522e-10,
+        "k25of50_vs_k25": 0.2644993132931658,
+        "k50_vs_k25of50": 0.0019429479533036632,
+        "k12of50_vs_k12": 0.004717190841880109,
+        "k25of50_vs_k12of50": 0.3462965934204161,
+        "k6of50_vs_k6": 0.0007237060753607299
+      }
+    },
+    "81-100": {
+      "users": 544,
+      "users_by_category": {
+        "Actor": 75,
+        "Comedian": 65,
+        "Journalist": 74,
+        "MusicalArtist": 61,
+        "Politician": 72,
+        "SportsTeam": 48,
+        "TelevisionShow": 45,
+        "TelevisionStation": 37,
+        "news": 67
+      },
+      "map": {
+        "random": 0.2477,
+        "popularity": 0.2874,
+        "ap_baseline": 0.2834,
+        "ap_gpt-4o": 0.3492,
+        "ap_k6": 0.3653,
+        "ap_k12": 0.361,
+        "ap_k25": 0.3702,
+        "ap_k6of50": 0.4154,
+        "ap_k12of50": 0.4411,
+        "ap_k25of50": 0.4687,
+        "ap_k50": 0.4735,
+        "socialvec": 0.4169
+      },
+      "tests": {
+        "4o_vs_baseline": 2.524462233327521e-11,
+        "baseline_vs_popularity": 0.4382993885433427,
+        "4o_vs_socialvec": 4.4268697511847845e-05,
+        "k12_vs_4o": 0.19686749341859744,
+        "k50_vs_socialvec": 4.79256425482301e-05,
+        "k25of50_vs_k25": 1.6850080263324822e-10,
+        "k50_vs_k25of50": 0.30829006348991395,
+        "k12of50_vs_k12": 7.454577889537115e-10,
+        "k25of50_vs_k12of50": 0.13469071807895355,
+        "k6of50_vs_k6": 2.356166915537231e-05
+      }
+    }
+  },
+  "attributes": {
+    "Gender": {
+      "values": [
+        "Female",
+        "Male",
+        "Not stated"
+      ],
+      "counts": {
+        "Male": 1057,
+        "Female": 741
+      },
+      "multiple": 0,
+      "by_category": {
+        "Actor": {
+          "Male": 115,
+          "Female": 85
+        },
+        "Comedian": {
+          "Female": 104,
+          "Male": 96
+        },
+        "Journalist": {
+          "Female": 107,
+          "Male": 93
+        },
+        "MusicalArtist": {
+          "Male": 112,
+          "Female": 88
+        },
+        "Politician": {
+          "Female": 107,
+          "Male": 93
+        },
+        "SportsTeam": {
+          "Male": 177,
+          "Female": 23
+        },
+        "TelevisionShow": {
+          "Male": 113,
+          "Female": 87
+        },
+        "TelevisionStation": {
+          "Male": 123,
+          "Female": 75
+        },
+        "news": {
+          "Male": 135,
+          "Female": 65
+        }
+      }
+    },
+    "Age": {
+      "values": [
+        "Under 30",
+        "30s",
+        "40s",
+        "Middle-aged",
+        "50 or older",
+        "Not stated"
+      ],
+      "counts": {
+        "30s": 755,
+        "40s": 667,
+        "Under 30": 240,
+        "50 or older": 134,
+        "Middle-aged": 2
+      },
+      "multiple": 60,
+      "by_category": {
+        "Actor": {
+          "30s": 88,
+          "40s": 72,
+          "Under 30": 26,
+          "50 or older": 14
+        },
+        "Comedian": {
+          "30s": 87,
+          "40s": 87,
+          "50 or older": 14,
+          "Under 30": 11,
+          "Middle-aged": 1
+        },
+        "Journalist": {
+          "40s": 105,
+          "30s": 63,
+          "50 or older": 32
+        },
+        "MusicalArtist": {
+          "Under 30": 81,
+          "30s": 72,
+          "40s": 41,
+          "50 or older": 5,
+          "Middle-aged": 1
+        },
+        "Politician": {
+          "40s": 97,
+          "30s": 72,
+          "50 or older": 22,
+          "Under 30": 9
+        },
+        "SportsTeam": {
+          "30s": 116,
+          "Under 30": 62,
+          "40s": 21,
+          "50 or older": 1
+        },
+        "TelevisionShow": {
+          "30s": 87,
+          "40s": 78,
+          "Under 30": 24,
+          "50 or older": 11
+        },
+        "TelevisionStation": {
+          "30s": 95,
+          "40s": 71,
+          "Under 30": 20,
+          "50 or older": 12
+        },
+        "news": {
+          "40s": 95,
+          "30s": 75,
+          "50 or older": 23,
+          "Under 30": 7
+        }
+      }
+    },
+    "Ethnicity": {
+      "values": [
+        "Caucasian / White",
+        "African American / Black",
+        "Hispanic / Latino",
+        "Asian",
+        "Mixed / diverse",
+        "Not stated"
+      ],
+      "counts": {
+        "Caucasian / White": 1589,
+        "African American / Black": 162,
+        "Hispanic / Latino": 19,
+        "Asian": 11,
+        "Mixed / diverse": 11,
+        "Not stated": 6
+      },
+      "multiple": 19,
+      "by_category": {
+        "Actor": {
+          "Caucasian / White": 180,
+          "African American / Black": 16,
+          "Hispanic / Latino": 2,
+          "Asian": 2
+        },
+        "Comedian": {
+          "Caucasian / White": 185,
+          "African American / Black": 9,
+          "Hispanic / Latino": 2,
+          "Asian": 2,
+          "Not stated": 1,
+          "Mixed / diverse": 1
+        },
+        "Journalist": {
+          "Caucasian / White": 191,
+          "African American / Black": 9
+        },
+        "MusicalArtist": {
+          "Caucasian / White": 126,
+          "African American / Black": 57,
+          "Hispanic / Latino": 7,
+          "Mixed / diverse": 4,
+          "Asian": 3,
+          "Not stated": 3
+        },
+        "Politician": {
+          "Caucasian / White": 184,
+          "African American / Black": 12,
+          "Asian": 2,
+          "Hispanic / Latino": 1,
+          "Mixed / diverse": 1
+        },
+        "SportsTeam": {
+          "Caucasian / White": 177,
+          "African American / Black": 18,
+          "Hispanic / Latino": 2,
+          "Mixed / diverse": 2,
+          "Asian": 1
+        },
+        "TelevisionShow": {
+          "Caucasian / White": 178,
+          "African American / Black": 17,
+          "Mixed / diverse": 2,
+          "Asian": 1,
+          "Hispanic / Latino": 1,
+          "Not stated": 1
+        },
+        "TelevisionStation": {
+          "Caucasian / White": 182,
+          "African American / Black": 12,
+          "Hispanic / Latino": 4
+        },
+        "news": {
+          "Caucasian / White": 186,
+          "African American / Black": 12,
+          "Not stated": 1,
+          "Mixed / diverse": 1
+        }
+      }
+    },
+    "Education": {
+      "values": [
+        "High school",
+        "Some higher education",
+        "College / university degree",
+        "Graduate degree",
+        "Higher education, level not stated",
+        "Not stated"
+      ],
+      "counts": {
+        "Higher education, level not stated": 1696,
+        "High school": 75,
+        "College / university degree": 13,
+        "Some higher education": 9,
+        "Graduate degree": 4,
+        "Not stated": 1
+      },
+      "multiple": 5,
+      "by_category": {
+        "Actor": {
+          "Higher education, level not stated": 190,
+          "High school": 7,
+          "Some higher education": 2,
+          "College / university degree": 1
+        },
+        "Comedian": {
+          "Higher education, level not stated": 194,
+          "College / university degree": 3,
+          "High school": 2,
+          "Graduate degree": 1
+        },
+        "Journalist": {
+          "Higher education, level not stated": 197,
+          "College / university degree": 2,
+          "High school": 1
+        },
+        "MusicalArtist": {
+          "Higher education, level not stated": 176,
+          "High school": 22,
+          "Some higher education": 2
+        },
+        "Politician": {
+          "Higher education, level not stated": 196,
+          "Graduate degree": 2,
+          "High school": 1,
+          "College / university degree": 1
+        },
+        "SportsTeam": {
+          "Higher education, level not stated": 171,
+          "High school": 21,
+          "Some higher education": 5,
+          "College / university degree": 2,
+          "Not stated": 1
+        },
+        "TelevisionShow": {
+          "Higher education, level not stated": 190,
+          "High school": 8,
+          "College / university degree": 2
+        },
+        "TelevisionStation": {
+          "Higher education, level not stated": 187,
+          "High school": 10,
+          "College / university degree": 1
+        },
+        "news": {
+          "Higher education, level not stated": 195,
+          "High school": 3,
+          "Graduate degree": 1,
+          "College / university degree": 1
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "user": 1079,
+      "category": "Musical artists",
+      "n_names": 44,
+      "known_entities": [
+        [
+          "Shia LaBeouf",
+          "thecampaignbook",
+          "Comedians"
+        ],
+        [
+          "Shanola Hampton",
+          "shanolahampton",
+          "Actors"
+        ],
+        [
+          "Ellie Goulding",
+          "elliegoulding",
+          "Musical artists"
+        ],
+        [
+          "Mehdi Hasan",
+          "mehdirhasan",
+          "Journalists"
+        ],
+        [
+          "Dave Coulier",
+          "DaveCoulier",
+          "Comedians"
+        ],
+        [
+          "Gillian Anderson",
+          "GillianA",
+          "Actors"
+        ],
+        [
+          "Nina Dobrev",
+          "ninadobrev",
+          "Actors"
+        ],
+        [
+          "Blake Lively",
+          "blakelively",
+          "Actors"
+        ],
+        [
+          "billy eichner",
+          "billyeichner",
+          "Comedians"
+        ],
+        [
+          "San Francisco 49ers",
+          "49ers",
+          "Sports teams"
+        ],
+        [
+          "Dave Mustaine",
+          "DaveMustaine",
+          "Musical artists"
+        ],
+        [
+          "Channing Tatum",
+          "channingtatum",
+          "Actors"
+        ],
+        [
+          "Jimmy Kimmel",
+          "jimmykimmel",
+          "Comedians"
+        ],
+        [
+          "pw",
+          "petewentz",
+          "Musical artists"
+        ],
+        [
+          "Lamorne Morris",
+          "LamorneMorris",
+          "Actors"
+        ],
+        [
+          "Keegan Allen",
+          "KeeganAllen",
+          "Actors"
+        ],
+        [
+          "Michael Keaton",
+          "MichaelKeaton",
+          "Actors"
+        ],
+        [
+          "terry crews",
+          "terrycrews",
+          "Actors"
+        ],
+        [
+          "Elizabeth Spiers",
+          "espiers",
+          "Journalists"
+        ],
+        [
+          "John Kasich",
+          "JohnKasich",
+          "Politicians"
+        ],
+        [
+          "Kelly!",
+          "KellyOsbourne",
+          "Actors"
+        ],
+        [
+          "Mr. T",
+          "MrT",
+          "Actors"
+        ],
+        [
+          "IT'S CHRISTMAS TIME",
+          "macklemore",
+          "Musical artists"
+        ],
+        [
+          "Phreddie Prinze Jr.",
+          "RealFPJr",
+          "Actors"
+        ],
+        [
+          "Joyce Alene",
+          "JoyceWhiteVance",
+          "Politicians"
+        ],
+        [
+          "Seth Rogen",
+          "Sethrogen",
+          "Actors"
+        ],
+        [
+          "Brody Jenner",
+          "BrodyJenner",
+          "Actors"
+        ],
+        [
+          "Jamie Lynn Spears",
+          "jamielynnspears",
+          "Actors"
+        ],
+        [
+          "Good Morning America",
+          "GMA",
+          "TV shows"
+        ]
+      ],
+      "description": "The user is most likely a Caucasian male in his 30s with a higher education level."
+    },
+    {
+      "user": 8749,
+      "category": "Sports teams",
+      "n_names": 37,
+      "known_entities": [
+        [
+          "Cleveland Browns",
+          "Browns",
+          "Sports teams"
+        ],
+        [
+          "Philadelphia Eagles",
+          "Eagles",
+          "Sports teams"
+        ],
+        [
+          "Houston Texans",
+          "HoustonTexans",
+          "Sports teams"
+        ],
+        [
+          "Arizona Cardinals",
+          "AZCardinals",
+          "Sports teams"
+        ],
+        [
+          "OKC THUNDER",
+          "okcthunder",
+          "Sports teams"
+        ],
+        [
+          "Cincinnati Bengals",
+          "Bengals",
+          "Sports teams"
+        ],
+        [
+          "Bleacher Report",
+          "BleacherReport",
+          "News outlets"
+        ],
+        [
+          "CBS Sports",
+          "CBSSports",
+          "TV stations"
+        ],
+        [
+          "New Orleans Saints",
+          "Saints",
+          "Sports teams"
+        ],
+        [
+          "NBA on TNT",
+          "NBAonTNT",
+          "TV shows"
+        ],
+        [
+          "#DUUUVAL",
+          "Jaguars",
+          "Sports teams"
+        ],
+        [
+          "ESPN Stats & Info",
+          "ESPNStatsInfo",
+          "TV stations"
+        ],
+        [
+          "The Athletic HQ",
+          "TheAthletic",
+          "News outlets"
+        ],
+        [
+          "ESPN",
+          "espn",
+          "TV stations"
+        ],
+        [
+          "NFL Network",
+          "nflnetwork",
+          "TV stations"
+        ],
+        [
+          "Jeff Passan",
+          "JeffPassan",
+          "Journalists"
+        ],
+        [
+          "Tampa Bay Buccaneers",
+          "Buccaneers",
+          "Sports teams"
+        ],
+        [
+          "St. Louis Cardinals",
+          "Cardinals",
+          "Sports teams"
+        ],
+        [
+          "Cleveland Indians",
+          "Indians",
+          "Sports teams"
+        ],
+        [
+          "Nike",
+          "Nike",
+          "Fashion"
+        ]
+      ],
+      "description": "The user is most likely a male in their 20s, Caucasian, and has completed higher education."
+    },
+    {
+      "user": 4228,
+      "category": "Politicians",
+      "n_names": 42,
+      "known_entities": [
+        [
+          "ICE T",
+          "FINALLEVEL",
+          "Musical artists"
+        ],
+        [
+          "CNN Breaking News",
+          "cnnbrk",
+          "TV stations"
+        ],
+        [
+          "Rickey Smiley",
+          "RickeySmiley",
+          "Actors"
+        ],
+        [
+          "Ari Melber",
+          "AriMelber",
+          "Journalists"
+        ],
+        [
+          "Bill Maher",
+          "billmaher",
+          "Comedians"
+        ],
+        [
+          "Yamiche Alcindor",
+          "Yamiche",
+          "Journalists"
+        ],
+        [
+          "Sunny Hostin",
+          "sunny",
+          "Journalists"
+        ],
+        [
+          "Rihanna",
+          "rihanna",
+          "Musical artists"
+        ],
+        [
+          "Ellen DeGeneres",
+          "TheEllenShow",
+          "Comedians"
+        ],
+        [
+          "\u2b50Jill Scott\u2b50",
+          "missjillscott",
+          "Musical artists"
+        ],
+        [
+          "Steve Schmidt",
+          "SteveSchmidtSES",
+          "Politicians"
+        ],
+        [
+          "Anderson Cooper 360\u00b0",
+          "AC360",
+          "News outlets"
+        ],
+        [
+          "Rachel Maddow MSNBC",
+          "maddow",
+          "News outlets"
+        ],
+        [
+          "Joy Reid",
+          "JoyAnnReid",
+          "Journalists"
+        ],
+        [
+          "Leslie Jones \ud83e\udd8b",
+          "Lesdoggg",
+          "Comedians"
+        ],
+        [
+          "Don Lemon",
+          "donlemon",
+          "News outlets"
+        ],
+        [
+          "Tiffany Cross",
+          "TiffanyDCross",
+          "TV hosts"
+        ],
+        [
+          "Maya Wiley",
+          "mayawiley",
+          "Politicians"
+        ],
+        [
+          "Elie Mystal",
+          "ElieNYC",
+          "Journalists"
+        ],
+        [
+          "P!nk",
+          "Pink",
+          "Musical artists"
+        ],
+        [
+          "Joe Scarborough",
+          "JoeNBC",
+          "News outlets"
+        ],
+        [
+          "Tish James",
+          "TishJames",
+          "Politicians"
+        ],
+        [
+          "AprilDRyan",
+          "AprilDRyan",
+          "Journalists"
+        ],
+        [
+          "A N G E L A | R Y E",
+          "angela_rye",
+          "Journalists"
+        ],
+        [
+          "Whoopi Goldberg",
+          "WhoopiGoldberg",
+          "Comedians"
+        ],
+        [
+          "BEYONC\u00c9",
+          "Beyonce",
+          "Musical artists"
+        ],
+        [
+          "Meek Mill",
+          "MeekMill",
+          "Musical artists"
+        ],
+        [
+          "Ashley Nicole Black",
+          "ashleyn1cole",
+          "Actors"
+        ],
+        [
+          "Stephen Colbert",
+          "StephenAtHome",
+          "Comedians"
+        ],
+        [
+          "Kandi Burruss",
+          "Kandi",
+          "Musical artists"
+        ],
+        [
+          "Symone D. Sanders",
+          "SymoneDSanders",
+          "Politicians"
+        ],
+        [
+          "Jim Acosta",
+          "Acosta",
+          "Journalists"
+        ],
+        [
+          "iamcardib",
+          "iamcardib",
+          "Musical artists"
+        ]
+      ],
+      "description": "The user is most likely a Black female in their 30s with higher education."
+    },
+    {
+      "user": 13440,
+      "category": "News outlets",
+      "n_names": 43,
+      "known_entities": [
+        [
+          "Preet Bharara",
+          "PreetBharara",
+          "Politicians"
+        ],
+        [
+          "Clarissa Ward",
+          "clarissaward",
+          "Journalists"
+        ],
+        [
+          "Joe Walsh",
+          "WalshFreedom",
+          "Politicians"
+        ],
+        [
+          "Fran Drescher",
+          "frandrescher",
+          "Politicians"
+        ],
+        [
+          "Jonathan Lemire",
+          "JonLemire",
+          "Journalists"
+        ],
+        [
+          "Pete Buttigieg",
+          "PeteButtigieg",
+          "Politicians"
+        ],
+        [
+          "Kamala Harris",
+          "KamalaHarris",
+          "Politicians"
+        ],
+        [
+          "CookPoliticalReport",
+          "CookPolitical",
+          "News outlets"
+        ],
+        [
+          "Katie Couric",
+          "katiecouric",
+          "Journalists"
+        ],
+        [
+          "Governor Gretchen Whitmer",
+          "GovWhitmer",
+          "Politicians"
+        ],
+        [
+          "Brooke Baldwin",
+          "BrookeBCNN",
+          "TV hosts"
+        ],
+        [
+          "Kate Bolduan",
+          "KateBolduan",
+          "Journalists"
+        ],
+        [
+          "Chaz Bono",
+          "ChazBono",
+          "Actors"
+        ],
+        [
+          "Gabrielle Giffords",
+          "GabbyGiffords",
+          "Politicians"
+        ],
+        [
+          "Mimi Rocah",
+          "Mimirocah1",
+          "Politicians"
+        ],
+        [
+          "The Hill",
+          "thehill",
+          "News outlets"
+        ],
+        [
+          "The View",
+          "TheView",
+          "TV shows"
+        ],
+        [
+          "ashley judd",
+          "AshleyJudd",
+          "Actors"
+        ],
+        [
+          "Karine Jean-Pierre",
+          "K_JeanPierre",
+          "Politicians"
+        ],
+        [
+          "Bill Clinton",
+          "BillClinton",
+          "Politicians"
+        ],
+        [
+          "Dan Rather",
+          "DanRather",
+          "TV hosts"
+        ],
+        [
+          "Chuck Schumer",
+          "SenSchumer",
+          "Politicians"
+        ],
+        [
+          "Ilhan Omar",
+          "IlhanMN",
+          "Politicians"
+        ],
+        [
+          "Taylor Swift",
+          "taylorswift13",
+          "Musical artists"
+        ]
+      ],
+      "description": "The user is most likely a Caucasian female in her 50s with higher education."
+    }
+  ],
+  "stage2_example": {
+    "user": 1079,
+    "band": "81-100",
+    "description": "The user is most likely a Caucasian male in his 30s with a higher education level.",
+    "candidates_json": "[{\"twitter_user_id\":23023236,\"twitter_name\":\"Tom Morello\"},{\"twitter_user_id\":17879692,\"twitter_name\":\"Ted Nugent\"},{\"twitter_user_id\":32876210,\"twitter_name\":\"Richard Marx\"},{\"twitter_user_id\":40156330,\"twitter_name\":\"Scott Gottlieb, MD\"},{\"twitter_user_id\":238687719,\"twitter_name\":\"Big Speaker\"},{\"twitter_user_id\":772789437063368704,\"twitter_name\":\"Polo.G\\ud83d\\udc10\"},{\"twitter_user_id\":568545739,\"twitter_name\":\"STINKY JOE\"},{\"twitter_user_id\":43383705,\"twitter_name\":\"Bruce Springsteen\"},{\"twitter_user_id\":50735431,\"twitter_name\":\"Nancy Sinatra\"},{\"twitter_user_id\":211918431,\"twitter_name\":\"Kid Rock\"},{\"twitter_user_id\":36169080,\"twitter_name\":\"Barbra Streisand\"},{\"twitter_user_id\":12266442,\"twitter_name\":\"Janelle Mon\\u00e1e, Cindi\"},{\"twitter_user_id\":39878074,\"twitter_name\":\"Ari Lennox\"},{\"twitter_user_id\":28420827,\"twitter_name\":\"ICE T\"},{\"twitter_user_id\":63769373,\"twitter_name\":\"Travis Tritt\"},{\"twitter_user_id\":874896877,\"twitter_name\":\"Dionne Warwick\"},{\"twitter_user_id\":23702397,\"twitter_name\":\"TEYANA M.J. SHUMPERT\"},{\"twitter_user_id\":32626129,\"twitter_name\":\"Kaya Jones\"},{\"twitter_user_id\":16869718,\"twitter_name\":\"John Rich\"},{\"twitter_user_id\":200329893,\"twitter_name\":\"SUMMER WALKER\"}]",
+    "response": "[23023236, 43383705, 17879692, 211918431, 32876210, 40156330, 28420827, 50735431, 63769373, 16869718, 36169080, 12266442, 874896877, 23702397, 32626129, 39878074, 200329893, 772789437063368704, 238687719, 568545739]",
+    "ranked": [
+      [
+        23023236,
+        "Tom Morello",
+        false
+      ],
+      [
+        43383705,
+        "Bruce Springsteen",
+        true
+      ],
+      [
+        17879692,
+        "Ted Nugent",
+        false
+      ],
+      [
+        211918431,
+        "Kid Rock",
+        false
+      ],
+      [
+        32876210,
+        "Richard Marx",
+        true
+      ],
+      [
+        40156330,
+        "Scott Gottlieb, MD",
+        false
+      ],
+      [
+        28420827,
+        "ICE T",
+        true
+      ],
+      [
+        50735431,
+        "Nancy Sinatra",
+        true
+      ],
+      [
+        63769373,
+        "Travis Tritt",
+        false
+      ],
+      [
+        16869718,
+        "John Rich",
+        false
+      ],
+      [
+        36169080,
+        "Barbra Streisand",
+        true
+      ],
+      [
+        12266442,
+        "Janelle Mon\u00e1e, Cindi",
+        false
+      ],
+      [
+        874896877,
+        "Dionne Warwick",
+        true
+      ],
+      [
+        23702397,
+        "TEYANA M.J. SHUMPERT",
+        false
+      ],
+      [
+        32626129,
+        "Kaya Jones",
+        false
+      ],
+      [
+        39878074,
+        "Ari Lennox",
+        false
+      ],
+      [
+        200329893,
+        "SUMMER WALKER",
+        false
+      ],
+      [
+        772789437063368704,
+        "Polo.G\ud83d\udc10",
+        false
+      ],
+      [
+        238687719,
+        "Big Speaker",
+        false
+      ],
+      [
+        568545739,
+        "STINKY JOE",
+        false
+      ]
+    ],
+    "relevant": [
+      "Dionne Warwick",
+      "Nancy Sinatra",
+      "Bruce Springsteen",
+      "Barbra Streisand",
+      "Richard Marx",
+      "ICE T"
+    ],
+    "ap": 0.4574425574425574
+  }
+}
